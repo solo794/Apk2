@@ -309,6 +309,10 @@
       <div class="bar-track"><div class="bar-fill" id="flexBar" style="width:0%"></div></div>
     </div>
 
+    <div class="section-title">💳 أرصدة الحسابات</div>
+    <div class="obl-list" id="accountsList"></div>
+    <button class="btn btn-ghost" id="addMoveBtn" style="margin-top:8px;">+ تسجيل حركة (إيداع/سحب)</button>
+
     <div class="section-title">📌 نظرة سريعة</div>
     <div class="stat-grid">
       <div class="stat-card"><div class="k">أكتر فئة صرف</div><div class="v" id="topCat">—</div></div>
@@ -391,6 +395,11 @@
     </div>
 
     <div class="set-card">
+      <h3>📜 حركات الحسابات</h3>
+      <div id="accountMovesList"></div>
+    </div>
+
+    <div class="set-card">
       <h3>🎯 حدود شهرية للفئات (اختياري)</h3>
       <div id="capsEdit"></div>
     </div>
@@ -459,7 +468,7 @@
 
     <div class="set-card">
       <h3>📊 تقرير إكسيل شامل</h3>
-      <button class="btn btn-primary" id="exportExcel">تصدير كل حاجة (مصاريف + التزامات + توزيعات)</button>
+      <button class="btn btn-primary" id="exportExcel">تصدير كل حاجة (مصاريف + التزامات + توزيعات + حسابات)</button>
     </div>
 
     <div class="set-card">
@@ -594,6 +603,37 @@
   </div>
 </div>
 
+<div class="modal-bg" id="accountModalBg">
+  <div class="modal">
+    <button class="close-x" id="closeAccountModal">✕</button>
+    <h2>تسجيل حركة على حساب</h2>
+    <div class="field">
+      <label>الحساب</label>
+      <div class="chip-row" id="accountChips"></div>
+    </div>
+    <div class="field">
+      <label>نوع الحركة</label>
+      <div class="chip-row" id="accountTypeChips"></div>
+    </div>
+    <div class="field">
+      <label>المبلغ (ج)</label>
+      <input type="number" id="acAmount" placeholder="مثال: 5000">
+    </div>
+    <div class="field">
+      <label>ملاحظة (اختياري)</label>
+      <input type="text" id="acNote" placeholder="مثال: تحويل المرتب">
+    </div>
+    <div class="field">
+      <label>التاريخ</label>
+      <input type="date" id="acDate">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelAccountAdd">إلغاء</button>
+      <button class="btn btn-primary" id="saveAccountAdd">حفظ</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div class="onboard-overlay" id="onboardOverlay">
@@ -659,7 +699,7 @@ const DEFAULT_MAINT_SCHEDULE = [
 const MAINT_ITEMS = ["زيت المحرك","فلتر الزيت","فلتر الهواء","فلتر البنزين","فلتر التكييف","تيار السير","صيانة عامة","تاني"];
 
 let state = { settings: defaultSettings(), items: [...DEFAULT_ITEMS], expenses: [], allocations: [],
-  car: {odometer:0, odometerDate:null}, maintenanceSchedule: [...DEFAULT_MAINT_SCHEDULE], maintenanceLog: [] };
+  car: {odometer:0, odometerDate:null}, maintenanceSchedule: [...DEFAULT_MAINT_SCHEDULE], maintenanceLog: [], accountMoves: [] };
 let curDate = new Date();
 let curMonthKey = monthKey(curDate);
 let activeTab = "home";
@@ -835,6 +875,7 @@ async function loadState(){
   try{ const c = localStorage.getItem("car"); if(c) state.car = {...state.car, ...JSON.parse(c)}; }catch(e){}
   try{ const ms = localStorage.getItem("maintenanceSchedule"); if(ms) state.maintenanceSchedule = JSON.parse(ms); }catch(e){}
   try{ const ml = localStorage.getItem("maintenanceLog"); if(ml) state.maintenanceLog = JSON.parse(ml); }catch(e){}
+  try{ const am = localStorage.getItem("accountMoves"); if(am) state.accountMoves = JSON.parse(am); }catch(e){}
 }
 async function saveSettings(){ try{ localStorage.setItem("settings", JSON.stringify(state.settings)); }catch(e){} }
 async function saveItems(){ try{ localStorage.setItem("items", JSON.stringify(state.items)); }catch(e){} }
@@ -843,6 +884,22 @@ async function saveAllocations(){ try{ localStorage.setItem("allocations", JSON.
 async function saveCar(){ try{ localStorage.setItem("car", JSON.stringify(state.car)); }catch(e){} }
 async function saveMaintSchedule(){ try{ localStorage.setItem("maintenanceSchedule", JSON.stringify(state.maintenanceSchedule)); }catch(e){} }
 async function saveMaintLog(){ try{ localStorage.setItem("maintenanceLog", JSON.stringify(state.maintenanceLog)); }catch(e){} }
+async function saveAccountMoves(){ try{ localStorage.setItem("accountMoves", JSON.stringify(state.accountMoves)); }catch(e){} }
+
+// ---------- account balances (per payment source: cash, Visa 1, Visa 2...) ----------
+// balance = sum(deposits) - sum(withdrawals) - sum(expenses tagged with this source), all-time
+function computeAccountBalance(sourceName){
+  const netMoves = state.accountMoves
+    .filter(m=>m.source===sourceName)
+    .reduce((s,m)=> s + (m.type==="withdraw" ? -Number(m.amount) : Number(m.amount)), 0);
+  const spent = state.expenses
+    .filter(e=>e.source===sourceName)
+    .reduce((s,e)=>s+Number(e.amount), 0);
+  return netMoves - spent;
+}
+function computeAllAccountBalances(){
+  return state.settings.sources.map(name=>({ name, balance: computeAccountBalance(name) }));
+}
 
 // ---------- onboarding (first run) ----------
 function needsOnboarding(){ return localStorage.getItem("onboarded") !== "1"; }
@@ -958,6 +1015,8 @@ function render(){
   renderExpenses();
   renderAllocations();
   renderMaintenance();
+  renderAccounts();
+  renderAccountMoves();
   renderSettings();
   renderPendingSms();
   updateTabsVisibility();
@@ -1118,7 +1177,7 @@ function renderSettings(){
   document.getElementById("smsAutoEnabled").checked = state.settings.smsAuto.enabled;
 
   document.getElementById("sourcesEdit").innerHTML = state.settings.sources.map((s,idx)=>`
-    <div class="cap-row"><span class="cl">💳 ${s}</span><button class="del-x" data-idx="${idx}">✕</button></div>
+    <div class="cap-row"><span class="cl">💳 ${s} <span style="font-weight:600; color:var(--ink-soft);">— ${fmt(computeAccountBalance(s))} ج</span></span><button class="del-x" data-idx="${idx}">✕</button></div>
   `).join("");
   document.querySelectorAll("#sourcesEdit .del-x").forEach(btn=>{
     btn.onclick = async ()=>{
@@ -1242,6 +1301,47 @@ function renderMaintenance(){
       };
     });
   }
+}
+
+function renderAccounts(){
+  const el = document.getElementById("accountsList");
+  if(!el) return;
+  const balances = computeAllAccountBalances();
+  if(balances.length===0){
+    el.innerHTML = `<div class="empty-state"><div class="big">💳</div><p>ضيف مصدر صرف الأول من الإعدادات (زي فيزا أو كاش).</p></div>`;
+    return;
+  }
+  const total = balances.reduce((s,b)=>s+b.balance, 0);
+  el.innerHTML = balances.map(b=>
+    `<div class="obl-row"><span class="name">${b.name}</span><span class="val" style="color:${b.balance<0?'var(--brick)':'var(--sage)'}">${fmt(b.balance)} ج</span></div>`
+  ).join("") + `<div class="obl-row total"><span class="name">الإجمالي</span><span class="val" style="color:${total<0?'var(--brick)':'var(--sage)'}">${fmt(total)} ج</span></div>`;
+}
+
+function renderAccountMoves(){
+  const el = document.getElementById("accountMovesList");
+  if(!el) return;
+  const list = [...state.accountMoves].sort((a,b)=>b.date.localeCompare(a.date));
+  if(list.length===0){
+    el.innerHTML = `<div class="empty-state"><div class="big">📜</div><p>لسه مفيش حركات مسجلة على أي حساب.</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(m=>{
+    const d = new Date(m.date);
+    const dateStr = d.getDate()+" "+MONTH_NAMES[d.getMonth()].slice(0,3)+" "+d.getFullYear();
+    const isDeposit = m.type!=="withdraw";
+    return `<div class="exp-row">
+      <div class="exp-icon">${isDeposit?"⬆️":"⬇️"}</div>
+      <div class="exp-mid"><div class="cat">${m.source}</div><div class="note">${m.note || (isDeposit?"إيداع":"سحب")}</div></div>
+      <div class="exp-right"><div class="amt" style="color:${isDeposit?'var(--sage)':'var(--brick)'}">${isDeposit?"+":"-"}${fmt(m.amount)} ج</div><div class="date">${dateStr}</div></div>
+      <button class="exp-del" data-id="${m.id}">🗑</button>
+    </div>`;
+  }).join("");
+  el.querySelectorAll(".exp-del").forEach(btn=>{
+    btn.onclick = async ()=>{
+      state.accountMoves = state.accountMoves.filter(m=>m.id!==btn.dataset.id);
+      await saveAccountMoves(); render(); showToast("اتمسحت الحركة");
+    };
+  });
 }
 
 function renderPendingSms(){
@@ -1394,6 +1494,7 @@ document.getElementById("obSkip").onclick = ()=>{ hideOnboarding(); render(); };
 document.getElementById("exportBackup").onclick = async ()=>{
   const backup = { settings: state.settings, items: state.items, expenses: state.expenses, allocations: state.allocations,
     car: state.car, maintenanceSchedule: state.maintenanceSchedule, maintenanceLog: state.maintenanceLog,
+    accountMoves: state.accountMoves,
     exportedAt: new Date().toISOString() };
   await saveOrShareFile("نسخة_احتياطية_مصاريفي.json", JSON.stringify(backup,null,2), false);
   showToast("اتصدرت النسخة الاحتياطية ✅");
@@ -1413,8 +1514,9 @@ document.getElementById("importFile").onchange = async (e)=>{
     if(data.car) state.car = {...state.car, ...data.car};
     if(data.maintenanceSchedule) state.maintenanceSchedule = data.maintenanceSchedule;
     if(data.maintenanceLog) state.maintenanceLog = data.maintenanceLog;
+    if(data.accountMoves) state.accountMoves = data.accountMoves;
     await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
-    await saveCar(); await saveMaintSchedule(); await saveMaintLog();
+    await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
     localStorage.setItem("onboarded", "1");
     render();
     showToast("اتستوردت النسخة الاحتياطية ✅");
@@ -1425,11 +1527,11 @@ document.getElementById("importFile").onchange = async (e)=>{
 };
 
 document.getElementById("resetBtn").onclick = async ()=>{
-  if(!confirm("متأكد؟ هيتصفر كل حاجة (المصاريف، الالتزامات، الصيانة، الإعدادات) ويرجع التطبيق زي أول مرة تفتحه.")) return;
+  if(!confirm("متأكد؟ هيتصفر كل حاجة (المصاريف، الالتزامات، الصيانة، أرصدة الحسابات، الإعدادات) ويرجع التطبيق زي أول مرة تفتحه.")) return;
   state = { settings:{...defaultSettings(), caps:{}}, items:[...DEFAULT_ITEMS], expenses:[], allocations:[],
-    car:{odometer:0, odometerDate:null}, maintenanceSchedule:[...DEFAULT_MAINT_SCHEDULE], maintenanceLog:[] };
+    car:{odometer:0, odometerDate:null}, maintenanceSchedule:[...DEFAULT_MAINT_SCHEDULE], maintenanceLog:[], accountMoves:[] };
   await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
-  await saveCar(); await saveMaintSchedule(); await saveMaintLog();
+  await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
   await cancelDailyReminder(); await cancelWeeklyBackupReminder();
   pendingSms = [];
   localStorage.removeItem("onboarded");
@@ -1635,6 +1737,45 @@ document.getElementById("saveMaintAdd").onclick = async ()=>{
   showToast("اتسجلت الصيانة ✅");
 };
 
+// account movement modal (deposit/withdraw against a payment source)
+const accountModalBg = document.getElementById("accountModalBg");
+const ACCOUNT_MOVE_TYPES = [{k:"deposit", l:"⬆️ إيداع"}, {k:"withdraw", l:"⬇️ سحب"}];
+let selectedAccountSource = null;
+let selectedAccountType = "deposit";
+function openAccountModal(){
+  if(state.settings.sources.length===0){ showToast("ضيف مصدر صرف الأول من الإعدادات"); return; }
+  document.getElementById("acAmount").value = "";
+  document.getElementById("acNote").value = "";
+  document.getElementById("acDate").value = new Date().toISOString().slice(0,10);
+  selectedAccountSource = state.settings.sources[0];
+  selectedAccountType = "deposit";
+  document.getElementById("accountChips").innerHTML = state.settings.sources.map(s=>
+    `<button class="chip ${s===selectedAccountSource?'sel':''}" data-src="${s}">💳 ${s}</button>`).join("");
+  document.querySelectorAll("#accountChips .chip").forEach(ch=>{
+    ch.onclick = ()=>{ selectedAccountSource = ch.dataset.src; document.querySelectorAll("#accountChips .chip").forEach(c=>c.classList.toggle("sel", c===ch)); };
+  });
+  document.getElementById("accountTypeChips").innerHTML = ACCOUNT_MOVE_TYPES.map(t=>
+    `<button class="chip ${t.k===selectedAccountType?'sel':''}" data-type="${t.k}">${t.l}</button>`).join("");
+  document.querySelectorAll("#accountTypeChips .chip").forEach(ch=>{
+    ch.onclick = ()=>{ selectedAccountType = ch.dataset.type; document.querySelectorAll("#accountTypeChips .chip").forEach(c=>c.classList.toggle("sel", c===ch)); };
+  });
+  accountModalBg.classList.add("show");
+}
+document.getElementById("addMoveBtn").onclick = openAccountModal;
+document.getElementById("closeAccountModal").onclick = ()=>accountModalBg.classList.remove("show");
+document.getElementById("cancelAccountAdd").onclick = ()=>accountModalBg.classList.remove("show");
+document.getElementById("saveAccountAdd").onclick = async ()=>{
+  const amt = Number(document.getElementById("acAmount").value);
+  if(!amt || amt<=0){ showToast("اكتب مبلغ صحيح"); return; }
+  const date = document.getElementById("acDate").value || new Date().toISOString().slice(0,10);
+  const note = document.getElementById("acNote").value.trim();
+  state.accountMoves.push({ id:"ac"+Date.now(), source:selectedAccountSource, type:selectedAccountType, amount:amt, note, date });
+  await saveAccountMoves();
+  accountModalBg.classList.remove("show");
+  render();
+  showToast("اتسجلت الحركة ✅");
+};
+
 // excel export
 document.getElementById("exportExcel").onclick = async ()=>{
   if(typeof XLSX === "undefined"){ showToast("محتاج إنترنت لتحميل مكتبة الإكسيل أول مرة"); return; }
@@ -1660,6 +1801,14 @@ document.getElementById("exportExcel").onclick = async ()=>{
     التاريخ:m.date, الكيلومترات:m.km, "التكلفة (ج)":m.cost, "اللي اتعمل":(m.items||[]).join("، "), ملاحظة:m.note||""
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(maintRows.length?maintRows:[{التاريخ:"",الكيلومترات:"",'التكلفة (ج)':"",'اللي اتعمل':"",ملاحظة:""}]), "الصيانة");
+
+  const moveRows = state.accountMoves.sort((a,b)=>a.date.localeCompare(b.date)).map(m=>({
+    التاريخ:m.date, الحساب:m.source, النوع:m.type==="withdraw"?"سحب":"إيداع", "المبلغ (ج)":m.amount, ملاحظة:m.note||""
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(moveRows.length?moveRows:[{التاريخ:"",الحساب:"",النوع:"",'المبلغ (ج)':"",ملاحظة:""}]), "حركات الحسابات");
+
+  const accountBalanceRows = computeAllAccountBalances().map(b=>({الحساب:b.name, "الرصيد الحالي (ج)":b.balance}));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(accountBalanceRows.length?accountBalanceRows:[{الحساب:"", "الرصيد الحالي (ج)":""}]), "أرصدة الحسابات");
 
   const summaryRows = [
     {البند:"المرتب", القيمة:state.settings.salary},
@@ -1689,7 +1838,7 @@ function setupNativeApp(){
   const { App } = window.Capacitor.Plugins;
   App.addListener("backButton", ()=>{
     if(document.getElementById("onboardOverlay").classList.contains("show")){ document.getElementById("obSkip").click(); return; }
-    const openModal = [modalBg, allocModalBg, flexModalBg, maintModalBg].find(m=>m.classList.contains("show"));
+    const openModal = [modalBg, allocModalBg, flexModalBg, maintModalBg, accountModalBg].find(m=>m.classList.contains("show"));
     if(openModal){ openModal.classList.remove("show"); return; }
     if(activeTab !== "home"){ document.querySelector('.tabbtn[data-tab="home"]').click(); return; }
     App.exitApp();
