@@ -250,6 +250,17 @@
     padding:10px 18px; border-radius:999px; font-size:12.5px; font-weight:600; z-index:80; opacity:0; pointer-events:none; transition:.25s;
   }
   .toast.show{opacity:1; bottom:110px;}
+
+  .onboard-overlay{
+    position:fixed; inset:0; z-index:90; background:var(--paper);
+    display:none; flex-direction:column; overflow-y:auto;
+    padding:calc(28px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+  }
+  .onboard-overlay.show{display:flex;}
+  .onboard-hero{text-align:center; margin-bottom:20px;}
+  .onboard-hero .emoji{font-size:40px;}
+  .onboard-hero h2{font-size:19px; margin:10px 0 8px; color:var(--ink);}
+  .onboard-hero p{font-size:12.5px; color:var(--ink-soft); line-height:1.8; margin:0;}
 </style>
 </head>
 <body>
@@ -329,6 +340,24 @@
     </div>
   </div>
 
+  <div class="content" id="tab-maintenance" style="display:none;">
+    <div class="set-card">
+      <h3>🚗 كيلومترات العربية الحالية</h3>
+      <div class="field"><label>الكيلومترات الحالية (KM)</label><input type="number" id="inOdometer" placeholder="مثال: 15000"></div>
+      <div class="field" style="margin-bottom:0;"><label id="odometerDateLbl" style="font-weight:500;"></label></div>
+    </div>
+
+    <div class="section-title">⏭️ الصيانة الجاية</div>
+    <div class="flex-card" id="nextMaintCard"></div>
+
+    <div class="section-title" style="margin-top:20px;">📋 جدول الصيانة الدورية <span class="hint">حسب موقع الوكيل الرسمي</span></div>
+    <div id="maintSchedule"></div>
+    <button class="btn btn-ghost" id="addSchedBtn" style="margin-top:8px;">+ إضافة نقطة صيانة</button>
+
+    <div class="section-title" style="margin-top:20px;">🧾 سجل الصيانة الفعلي</div>
+    <div id="maintLog"></div>
+  </div>
+
   <div class="content" id="tab-settings" style="display:none;">
     <div class="set-card">
       <h3>💵 الدخل والطوارئ</h3>
@@ -378,6 +407,7 @@
     <button class="tabbtn" data-tab="expenses"><span class="ic">🧾</span><span class="lb">المصاريف</span></button>
     <button class="tabbtn" data-tab="allocations"><span class="ic">📦</span><span class="lb">التوزيعات</span></button>
     <button class="tabbtn" data-tab="obligations"><span class="ic">🚗</span><span class="lb">الالتزامات</span></button>
+    <button class="tabbtn" data-tab="maintenance"><span class="ic">🔧</span><span class="lb">الصيانة</span></button>
     <button class="tabbtn" data-tab="settings"><span class="ic">⚙️</span><span class="lb">الإعدادات</span></button>
   </div>
 </div>
@@ -433,7 +463,7 @@
     </div>
     <div class="field">
       <label>ملاحظة (اختياري)</label>
-      <input type="text" id="mNote" placeholder="مثال: غدا مع زين وريناد">
+      <input type="text" id="mNote" placeholder="مثال: غدا مع الأصحاب">
     </div>
     <div class="field">
       <label>التاريخ</label>
@@ -462,7 +492,59 @@
   </div>
 </div>
 
+<div class="modal-bg" id="maintModalBg">
+  <div class="modal">
+    <button class="close-x" id="closeMaintModal">✕</button>
+    <h2>تسجيل صيانة</h2>
+    <div class="field">
+      <label>الكيلومترات وقت الصيانة</label>
+      <input type="number" id="maKm" placeholder="مثال: 20000">
+    </div>
+    <div class="field">
+      <label>التكلفة (ج)</label>
+      <input type="number" id="maCost" placeholder="مثال: 5837">
+    </div>
+    <div class="field">
+      <label>اللي اتعمل</label>
+      <div class="chip-row" id="maintItemChips"></div>
+    </div>
+    <div class="field">
+      <label>ملاحظة (اختياري)</label>
+      <input type="text" id="maNote" placeholder="مثال: توكيل مدينة نصر">
+    </div>
+    <div class="field">
+      <label>التاريخ</label>
+      <input type="date" id="maDate">
+    </div>
+    <div class="toggle-row" style="border-bottom:none; padding-top:2px;">
+      <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">سجّلها كمان كمصروف الشهر (فئة عربية)</span>
+      <label class="switch"><input type="checkbox" id="maLinkExpense" checked><span class="slider"></span></label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelMaintAdd">إلغاء</button>
+      <button class="btn btn-primary" id="saveMaintAdd">حفظ</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
+
+<div class="onboard-overlay" id="onboardOverlay">
+  <div class="onboard-hero">
+    <div class="emoji">👋</div>
+    <h2>أهلاً بيك!</h2>
+    <p>خلينا نظبط بياناتك الأساسية الأول. تقدر تعدّل أي حاجة تاني من تبويب الإعدادات في أي وقت،
+      وتضيف التزاماتك (أقساط، جمعيات، مصروفات ثابتة) من تبويب الالتزامات.</p>
+  </div>
+  <div class="set-card">
+    <h3>💵 الدخل والطوارئ</h3>
+    <div class="field"><label>المرتب الشهري</label><input type="number" id="obSalary" placeholder="مثال: 20000"></div>
+    <div class="field"><label>رصيد كاش الطوارئ الحالي (اختياري)</label><input type="number" id="obEmergBal" placeholder="0"></div>
+    <div class="field" style="margin-bottom:0;"><label>هدف كاش الطوارئ (اختياري)</label><input type="number" id="obEmergGoal" placeholder="0"></div>
+  </div>
+  <button class="btn btn-primary" id="obStart" style="margin-top:16px;">يلا نبدأ 🚀</button>
+  <button class="btn btn-ghost" id="obSkip" style="margin-top:10px;">هعبي البيانات بعدين</button>
+</div>
 
 <script>
 const MONTH_NAMES = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
@@ -472,46 +554,28 @@ const CATS = [
   {k:"أولاد", i:"🧸"}, {k:"بيت", i:"🏠"}, {k:"تاني", i:"📦"}
 ];
 
-const DEFAULT_SETTINGS = { salary: 55000, emergBal: 0, emergGoal: 30000, caps: {}, sources: ["كاش","فيزا","بطاقة بنكية","فودافون كاش"], allocOverrides: {} };
+const DEFAULT_SETTINGS = { salary: 0, emergBal: 0, emergGoal: 0, caps: {}, sources: ["كاش","فيزا","بطاقة بنكية","فودافون كاش"], allocOverrides: {} };
 const ALLOC_CATS = [
   {k:"طوارئ", i:"🛟"}, {k:"استثمار", i:"📈"}, {k:"مرونة", i:"🎯"}
 ];
 
-const DEFAULT_ITEMS = [
-  {id:"car1", name:"قسط عربية (الشاين)", amount:18300, cat:"قسط", endMonth:"2029-09", active:true},
-  {id:"car2", name:"مصروف تشغيل العربية", amount:3000, cat:"قسط", endMonth:"2029-09", active:true},
-  {id:"i1", name:"هدوم qnb", amount:4647, cat:"قسط", endMonth:"2026-10", active:true},
-  {id:"i2", name:"هدوم افنان qnb", amount:1263, cat:"قسط", endMonth:"2026-11", active:true},
-  {id:"i3", name:"قسط هدوم qnb", amount:1773, cat:"قسط", endMonth:"2026-09", active:true},
-  {id:"i4", name:"جهاز الليز أفنان", amount:2000, cat:"قسط", endMonth:"2027-01", active:true},
-  {id:"i5", name:"جهاز جوميا (تنظيف بخار)", amount:937, cat:"قسط", endMonth:"2026-10", active:true},
-  {id:"i6", name:"أمازون", amount:717, cat:"قسط", endMonth:"2026-10", active:true},
-  {id:"i7", name:"نون (قسط 1)", amount:383, cat:"قسط", endMonth:"2026-09", active:true},
-  {id:"i8", name:"تابلت هونر", amount:1257, cat:"قسط", endMonth:"2026-12", active:true},
-  {id:"i9", name:"فيفا", amount:342, cat:"قسط", endMonth:"2027-02", active:true},
-  {id:"i10", name:"اكونت جيم باس", amount:413, cat:"قسط", endMonth:"2027-02", active:true},
-  {id:"i11", name:"نون (قسط 2)", amount:411, cat:"قسط", endMonth:"2027-02", active:true},
-  {id:"i12", name:"2b", amount:105, cat:"قسط", endMonth:"2026-10", active:true},
-  {id:"i13", name:"قسط ماما", amount:500, cat:"قسط", endMonth:"2027-12", active:true},
-  {id:"i14", name:"visa udemy", amount:518, cat:"قسط", endMonth:"2027-02", active:true},
-  {id:"i15", name:"أقساط الفيزا", amount:4595, cat:"قسط", endMonth:"2026-09", active:true},
-  {id:"f1", name:"مصروف البيت", amount:10000, cat:"ثابت", endMonth:null, active:true},
-  {id:"f2", name:"مصروفات العربية (جراج)", amount:300, cat:"ثابت", endMonth:null, active:true},
-  {id:"f3", name:"مصروف سالم", amount:1500, cat:"ثابت", endMonth:null, active:true},
-  {id:"f4", name:"افنان", amount:500, cat:"ثابت", endMonth:null, active:true},
-  {id:"f5", name:"مصروف الأولاد والدروس", amount:2500, cat:"ثابت", endMonth:null, active:true},
-  {id:"f6", name:"اشتراك عربية المدارس", amount:1500, cat:"ثابت", endMonth:null, active:true},
-  {id:"f7", name:"كهرباء وماء وغاز", amount:2000, cat:"ثابت", endMonth:null, active:true},
-  {id:"f8", name:"تبرع خيري", amount:500, cat:"ثابت", endMonth:null, active:true},
-  {id:"f9", name:"WE باقة 1", amount:900, cat:"ثابت", endMonth:null, active:true},
-  {id:"f10", name:"WE باقة 2", amount:350, cat:"ثابت", endMonth:null, active:true},
-  {id:"f11", name:"Google One", amount:280, cat:"ثابت", endMonth:null, active:true},
-  {id:"f12", name:"Claude Pro", amount:1000, cat:"ثابت", endMonth:null, active:true},
-  {id:"g1", name:"جمعية الشرقية", amount:4000, cat:"جمعية", endMonth:null, active:true, payoutAmount:50000, payoutMonth:"2027-04"},
-  {id:"g2", name:"جمعية مهند", amount:2500, cat:"جمعية", endMonth:null, active:false, payoutAmount:62500, payoutMonth:null},
-];
+// لا بيانات افتراضية شخصية — كل مستخدم بيضيف التزاماته بنفسه من تبويب "الالتزامات"
+const DEFAULT_ITEMS = [];
 
-let state = { settings: {...DEFAULT_SETTINGS}, items: [...DEFAULT_ITEMS], expenses: [], allocations: [] };
+// جدول الصيانة الدوري الرسمي (حسب موقع Dongfeng مصر — Shine E2) — بيانات معروفة لحد 50,000 كم بس،
+// المستخدم يقدر يضيف نقط تانية لو عايز يكمّل الجدول لحد 200,000 كم.
+const DEFAULT_MAINT_SCHEDULE = [
+  {km:1000, price:4184},
+  {km:10000, price:5837},
+  {km:20000, price:5837},
+  {km:30000, price:10670},
+  {km:40000, price:5837},
+  {km:50000, price:5837},
+];
+const MAINT_ITEMS = ["زيت المحرك","فلتر الزيت","فلتر الهواء","فلتر البنزين","فلتر التكييف","تيار السير","صيانة عامة","تاني"];
+
+let state = { settings: {...DEFAULT_SETTINGS}, items: [...DEFAULT_ITEMS], expenses: [], allocations: [],
+  car: {odometer:0, odometerDate:null}, maintenanceSchedule: [...DEFAULT_MAINT_SCHEDULE], maintenanceLog: [] };
 let curDate = new Date();
 let curMonthKey = monthKey(curDate);
 let activeTab = "home";
@@ -565,11 +629,30 @@ async function loadState(){
   try{ const it = localStorage.getItem("items"); if(it) state.items = JSON.parse(it); }catch(e){}
   try{ const ex = localStorage.getItem("expenses"); if(ex) state.expenses = JSON.parse(ex); }catch(e){}
   try{ const al = localStorage.getItem("allocations"); if(al) state.allocations = JSON.parse(al); }catch(e){}
+  try{ const c = localStorage.getItem("car"); if(c) state.car = {...state.car, ...JSON.parse(c)}; }catch(e){}
+  try{ const ms = localStorage.getItem("maintenanceSchedule"); if(ms) state.maintenanceSchedule = JSON.parse(ms); }catch(e){}
+  try{ const ml = localStorage.getItem("maintenanceLog"); if(ml) state.maintenanceLog = JSON.parse(ml); }catch(e){}
 }
 async function saveSettings(){ try{ localStorage.setItem("settings", JSON.stringify(state.settings)); }catch(e){} }
 async function saveItems(){ try{ localStorage.setItem("items", JSON.stringify(state.items)); }catch(e){} }
 async function saveExpenses(){ try{ localStorage.setItem("expenses", JSON.stringify(state.expenses)); }catch(e){} }
 async function saveAllocations(){ try{ localStorage.setItem("allocations", JSON.stringify(state.allocations)); }catch(e){} }
+async function saveCar(){ try{ localStorage.setItem("car", JSON.stringify(state.car)); }catch(e){} }
+async function saveMaintSchedule(){ try{ localStorage.setItem("maintenanceSchedule", JSON.stringify(state.maintenanceSchedule)); }catch(e){} }
+async function saveMaintLog(){ try{ localStorage.setItem("maintenanceLog", JSON.stringify(state.maintenanceLog)); }catch(e){} }
+
+// ---------- onboarding (first run) ----------
+function needsOnboarding(){ return localStorage.getItem("onboarded") !== "1"; }
+function showOnboarding(){
+  document.getElementById("obSalary").value = state.settings.salary || "";
+  document.getElementById("obEmergBal").value = state.settings.emergBal || "";
+  document.getElementById("obEmergGoal").value = state.settings.emergGoal || "";
+  document.getElementById("onboardOverlay").classList.add("show");
+}
+function hideOnboarding(){
+  localStorage.setItem("onboarded", "1");
+  document.getElementById("onboardOverlay").classList.remove("show");
+}
 
 function computeMonth(monthKeyStr){
   const active = state.items.filter(it=>it.active);
@@ -670,6 +753,7 @@ function render(){
   renderCategoryBars(monthExpenses);
   renderExpenses();
   renderAllocations();
+  renderMaintenance();
   renderSettings();
 }
 
@@ -856,6 +940,92 @@ function renderSettings(){
   });
 }
 
+function renderMaintenance(){
+  const odoEl = document.getElementById("inOdometer");
+  if(!odoEl) return;
+  odoEl.value = state.car.odometer || "";
+  document.getElementById("odometerDateLbl").textContent = state.car.odometerDate
+    ? "آخر تحديث: " + state.car.odometerDate
+    : "لسه متسجّلش تاريخ تحديث";
+
+  const odometer = Number(state.car.odometer||0);
+  const schedule = [...state.maintenanceSchedule].sort((a,b)=>a.km-b.km);
+  const next = schedule.find(s=>s.km > odometer);
+  const nextCard = document.getElementById("nextMaintCard");
+  if(next){
+    const remaining = next.km - odometer;
+    nextCard.innerHTML = `
+      <div class="flex-top">
+        <div><div class="t1">الصيانة الجاية عند</div><div class="t2">${fmt(next.km)} كم</div></div>
+        <div style="text-align:left;"><div class="t3">السعر المتوقع</div><div class="t2" style="font-size:16px;">${fmt(next.price)} ج</div></div>
+      </div>
+      <div style="margin-top:10px; font-size:12px; opacity:.8;">باقيلك حوالي ${fmt(remaining)} كم على الصيانة الجاية</div>`;
+  } else {
+    nextCard.innerHTML = `
+      <div class="flex-top"><div><div class="t1">جدول الصيانة</div><div class="t2" style="font-size:15px;">مفيش نقطة صيانة متسجّلة بعد ${fmt(odometer)} كم</div></div></div>
+      <div style="margin-top:10px; font-size:12px; opacity:.8;">ضيف نقط صيانة جديدة من الجدول تحت لو عايز تكمّل أبعد من كده.</div>`;
+  }
+
+  const schedEl = document.getElementById("maintSchedule");
+  schedEl.innerHTML = schedule.length ? schedule.map(s=>{
+    const done = s.km <= odometer;
+    return `<div class="item-row-edit" data-km="${s.km}">
+      <div class="ii">
+        <div class="n"><input type="number" class="schedKm" value="${s.km}" style="width:70px;"></div>
+        <div class="m">${done ? "✅ اتعملت" : "🔜 الجاية"}</div>
+      </div>
+      <input type="number" class="amt-in schedPrice" value="${s.price}">
+      <button class="del-x">✕</button>
+    </div>`;
+  }).join("") : `<div class="empty-state"><div class="big">📋</div><p>لسه مفيش نقط صيانة في الجدول.</p></div>`;
+  schedEl.querySelectorAll(".item-row-edit").forEach(row=>{
+    const origKm = Number(row.dataset.km);
+    row.querySelector(".schedKm").onchange = async (e)=>{
+      const item = state.maintenanceSchedule.find(x=>x.km===origKm);
+      if(item) item.km = Number(e.target.value)||0;
+      await saveMaintSchedule(); renderMaintenance();
+    };
+    row.querySelector(".schedPrice").onchange = async (e)=>{
+      const item = state.maintenanceSchedule.find(x=>x.km===origKm);
+      if(item) item.price = Number(e.target.value)||0;
+      await saveMaintSchedule(); renderMaintenance();
+    };
+    row.querySelector(".del-x").onclick = async ()=>{
+      state.maintenanceSchedule = state.maintenanceSchedule.filter(x=>x.km!==origKm);
+      await saveMaintSchedule(); renderMaintenance(); showToast("اتمسحت نقطة الصيانة");
+    };
+  });
+
+  const logEl = document.getElementById("maintLog");
+  const log = [...state.maintenanceLog].sort((a,b)=>b.date.localeCompare(a.date));
+  if(log.length===0){
+    logEl.innerHTML = `<div class="empty-state"><div class="big">🔧</div><p>لسه مفيش صيانات مسجلة.<br>دوس + وسجّل أول صيانة.</p></div>`;
+  } else {
+    logEl.innerHTML = log.map(m=>{
+      const d = new Date(m.date);
+      const dateStr = d.getDate()+" "+MONTH_NAMES[d.getMonth()].slice(0,3)+" "+d.getFullYear();
+      const detail = [...(m.items||[]), m.note].filter(Boolean).join(" · ") || "بدون تفاصيل";
+      return `<div class="exp-row">
+        <div class="exp-icon">🔧</div>
+        <div class="exp-mid"><div class="cat">${fmt(m.km)} كم</div><div class="note">${detail}</div></div>
+        <div class="exp-right"><div class="amt">${fmt(m.cost)} ج</div><div class="date">${dateStr}</div></div>
+        <button class="exp-del" data-id="${m.id}">🗑</button>
+      </div>`;
+    }).join("");
+    logEl.querySelectorAll(".exp-del").forEach(btn=>{
+      btn.onclick = async ()=>{
+        const rec = state.maintenanceLog.find(x=>x.id===btn.dataset.id);
+        state.maintenanceLog = state.maintenanceLog.filter(x=>x.id!==btn.dataset.id);
+        if(rec && rec.linkedExpenseId){
+          state.expenses = state.expenses.filter(e=>e.id!==rec.linkedExpenseId);
+          await saveExpenses();
+        }
+        await saveMaintLog(); render(); showToast("اتمسحت الصيانة");
+      };
+    });
+  }
+}
+
 document.getElementById("prevMonth").onclick = ()=>{ const [y,m]=curMonthKey.split("-").map(Number); curMonthKey = monthKey(new Date(y,m-2,1)); render(); };
 document.getElementById("nextMonth").onclick = ()=>{ const [y,m]=curMonthKey.split("-").map(Number); curMonthKey = monthKey(new Date(y,m,1)); render(); };
 
@@ -867,9 +1037,11 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
     document.getElementById("tab-expenses").style.display = activeTab==="expenses" ? "block":"none";
     document.getElementById("tab-allocations").style.display = activeTab==="allocations" ? "block":"none";
     document.getElementById("tab-obligations").style.display = activeTab==="obligations" ? "block":"none";
+    document.getElementById("tab-maintenance").style.display = activeTab==="maintenance" ? "block":"none";
     document.getElementById("tab-settings").style.display = activeTab==="settings" ? "block":"none";
     document.getElementById("fabAdd").style.display = (activeTab==="settings"||activeTab==="obligations") ? "none":"flex";
     if(activeTab==="allocations") renderAllocations();
+    if(activeTab==="maintenance") renderMaintenance();
   };
 });
 
@@ -890,8 +1062,30 @@ document.getElementById("addItemBtn").onclick = async ()=>{
   state.items.push({id:"c"+Date.now(), name:"بند جديد", amount:0, cat:"ثابت", endMonth:null, active:true});
   await saveItems(); render();
 };
+
+document.getElementById("inOdometer").onchange = async (e)=>{
+  state.car.odometer = Number(e.target.value)||0;
+  state.car.odometerDate = new Date().toISOString().slice(0,10);
+  await saveCar(); renderMaintenance();
+};
+document.getElementById("addSchedBtn").onclick = async ()=>{
+  state.maintenanceSchedule.push({km:0, price:0});
+  await saveMaintSchedule(); renderMaintenance();
+};
+
+document.getElementById("obStart").onclick = async ()=>{
+  state.settings.salary = Number(document.getElementById("obSalary").value)||0;
+  state.settings.emergBal = Number(document.getElementById("obEmergBal").value)||0;
+  state.settings.emergGoal = Number(document.getElementById("obEmergGoal").value)||0;
+  await saveSettings();
+  hideOnboarding();
+  render();
+};
+document.getElementById("obSkip").onclick = ()=>{ hideOnboarding(); render(); };
 document.getElementById("exportBackup").onclick = async ()=>{
-  const backup = { settings: state.settings, items: state.items, expenses: state.expenses, allocations: state.allocations, exportedAt: new Date().toISOString() };
+  const backup = { settings: state.settings, items: state.items, expenses: state.expenses, allocations: state.allocations,
+    car: state.car, maintenanceSchedule: state.maintenanceSchedule, maintenanceLog: state.maintenanceLog,
+    exportedAt: new Date().toISOString() };
   await saveOrShareFile("نسخة_احتياطية_مصاريفي.json", JSON.stringify(backup,null,2), false);
   showToast("اتصدرت النسخة الاحتياطية ✅");
 };
@@ -907,7 +1101,12 @@ document.getElementById("importFile").onchange = async (e)=>{
     if(data.items) state.items = data.items;
     if(data.expenses) state.expenses = data.expenses;
     if(data.allocations) state.allocations = data.allocations;
+    if(data.car) state.car = {...state.car, ...data.car};
+    if(data.maintenanceSchedule) state.maintenanceSchedule = data.maintenanceSchedule;
+    if(data.maintenanceLog) state.maintenanceLog = data.maintenanceLog;
     await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
+    await saveCar(); await saveMaintSchedule(); await saveMaintLog();
+    localStorage.setItem("onboarded", "1");
     render();
     showToast("اتستوردت النسخة الاحتياطية ✅");
   }catch(err){
@@ -917,9 +1116,15 @@ document.getElementById("importFile").onchange = async (e)=>{
 };
 
 document.getElementById("resetBtn").onclick = async ()=>{
-  if(!confirm("متأكد؟ هيتصفر كل حاجة ويرجع للوضع الافتراضي.")) return;
-  state = { settings:{...DEFAULT_SETTINGS, caps:{}}, items:[...DEFAULT_ITEMS], expenses:[], allocations:[] };
-  await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations(); render(); showToast("اتصفرت البيانات");
+  if(!confirm("متأكد؟ هيتصفر كل حاجة (المصاريف، الالتزامات، الصيانة، الإعدادات) ويرجع التطبيق زي أول مرة تفتحه.")) return;
+  state = { settings:{...DEFAULT_SETTINGS, caps:{}}, items:[...DEFAULT_ITEMS], expenses:[], allocations:[],
+    car:{odometer:0, odometerDate:null}, maintenanceSchedule:[...DEFAULT_MAINT_SCHEDULE], maintenanceLog:[] };
+  await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
+  await saveCar(); await saveMaintSchedule(); await saveMaintLog();
+  localStorage.removeItem("onboarded");
+  render();
+  showToast("اتصفرت البيانات");
+  showOnboarding();
 };
 
 document.getElementById("searchBox").oninput = (e)=>{ searchTerm = e.target.value; renderExpenses(); };
@@ -984,7 +1189,9 @@ function openModal(existing){
   modalBg.classList.add("show");
 }
 document.getElementById("fabAdd").onclick = ()=>{
-  if(activeTab==="allocations") openAllocModal(); else openModal(null);
+  if(activeTab==="allocations") openAllocModal();
+  else if(activeTab==="maintenance") openMaintModal();
+  else openModal(null);
 };
 document.getElementById("closeModal").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
 document.getElementById("cancelAdd").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
@@ -1051,6 +1258,60 @@ document.getElementById("saveAllocAdd").onclick = async ()=>{
   showToast("اتسجلت العملية ✅");
 };
 
+// maintenance modal (multi-select items — unlike the single-select chip rows elsewhere)
+const maintModalBg = document.getElementById("maintModalBg");
+let selectedMaintItems = [];
+function openMaintModal(){
+  document.getElementById("maKm").value = state.car.odometer || "";
+  document.getElementById("maCost").value = "";
+  document.getElementById("maNote").value = "";
+  document.getElementById("maDate").value = new Date().toISOString().slice(0,10);
+  document.getElementById("maLinkExpense").checked = true;
+  selectedMaintItems = [];
+  document.getElementById("maintItemChips").innerHTML = MAINT_ITEMS.map(it=>
+    `<button type="button" class="chip" data-item="${it}">${it}</button>`).join("");
+  document.querySelectorAll("#maintItemChips .chip").forEach(ch=>{
+    ch.onclick = ()=>{
+      const it = ch.dataset.item;
+      if(selectedMaintItems.includes(it)) selectedMaintItems = selectedMaintItems.filter(x=>x!==it);
+      else selectedMaintItems.push(it);
+      ch.classList.toggle("sel");
+    };
+  });
+  maintModalBg.classList.add("show");
+}
+document.getElementById("closeMaintModal").onclick = ()=>maintModalBg.classList.remove("show");
+document.getElementById("cancelMaintAdd").onclick = ()=>maintModalBg.classList.remove("show");
+document.getElementById("saveMaintAdd").onclick = async ()=>{
+  const km = Number(document.getElementById("maKm").value);
+  const cost = Number(document.getElementById("maCost").value);
+  if(isNaN(km) || km<0){ showToast("اكتب كيلومترات صحيحة"); return; }
+  if(!cost || cost<=0){ showToast("اكتب تكلفة صحيحة"); return; }
+  const date = document.getElementById("maDate").value || new Date().toISOString().slice(0,10);
+  const note = document.getElementById("maNote").value.trim();
+  const linkExpense = document.getElementById("maLinkExpense").checked;
+
+  const rec = { id:"mt"+Date.now(), km, cost, items:[...selectedMaintItems], note, date, linkedExpenseId:null };
+  if(linkExpense){
+    const expNote = "صيانة" + (selectedMaintItems.length ? ": "+selectedMaintItems.join("، ") : (note?": "+note:""));
+    const exp = { id:"e"+Date.now(), amount:cost, cat:"عربية", source: state.settings.sources[0]||"", note:expNote, date };
+    state.expenses.push(exp);
+    rec.linkedExpenseId = exp.id;
+    await saveExpenses();
+  }
+  state.maintenanceLog.push(rec);
+  await saveMaintLog();
+  if(km > Number(state.car.odometer||0)){
+    state.car.odometer = km;
+    state.car.odometerDate = date;
+    await saveCar();
+  }
+  maintModalBg.classList.remove("show");
+  curMonthKey = date.slice(0,7);
+  render();
+  showToast("اتسجلت الصيانة ✅");
+};
+
 // excel export
 document.getElementById("exportExcel").onclick = async ()=>{
   if(typeof XLSX === "undefined"){ showToast("محتاج إنترنت لتحميل مكتبة الإكسيل أول مرة"); return; }
@@ -1071,6 +1332,11 @@ document.getElementById("exportExcel").onclick = async ()=>{
     التاريخ:a.date, البند:a.cat, "المبلغ (ج)":a.amount, ملاحظة:a.note||""
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(allocRows.length?allocRows:[{التاريخ:"",البند:"",'المبلغ (ج)':"",ملاحظة:""}]), "التوزيعات الفعلية");
+
+  const maintRows = state.maintenanceLog.sort((a,b)=>a.date.localeCompare(b.date)).map(m=>({
+    التاريخ:m.date, الكيلومترات:m.km, "التكلفة (ج)":m.cost, "اللي اتعمل":(m.items||[]).join("، "), ملاحظة:m.note||""
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(maintRows.length?maintRows:[{التاريخ:"",الكيلومترات:"",'التكلفة (ج)':"",'اللي اتعمل':"",ملاحظة:""}]), "الصيانة");
 
   const summaryRows = [
     {البند:"المرتب", القيمة:state.settings.salary},
@@ -1099,14 +1365,20 @@ function setupNativeApp(){
 
   const { App } = window.Capacitor.Plugins;
   App.addListener("backButton", ()=>{
-    const openModal = [modalBg, allocModalBg, flexModalBg].find(m=>m.classList.contains("show"));
+    if(document.getElementById("onboardOverlay").classList.contains("show")){ document.getElementById("obSkip").click(); return; }
+    const openModal = [modalBg, allocModalBg, flexModalBg, maintModalBg].find(m=>m.classList.contains("show"));
     if(openModal){ openModal.classList.remove("show"); return; }
     if(activeTab !== "home"){ document.querySelector('.tabbtn[data-tab="home"]').click(); return; }
     App.exitApp();
   });
 }
 
-(async ()=>{ await loadState(); render(); setupNativeApp(); })();
+(async ()=>{
+  await loadState();
+  render();
+  setupNativeApp();
+  if(needsOnboarding()) showOnboarding();
+})();
 </script>
 </body>
 </html>
