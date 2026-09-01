@@ -1,0 +1,24 @@
+{
+  "name": "masarifi-app",
+  "version": "1.0.0",
+  "description": "تطبيق متابعة مصاريفي - Android app (Capacitor wrapper)",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync android",
+    "open:android": "cap open android",
+    "build:debug": "cd android && ./gradlew assembleDebug",
+    "build:release": "cd android && ./gradlew assembleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/app": "^6.0.3",
+    "@capacitor/cli": "^6.2.2",
+    "@capacitor/core": "^6.2.2",
+    "@capacitor/filesystem": "^6.0.4",
+    "@capacitor/share": "^6.0.4",
+    "@capacitor/status-bar": "^6.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  }
+}
