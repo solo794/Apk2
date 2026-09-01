@@ -309,7 +309,7 @@
       <div class="bar-track"><div class="bar-fill" id="flexBar" style="width:0%"></div></div>
     </div>
 
-    <div class="section-title">💳 أرصدة الحسابات</div>
+    <div class="section-title">💳 أرصدة الحسابات <span class="hint">مستقلة عن "معايا كام؟"</span></div>
     <div class="obl-list" id="accountsList"></div>
     <button class="btn btn-ghost" id="addMoveBtn" style="margin-top:8px;">+ تسجيل حركة (إيداع/سحب)</button>
 
@@ -332,6 +332,7 @@
       <input type="text" id="searchBox" placeholder="دور بالملاحظة...">
     </div>
     <div class="filter-scroll" id="filterChips"></div>
+    <div class="filter-scroll" id="expSortChips"></div>
     <div id="expList"></div>
     <button class="btn btn-ghost" id="exportCsv" style="margin-top:6px;">⬇️ تصدير مصاريف الشهر (CSV)</button>
   </div>
@@ -348,12 +349,14 @@
 
     <div class="section-title">🧾 كل العمليات</div>
     <div class="filter-scroll" id="allocFilterChips"></div>
+    <div class="filter-scroll" id="allocSortChips"></div>
     <div id="allocList"></div>
   </div>
 
   <div class="content" id="tab-obligations" style="display:none;">
     <div class="set-card">
-      <h3>🚗 التزامات ثابتة / أقساط / جمعيات</h3>
+      <h3>📋 التزامات ثابتة / أقساط / جمعيات</h3>
+      <div class="filter-scroll" id="itemsSortChips"></div>
       <div id="itemsEdit"></div>
       <button class="btn btn-ghost" id="addItemBtn" style="margin-top:10px;">+ إضافة بند جديد</button>
     </div>
@@ -374,6 +377,7 @@
     <button class="btn btn-ghost" id="addSchedBtn" style="margin-top:8px;">+ إضافة نقطة صيانة</button>
 
     <div class="section-title" style="margin-top:20px;">🧾 سجل الصيانة الفعلي</div>
+    <div class="filter-scroll" id="maintSortChips"></div>
     <div id="maintLog"></div>
   </div>
 
@@ -396,6 +400,7 @@
 
     <div class="set-card">
       <h3>📜 حركات الحسابات</h3>
+      <div class="filter-scroll" id="accountMoveSortChips"></div>
       <div id="accountMovesList"></div>
     </div>
 
@@ -482,7 +487,7 @@
     <button class="tabbtn active" data-tab="home"><span class="ic">🏠</span><span class="lb">الرئيسية</span></button>
     <button class="tabbtn" data-tab="expenses"><span class="ic">🧾</span><span class="lb">المصاريف</span></button>
     <button class="tabbtn" data-tab="allocations"><span class="ic">📦</span><span class="lb">التوزيعات</span></button>
-    <button class="tabbtn" data-tab="obligations"><span class="ic">🚗</span><span class="lb">الالتزامات</span></button>
+    <button class="tabbtn" data-tab="obligations"><span class="ic">📋</span><span class="lb">الالتزامات</span></button>
     <button class="tabbtn" data-tab="maintenance"><span class="ic">🔧</span><span class="lb">الصيانة</span></button>
     <button class="tabbtn" data-tab="settings"><span class="ic">⚙️</span><span class="lb">الإعدادات</span></button>
   </div>
@@ -579,6 +584,10 @@
     <div class="field">
       <label>التكلفة (ج)</label>
       <input type="number" id="maCost" placeholder="مثال: 5837">
+    </div>
+    <div class="field">
+      <label>المصدر (هيتخصم منين)</label>
+      <div class="chip-row" id="maintSourceChips"></div>
     </div>
     <div class="field">
       <label>اللي اتعمل</label>
@@ -711,6 +720,43 @@ let filterCat = "الكل";
 let allocFilterCat = "الكل";
 let searchTerm = "";
 let pendingSms = []; // candidate transactions detected from bank SMS — not persisted, reviewed each app open
+
+// ---------- sorting (shared across expenses / allocations / obligations / maintenance / account moves) ----------
+let expenseSortBy = "date_desc";
+let allocSortBy = "date_desc";
+let itemsSortBy = "newest";
+let maintSortBy = "date_desc";
+let accountMoveSortBy = "date_desc";
+
+const SORT_OPTIONS_DATE_AMOUNT = [
+  {k:"date_desc", l:"🔽 الأحدث"}, {k:"date_asc", l:"🔼 الأقدم"},
+  {k:"amount_desc", l:"💰 الأعلى مبلغ"}, {k:"amount_asc", l:"💰 الأقل مبلغ"},
+];
+const SORT_OPTIONS_ITEMS = [
+  {k:"newest", l:"🔽 الأحدث إضافة"}, {k:"name_asc", l:"🔤 الاسم (أ-ي)"},
+  {k:"amount_desc", l:"💰 الأعلى مبلغ"}, {k:"amount_asc", l:"💰 الأقل مبلغ"},
+];
+
+// sorts a copy of `list` by `opt`; dateField/amountField name the fields to compare (amount also
+// used as the id-freshness proxy for "newest" on lists that have no date, e.g. obligation items)
+function sortList(list, opt, dateField, amountField){
+  const arr = [...list];
+  if(opt==="date_desc") arr.sort((a,b)=> String(b[dateField]||"").localeCompare(String(a[dateField]||"")));
+  else if(opt==="date_asc") arr.sort((a,b)=> String(a[dateField]||"").localeCompare(String(b[dateField]||"")));
+  else if(opt==="amount_desc") arr.sort((a,b)=> Number(b[amountField]||0)-Number(a[amountField]||0));
+  else if(opt==="amount_asc") arr.sort((a,b)=> Number(a[amountField]||0)-Number(b[amountField]||0));
+  else if(opt==="name_asc") arr.sort((a,b)=> String(a.name||"").localeCompare(String(b.name||""),"ar"));
+  else if(opt==="newest") arr.reverse(); // insertion order kept ascending in state; newest-added = last pushed
+  return arr;
+}
+function renderSortChips(containerId, options, current, onChange){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML = options.map(o=>`<button class="fchip ${o.k===current?'sel':''}" data-k="${o.k}">${o.l}</button>`).join("");
+  el.querySelectorAll(".fchip").forEach(ch=>{
+    ch.onclick = ()=>onChange(ch.dataset.k);
+  });
+}
 
 function monthKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
 function monthLabelOf(key){ const [y,m] = key.split("-").map(Number); return MONTH_NAMES[m-1]+" "+y; }
@@ -956,6 +1002,21 @@ function computeMonth(monthKeyStr){
 
 function expensesForMonth(monthKeyStr){ return state.expenses.filter(e=>e.date.slice(0,7)===monthKeyStr); }
 
+// shared by every code path that can create an expense (the regular expense modal AND the
+// maintenance modal's "سجّلها كمان كمصروف") so a monthly category cap behaves identically no
+// matter which tab the expense came from
+function categoryMonthTotal(cat, mk, excludeId){
+  return state.expenses.filter(e=>e.cat===cat && e.date.slice(0,7)===mk && e.id!==excludeId).reduce((s,e)=>s+Number(e.amount),0);
+}
+function maybeNotifyCapExceeded(cat, mk, prevTotal){
+  const cap = Number(state.settings.caps[cat]||0);
+  if(cap<=0 || !state.settings.notif.capAlert.enabled) return;
+  const newTotal = categoryMonthTotal(cat, mk, null);
+  if(prevTotal<=cap && newTotal>cap){
+    notifyNow("تجاوزت حد "+cat, "صرفت "+fmt(newTotal)+" ج من حد "+fmt(cap)+" ج المخصص لفئة "+cat+" الشهر ده");
+  }
+}
+
 function render(){
   document.getElementById("monthLabel").textContent = monthLabelOf(curMonthKey);
   const m = computeMonth(curMonthKey);
@@ -1053,15 +1114,16 @@ function renderExpenses(){
   const el = document.getElementById("expList");
   document.getElementById("filterChips").innerHTML = ["الكل", ...CATS.map(c=>c.k)].map(c=>
     `<button class="fchip ${c===filterCat?'sel':''}" data-cat="${c}">${c}</button>`).join("");
-  document.querySelectorAll(".fchip").forEach(ch=>{
+  document.querySelectorAll("#filterChips .fchip").forEach(ch=>{
     ch.onclick = ()=>{ filterCat = ch.dataset.cat; render(); };
   });
+  renderSortChips("expSortChips", SORT_OPTIONS_DATE_AMOUNT, expenseSortBy, (k)=>{ expenseSortBy = k; render(); });
   document.getElementById("searchBox").value = searchTerm;
 
   let list = expensesForMonth(curMonthKey);
   if(filterCat!=="الكل") list = list.filter(e=>e.cat===filterCat);
   if(searchTerm.trim()) list = list.filter(e=>(e.note||"").includes(searchTerm.trim()));
-  list = list.sort((a,b)=>b.date.localeCompare(a.date));
+  list = sortList(list, expenseSortBy, "date", "amount");
 
   if(list.length===0){
     el.innerHTML = `<div class="empty-state"><div class="big">🧾</div><p>لسه مفيش مصاريف تطابق البحث.<br>دوس على زرار + وسجّل مصروف.</p></div>`;
@@ -1132,9 +1194,10 @@ function renderAllocations(){
   document.querySelectorAll("#allocFilterChips .fchip").forEach(ch=>{
     ch.onclick = ()=>{ allocFilterCat = ch.dataset.cat; renderAllocations(); };
   });
+  renderSortChips("allocSortChips", SORT_OPTIONS_DATE_AMOUNT, allocSortBy, (k)=>{ allocSortBy = k; renderAllocations(); });
   let list = [...state.allocations];
   if(allocFilterCat!=="الكل") list = list.filter(a=>a.cat===allocFilterCat);
-  list = list.sort((a,b)=>b.date.localeCompare(a.date));
+  list = sortList(list, allocSortBy, "date", "amount");
   const el = document.getElementById("allocList");
   if(list.length===0){
     el.innerHTML = `<div class="empty-state"><div class="big">🧾</div><p>مفيش عمليات تطابق الفلتر.</p></div>`;
@@ -1199,8 +1262,9 @@ function renderSettings(){
     };
   });
 
+  renderSortChips("itemsSortChips", SORT_OPTIONS_ITEMS, itemsSortBy, (k)=>{ itemsSortBy = k; render(); });
   const el = document.getElementById("itemsEdit");
-  el.innerHTML = state.items.map(it=>`
+  el.innerHTML = sortList(state.items, itemsSortBy, null, "amount").map(it=>`
     <div class="item-row-edit" data-id="${it.id}">
       <label class="switch"><input type="checkbox" class="itmToggle" ${it.active?"checked":""}><span class="slider"></span></label>
       <div class="ii"><div class="n"><input class="itmName" value="${it.name}"></div>
@@ -1273,8 +1337,9 @@ function renderMaintenance(){
     };
   });
 
+  renderSortChips("maintSortChips", SORT_OPTIONS_DATE_AMOUNT, maintSortBy, (k)=>{ maintSortBy = k; renderMaintenance(); });
   const logEl = document.getElementById("maintLog");
-  const log = [...state.maintenanceLog].sort((a,b)=>b.date.localeCompare(a.date));
+  const log = sortList(state.maintenanceLog, maintSortBy, "date", "cost");
   if(log.length===0){
     logEl.innerHTML = `<div class="empty-state"><div class="big">🔧</div><p>لسه مفيش صيانات مسجلة.<br>دوس + وسجّل أول صيانة.</p></div>`;
   } else {
@@ -1320,7 +1385,8 @@ function renderAccounts(){
 function renderAccountMoves(){
   const el = document.getElementById("accountMovesList");
   if(!el) return;
-  const list = [...state.accountMoves].sort((a,b)=>b.date.localeCompare(a.date));
+  renderSortChips("accountMoveSortChips", SORT_OPTIONS_DATE_AMOUNT, accountMoveSortBy, (k)=>{ accountMoveSortBy = k; renderAccountMoves(); });
+  const list = sortList(state.accountMoves, accountMoveSortBy, "date", "amount");
   if(list.length===0){
     el.innerHTML = `<div class="empty-state"><div class="big">📜</div><p>لسه مفيش حركات مسجلة على أي حساب.</p></div>`;
     return;
@@ -1401,9 +1467,10 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
     document.getElementById("tab-obligations").style.display = activeTab==="obligations" ? "block":"none";
     document.getElementById("tab-maintenance").style.display = activeTab==="maintenance" ? "block":"none";
     document.getElementById("tab-settings").style.display = activeTab==="settings" ? "block":"none";
-    document.getElementById("fabAdd").style.display = (activeTab==="settings"||activeTab==="obligations") ? "none":"flex";
+    document.getElementById("fabAdd").style.display = activeTab==="settings" ? "none":"flex";
     if(activeTab==="allocations") renderAllocations();
     if(activeTab==="maintenance") renderMaintenance();
+    window.scrollTo(0, 0); // always start each tab from the top, never keep the previous tab's scroll position
   };
 });
 
@@ -1466,10 +1533,12 @@ document.getElementById("addSourceBtn").onclick = async ()=>{
   await saveSettings(); render();
 };
 
-document.getElementById("addItemBtn").onclick = async ()=>{
+async function addNewObligationItem(){
   state.items.push({id:"c"+Date.now(), name:"بند جديد", amount:0, cat:"ثابت", endMonth:null, active:true});
   await saveItems(); render();
-};
+  showToast("اتضاف بند جديد — عدّل اسمه وقيمته تحت");
+}
+document.getElementById("addItemBtn").onclick = addNewObligationItem;
 
 document.getElementById("inOdometer").onchange = async (e)=>{
   state.car.odometer = Number(e.target.value)||0;
@@ -1604,6 +1673,7 @@ function openModal(existing){
 document.getElementById("fabAdd").onclick = ()=>{
   if(activeTab==="allocations") openAllocModal();
   else if(activeTab==="maintenance") openMaintModal();
+  else if(activeTab==="obligations") addNewObligationItem();
   else openModal(null);
 };
 document.getElementById("closeModal").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
@@ -1630,9 +1700,7 @@ document.getElementById("saveAdd").onclick = async ()=>{
   const wasEditing = !!editingExpenseId;
   const mk = date.slice(0,7);
   const cap = Number(state.settings.caps[selectedCat]||0);
-  const prevTotal = cap>0
-    ? state.expenses.filter(e=>e.cat===selectedCat && e.date.slice(0,7)===mk && e.id!==editingExpenseId).reduce((s,e)=>s+Number(e.amount),0)
-    : 0;
+  const prevTotal = cap>0 ? categoryMonthTotal(selectedCat, mk, editingExpenseId) : 0;
   if(editingExpenseId){
     const ex = state.expenses.find(e=>e.id===editingExpenseId);
     if(ex){ ex.amount=amt; ex.cat=selectedCat; ex.source=selectedSource; ex.note=note; ex.date=date; }
@@ -1643,12 +1711,7 @@ document.getElementById("saveAdd").onclick = async ()=>{
   modalBg.classList.remove("show");
   curMonthKey = mk;
   editingExpenseId = null;
-  if(cap>0 && state.settings.notif.capAlert.enabled){
-    const newTotal = state.expenses.filter(e=>e.cat===selectedCat && e.date.slice(0,7)===mk).reduce((s,e)=>s+Number(e.amount),0);
-    if(prevTotal<=cap && newTotal>cap){
-      notifyNow("تجاوزت حد "+selectedCat, "صرفت "+fmt(newTotal)+" ج من حد "+fmt(cap)+" ج المخصص لفئة "+selectedCat+" الشهر ده");
-    }
-  }
+  maybeNotifyCapExceeded(selectedCat, mk, prevTotal);
   render();
   showToast(wasEditing ? "اتحدّث المصروف ✅" : "اتسجل المصروف ✅");
 };
@@ -1685,6 +1748,7 @@ document.getElementById("saveAllocAdd").onclick = async ()=>{
 // maintenance modal (multi-select items — unlike the single-select chip rows elsewhere)
 const maintModalBg = document.getElementById("maintModalBg");
 let selectedMaintItems = [];
+let selectedMaintSource = null;
 function openMaintModal(){
   document.getElementById("maKm").value = state.car.odometer || "";
   document.getElementById("maCost").value = "";
@@ -1692,6 +1756,12 @@ function openMaintModal(){
   document.getElementById("maDate").value = new Date().toISOString().slice(0,10);
   document.getElementById("maLinkExpense").checked = true;
   selectedMaintItems = [];
+  selectedMaintSource = state.settings.sources[0] || null;
+  document.getElementById("maintSourceChips").innerHTML = state.settings.sources.map(s=>
+    `<button type="button" class="chip ${s===selectedMaintSource?'sel':''}" data-src="${s}">💳 ${s}</button>`).join("");
+  document.querySelectorAll("#maintSourceChips .chip").forEach(ch=>{
+    ch.onclick = ()=>{ selectedMaintSource = ch.dataset.src; document.querySelectorAll("#maintSourceChips .chip").forEach(c=>c.classList.toggle("sel", c===ch)); };
+  });
   document.getElementById("maintItemChips").innerHTML = MAINT_ITEMS.map(it=>
     `<button type="button" class="chip" data-item="${it}">${it}</button>`).join("");
   document.querySelectorAll("#maintItemChips .chip").forEach(ch=>{
@@ -1717,11 +1787,15 @@ document.getElementById("saveMaintAdd").onclick = async ()=>{
 
   const rec = { id:"mt"+Date.now(), km, cost, items:[...selectedMaintItems], note, date, linkedExpenseId:null };
   if(linkExpense){
+    const mk = date.slice(0,7);
+    const cap = Number(state.settings.caps["عربية"]||0);
+    const prevTotal = cap>0 ? categoryMonthTotal("عربية", mk, null) : 0;
     const expNote = "صيانة" + (selectedMaintItems.length ? ": "+selectedMaintItems.join("، ") : (note?": "+note:""));
-    const exp = { id:"e"+Date.now(), amount:cost, cat:"عربية", source: state.settings.sources[0]||"", note:expNote, date };
+    const exp = { id:"e"+Date.now(), amount:cost, cat:"عربية", source: selectedMaintSource||state.settings.sources[0]||"", note:expNote, date };
     state.expenses.push(exp);
     rec.linkedExpenseId = exp.id;
     await saveExpenses();
+    maybeNotifyCapExceeded("عربية", mk, prevTotal);
   }
   state.maintenanceLog.push(rec);
   await saveMaintLog();
