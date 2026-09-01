@@ -261,6 +261,19 @@
   .onboard-hero .emoji{font-size:40px;}
   .onboard-hero h2{font-size:19px; margin:10px 0 8px; color:var(--ink);}
   .onboard-hero p{font-size:12.5px; color:var(--ink-soft); line-height:1.8; margin:0;}
+
+  .sms-banner{margin:14px 16px 0; background:#fff; border:1.5px solid var(--gold); border-radius:16px; padding:12px 14px;}
+  .sms-banner .sb-title{font-size:12.5px; font-weight:800; color:var(--ink); margin-bottom:2px;}
+  .sms-item{border-top:1px solid var(--line); padding-top:10px; margin-top:10px;}
+  .sms-item:first-of-type{border-top:none; padding-top:0; margin-top:0;}
+  .sms-item .si-top{display:flex; justify-content:space-between; align-items:baseline;}
+  .sms-item .si-amt{font-size:15px; font-weight:800; color:var(--brick);}
+  .sms-item .si-src{font-size:11px; color:var(--ink-soft);}
+  .sms-item .si-body{font-size:11px; color:var(--ink-soft); margin:4px 0 8px; line-height:1.6;}
+  .sms-item .si-actions{display:flex; gap:8px;}
+  .sms-item .si-actions button{flex:1; padding:8px; border-radius:10px; border:none; font-family:'Cairo'; font-weight:700; font-size:12px; cursor:pointer;}
+  .sms-item .si-add{background:var(--teal); color:#fff;}
+  .sms-item .si-dismiss{background:var(--paper-dim); color:var(--ink);}
 </style>
 </head>
 <body>
@@ -281,6 +294,8 @@
       <div class="phase-chip" id="phaseChip">—</div>
     </div>
   </div>
+
+  <div id="pendingSmsWrap"></div>
 
   <div class="content" id="tab-home">
     <div class="section-title">🎯 مرونة الشهر ده</div>
@@ -378,6 +393,58 @@
     <div class="set-card">
       <h3>🎯 حدود شهرية للفئات (اختياري)</h3>
       <div id="capsEdit"></div>
+    </div>
+
+    <div class="set-card">
+      <h3>🚗 العربية</h3>
+      <div class="toggle-row">
+        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تتبع صيانة العربية (تبويب الصيانة)</span>
+        <label class="switch"><input type="checkbox" id="inHasCar"><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="set-card">
+      <h3>🔔 التذكيرات</h3>
+      <div class="toggle-row">
+        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تذكير يومي بتسجيل المصاريف</span>
+        <label class="switch"><input type="checkbox" id="notifDailyEnabled"><span class="slider"></span></label>
+      </div>
+      <div class="field" id="notifDailyTimeField" style="margin-top:2px;">
+        <input type="time" id="notifDailyTime">
+      </div>
+      <div class="toggle-row">
+        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تذكير أسبوعي بعمل نسخة احتياطية (كل اتنين الساعة 10ص)</span>
+        <label class="switch"><input type="checkbox" id="notifWeeklyEnabled"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تنبيه لما أتجاوز حد فئة مصروف</span>
+        <label class="switch"><input type="checkbox" id="notifCapEnabled"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row" id="notifMaintRow">
+        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تنبيه قرب موعد صيانة العربية</span>
+        <label class="switch"><input type="checkbox" id="notifMaintEnabled"><span class="slider"></span></label>
+      </div>
+      <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;">بعض الأجهزة بتأخر التذكيرات المجدولة بسبب إعدادات توفير البطارية — لو التذكير مش بيوصل، جرّب تستثني التطبيق من توفير البطارية من إعدادات الأندرويد.</p>
+    </div>
+
+    <div class="set-card">
+      <h3>🏦 كشف مصاريف من رسائل البنك (تجريبي)</h3>
+      <div class="toggle-row">
+        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تفعيل الكشف التلقائي</span>
+        <label class="switch"><input type="checkbox" id="smsAutoEnabled"><span class="slider"></span></label>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>البنوك المتابَعة (افصل بفاصلة)</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="bankSendersInput" placeholder="QNB,CIB" style="flex:1;">
+          <button class="btn btn-ghost" id="saveBankSendersBtn" style="width:auto; padding:10px 16px;">حفظ</button>
+        </div>
+      </div>
+      <p style="font-size:11px; color:var(--ink-soft); margin:10px 0 0; line-height:1.7;">
+        بيراقب رسائل SMS اللي جايه من البنوك دي بس، وبيقترح مصروف — مفيش حاجة بتتسجل تلقائيًا،
+        دايمًا بتراجع وتأكد (أو تتجاهل) من الكارت اللي بيظهر فوق أي تبويب. تحليل نص الرسالة أول
+        محاولة (مفيش عينات رسائل حقيقية من QNB/CIB اتجربت عليها)، فممكن يحتاج ضبط لو الصيغة مختلفة.
+      </p>
     </div>
 
     <div class="set-card">
@@ -542,6 +609,12 @@
     <div class="field"><label>رصيد كاش الطوارئ الحالي (اختياري)</label><input type="number" id="obEmergBal" placeholder="0"></div>
     <div class="field" style="margin-bottom:0;"><label>هدف كاش الطوارئ (اختياري)</label><input type="number" id="obEmergGoal" placeholder="0"></div>
   </div>
+  <div class="set-card">
+    <div class="toggle-row" style="border-bottom:none;">
+      <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">🚗 عندك عربية؟ (بيظهر تبويب صيانة)</span>
+      <label class="switch"><input type="checkbox" id="obHasCar" checked><span class="slider"></span></label>
+    </div>
+  </div>
   <button class="btn btn-primary" id="obStart" style="margin-top:16px;">يلا نبدأ 🚀</button>
   <button class="btn btn-ghost" id="obSkip" style="margin-top:10px;">هعبي البيانات بعدين</button>
 </div>
@@ -554,7 +627,18 @@ const CATS = [
   {k:"أولاد", i:"🧸"}, {k:"بيت", i:"🏠"}, {k:"تاني", i:"📦"}
 ];
 
-const DEFAULT_SETTINGS = { salary: 0, emergBal: 0, emergGoal: 0, caps: {}, sources: ["كاش","فيزا","بطاقة بنكية","فودافون كاش"], allocOverrides: {} };
+// factory (not a shared object literal) — settings has nested objects (notif, sources...) and
+// every {...defaultSettings()} spread needs its own fresh copies, not shared references that a
+// later mutation (e.g. toggling a reminder) could leak back into
+function defaultSettings(){
+  return {
+    salary: 0, emergBal: 0, emergGoal: 0, caps: {}, sources: ["كاش","فيزا","بطاقة بنكية","فودافون كاش"], allocOverrides: {},
+    hasCar: true,
+    notif: { daily:{enabled:false, time:"21:00"}, weeklyBackup:{enabled:false}, capAlert:{enabled:true}, maintDue:{enabled:true} },
+    smsAuto: { enabled:false },
+  };
+}
+const NOTIF_IDS = { daily: 1001, weeklyBackup: 1002 };
 const ALLOC_CATS = [
   {k:"طوارئ", i:"🛟"}, {k:"استثمار", i:"📈"}, {k:"مرونة", i:"🎯"}
 ];
@@ -574,7 +658,7 @@ const DEFAULT_MAINT_SCHEDULE = [
 ];
 const MAINT_ITEMS = ["زيت المحرك","فلتر الزيت","فلتر الهواء","فلتر البنزين","فلتر التكييف","تيار السير","صيانة عامة","تاني"];
 
-let state = { settings: {...DEFAULT_SETTINGS}, items: [...DEFAULT_ITEMS], expenses: [], allocations: [],
+let state = { settings: defaultSettings(), items: [...DEFAULT_ITEMS], expenses: [], allocations: [],
   car: {odometer:0, odometerDate:null}, maintenanceSchedule: [...DEFAULT_MAINT_SCHEDULE], maintenanceLog: [] };
 let curDate = new Date();
 let curMonthKey = monthKey(curDate);
@@ -586,6 +670,7 @@ let selectedAllocCat = ALLOC_CATS[0].k;
 let filterCat = "الكل";
 let allocFilterCat = "الكل";
 let searchTerm = "";
+let pendingSms = []; // candidate transactions detected from bank SMS — not persisted, reviewed each app open
 
 function monthKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
 function monthLabelOf(key){ const [y,m] = key.split("-").map(Number); return MONTH_NAMES[m-1]+" "+y; }
@@ -624,8 +709,126 @@ async function saveOrShareFile(filename, content, isBase64){
   URL.revokeObjectURL(url);
 }
 
+// ---------- local notifications & reminders ----------
+async function ensureNotifPermission(){
+  if(!isNativeApp()) return false;
+  try{
+    const { LocalNotifications } = window.Capacitor.Plugins;
+    let status = await LocalNotifications.checkPermissions();
+    if(status.display !== "granted") status = await LocalNotifications.requestPermissions();
+    return status.display === "granted";
+  }catch(e){ return false; }
+}
+// fire an immediate one-off notification (SMS alert, budget cap, maintenance due...)
+async function notifyNow(title, body){
+  if(!isNativeApp()) return;
+  if(!(await ensureNotifPermission())) return;
+  try{
+    const { LocalNotifications } = window.Capacitor.Plugins;
+    const id = Math.floor(Date.now() % 2147483647);
+    await LocalNotifications.schedule({ notifications:[{ id, title, body, schedule:{ at:new Date(Date.now()+300) } }] });
+  }catch(e){}
+}
+async function scheduleDailyReminder(time){
+  if(!isNativeApp()) return false;
+  if(!(await ensureNotifPermission())) return false;
+  try{
+    const [hour, minute] = (time||"21:00").split(":").map(Number);
+    const { LocalNotifications } = window.Capacitor.Plugins;
+    await LocalNotifications.cancel({ notifications:[{id:NOTIF_IDS.daily}] });
+    await LocalNotifications.schedule({ notifications:[{
+      id: NOTIF_IDS.daily, title:"متابعة مصاريفي", body:"متنساش تسجّل مصاريف النهاردة 🧾",
+      schedule:{ on:{hour, minute}, repeats:true, allowWhileIdle:true }
+    }]});
+    return true;
+  }catch(e){ return false; }
+}
+async function cancelDailyReminder(){
+  if(!isNativeApp()) return;
+  try{ const { LocalNotifications } = window.Capacitor.Plugins; await LocalNotifications.cancel({notifications:[{id:NOTIF_IDS.daily}]}); }catch(e){}
+}
+async function scheduleWeeklyBackupReminder(){
+  if(!isNativeApp()) return false;
+  if(!(await ensureNotifPermission())) return false;
+  try{
+    const { LocalNotifications } = window.Capacitor.Plugins;
+    await LocalNotifications.cancel({ notifications:[{id:NOTIF_IDS.weeklyBackup}] });
+    await LocalNotifications.schedule({ notifications:[{
+      id: NOTIF_IDS.weeklyBackup, title:"متابعة مصاريفي", body:"متنساش تاخد نسخة احتياطية من بياناتك 💾",
+      schedule:{ on:{weekday:2, hour:10, minute:0}, repeats:true, allowWhileIdle:true } // weekday 2 = Monday
+    }]});
+    return true;
+  }catch(e){ return false; }
+}
+async function cancelWeeklyBackupReminder(){
+  if(!isNativeApp()) return;
+  try{ const { LocalNotifications } = window.Capacitor.Plugins; await LocalNotifications.cancel({notifications:[{id:NOTIF_IDS.weeklyBackup}]}); }catch(e){}
+}
+// fires a one-off notification when the next scheduled service is within 500km — call after any odometer update
+function checkMaintDueNotify(){
+  if(!state.settings.hasCar || !state.settings.notif.maintDue.enabled) return;
+  const odometer = Number(state.car.odometer||0);
+  const next = [...state.maintenanceSchedule].sort((a,b)=>a.km-b.km).find(s=>s.km > odometer);
+  if(!next) return;
+  const remaining = next.km - odometer;
+  if(remaining <= 500){
+    notifyNow("صيانة العربية قربت 🔧", "باقيلك حوالي "+fmt(remaining)+" كم على صيانة "+fmt(next.km)+" كم (السعر المتوقع "+fmt(next.price)+" ج)");
+  }
+}
+
+// ---------- bank SMS auto-detect (best-effort — always requires user confirmation) ----------
+async function ensureSmsPermission(){
+  if(!isNativeApp()) return false;
+  try{
+    const { SmsReader } = window.Capacitor.Plugins;
+    const res = await SmsReader.requestSmsPermission();
+    return !!res.granted;
+  }catch(e){ return false; }
+}
+// Best-effort parser: no real QNB/CIB SMS samples were available while building this, so it
+// looks for common Egyptian-bank phrasing (EGP/جنيه amounts, debit/purchase keywords) and skips
+// anything that looks like an OTP or balance-inquiry message. It only ever produces a *candidate*
+// — the user always reviews/edits/confirms before anything becomes a real expense.
+// Returns null only for messages that are clearly NOT a transaction (OTP, pure balance inquiry) —
+// everything else from a recognized bank sender is still surfaced (amount:null when it can't be
+// extracted) so nothing silently vanishes; the user always reviews/edits before it becomes an expense.
+function parseBankSms(sender, body){
+  const text = (body||"").trim();
+  if(!text) return null;
+  if(/otp|رمز التحقق|كود التحقق|verification code/i.test(text)) return null;
+  if(/رصيدك الحالي|available balance|current balance/i.test(text) && !/(debit|خصم|purchase|شراء|دفع)/i.test(text)) return null;
+
+  const amountMatch = text.match(/(?:EGP|LE|ج\.م|جنيه)\s*[\d,]+(?:\.\d+)?|[\d,]+(?:\.\d+)?\s*(?:EGP|LE|ج\.م|جنيه)/i);
+  const amount = amountMatch ? Number(amountMatch[0].replace(/[^\d.]/g, "")) : null;
+
+  const isCredit = /credited|إيداع|تحويل وارد|received/i.test(text) && !/debit|خصم|purchase|شراء/i.test(text);
+
+  let merchant = "";
+  const atMatch = text.match(/(?:at|في|لدى)\s+([A-Za-z0-9؀-ۿ .\-]{2,30})/i);
+  if(atMatch) merchant = atMatch[1].trim();
+
+  return { sender, amount: (amount && amount>0) ? amount : null, isCredit, merchant, rawBody: text };
+}
+async function checkPendingSmsTransactions(){
+  if(!isNativeApp() || !state.settings.smsAuto.enabled) return;
+  try{
+    const { SmsReader } = window.Capacitor.Plugins;
+    const res = await SmsReader.getPendingTransactions();
+    const items = res.items || [];
+    if(items.length === 0) return;
+    await SmsReader.clearPendingTransactions();
+    items.forEach(it=>{
+      const parsed = parseBankSms(it.sender, it.body);
+      if(parsed && !parsed.isCredit){
+        pendingSms.push({ id:"sms"+Date.now()+Math.random().toString(36).slice(2,6), ...parsed, timestamp: it.timestamp });
+      }
+    });
+    render();
+  }catch(e){}
+}
+
 async function loadState(){
-  try{ const s = localStorage.getItem("settings"); if(s) state.settings = {...DEFAULT_SETTINGS, ...JSON.parse(s)}; }catch(e){}
+  try{ const s = localStorage.getItem("settings"); if(s) state.settings = {...defaultSettings(), ...JSON.parse(s)}; }catch(e){}
   try{ const it = localStorage.getItem("items"); if(it) state.items = JSON.parse(it); }catch(e){}
   try{ const ex = localStorage.getItem("expenses"); if(ex) state.expenses = JSON.parse(ex); }catch(e){}
   try{ const al = localStorage.getItem("allocations"); if(al) state.allocations = JSON.parse(al); }catch(e){}
@@ -647,6 +850,7 @@ function showOnboarding(){
   document.getElementById("obSalary").value = state.settings.salary || "";
   document.getElementById("obEmergBal").value = state.settings.emergBal || "";
   document.getElementById("obEmergGoal").value = state.settings.emergGoal || "";
+  document.getElementById("obHasCar").checked = state.settings.hasCar !== false;
   document.getElementById("onboardOverlay").classList.add("show");
 }
 function hideOnboarding(){
@@ -755,6 +959,8 @@ function render(){
   renderAllocations();
   renderMaintenance();
   renderSettings();
+  renderPendingSms();
+  updateTabsVisibility();
 }
 
 function oblRow(name, val){
@@ -899,6 +1105,18 @@ function renderSettings(){
   document.getElementById("inEmergBal").value = state.settings.emergBal;
   document.getElementById("inEmergGoal").value = state.settings.emergGoal;
 
+  document.getElementById("inHasCar").checked = !!state.settings.hasCar;
+  document.getElementById("notifMaintRow").style.display = state.settings.hasCar ? "" : "none";
+
+  document.getElementById("notifDailyEnabled").checked = state.settings.notif.daily.enabled;
+  document.getElementById("notifDailyTime").value = state.settings.notif.daily.time || "21:00";
+  document.getElementById("notifDailyTimeField").style.display = state.settings.notif.daily.enabled ? "" : "none";
+  document.getElementById("notifWeeklyEnabled").checked = state.settings.notif.weeklyBackup.enabled;
+  document.getElementById("notifCapEnabled").checked = state.settings.notif.capAlert.enabled;
+  document.getElementById("notifMaintEnabled").checked = state.settings.notif.maintDue.enabled;
+
+  document.getElementById("smsAutoEnabled").checked = state.settings.smsAuto.enabled;
+
   document.getElementById("sourcesEdit").innerHTML = state.settings.sources.map((s,idx)=>`
     <div class="cap-row"><span class="cl">💳 ${s}</span><button class="del-x" data-idx="${idx}">✕</button></div>
   `).join("");
@@ -1026,6 +1244,50 @@ function renderMaintenance(){
   }
 }
 
+function renderPendingSms(){
+  const wrap = document.getElementById("pendingSmsWrap");
+  if(!wrap) return;
+  if(pendingSms.length===0){ wrap.innerHTML = ""; return; }
+  wrap.innerHTML = `<div class="sms-banner">
+    <div class="sb-title">🏦 معاملات بنكية مكتشفة (${pendingSms.length}) — مراجعتك مطلوبة</div>
+    ${pendingSms.map(s=>`
+      <div class="sms-item" data-id="${s.id}">
+        <div class="si-top"><span class="si-amt">${s.amount!=null ? fmt(s.amount)+" ج" : "المبلغ مش واضح"}</span><span class="si-src">${s.sender}${s.merchant ? " · "+s.merchant : ""}</span></div>
+        <div class="si-body">${(s.rawBody||"").slice(0,140)}</div>
+        <div class="si-actions">
+          <button class="si-add" data-id="${s.id}">✅ ${s.amount!=null ? "إضافة كمصروف" : "افتح وسجّل يدوي"}</button>
+          <button class="si-dismiss" data-id="${s.id}">✖️ تجاهل</button>
+        </div>
+      </div>`).join("")}
+  </div>`;
+  wrap.querySelectorAll(".si-dismiss").forEach(btn=>{
+    btn.onclick = ()=>{ pendingSms = pendingSms.filter(s=>s.id!==btn.dataset.id); renderPendingSms(); };
+  });
+  wrap.querySelectorAll(".si-add").forEach(btn=>{
+    btn.onclick = ()=>{
+      const s = pendingSms.find(x=>x.id===btn.dataset.id);
+      if(!s) return;
+      pendingSms = pendingSms.filter(x=>x.id!==s.id);
+      renderPendingSms();
+      openModal(null);
+      if(s.amount!=null) document.getElementById("mAmount").value = s.amount;
+      document.getElementById("mNote").value = s.merchant || ("من "+s.sender);
+    };
+  });
+}
+
+// hides the "الصيانة" tab entirely for users who don't have a car
+function updateTabsVisibility(){
+  const btn = document.querySelector('.tabbtn[data-tab="maintenance"]');
+  if(!btn) return;
+  const show = !!state.settings.hasCar;
+  btn.style.display = show ? "" : "none";
+  if(!show && activeTab==="maintenance"){
+    activeTab = "home";
+    document.querySelector('.tabbtn[data-tab="home"]').click();
+  }
+}
+
 document.getElementById("prevMonth").onclick = ()=>{ const [y,m]=curMonthKey.split("-").map(Number); curMonthKey = monthKey(new Date(y,m-2,1)); render(); };
 document.getElementById("nextMonth").onclick = ()=>{ const [y,m]=curMonthKey.split("-").map(Number); curMonthKey = monthKey(new Date(y,m,1)); render(); };
 
@@ -1049,6 +1311,52 @@ document.getElementById("inSalary").onchange = async (e)=>{ state.settings.salar
 document.getElementById("inEmergBal").onchange = async (e)=>{ state.settings.emergBal = Number(e.target.value)||0; await saveSettings(); render(); };
 document.getElementById("inEmergGoal").onchange = async (e)=>{ state.settings.emergGoal = Number(e.target.value)||0; await saveSettings(); render(); };
 
+document.getElementById("inHasCar").onchange = async (e)=>{ state.settings.hasCar = e.target.checked; await saveSettings(); render(); };
+
+document.getElementById("notifDailyEnabled").onchange = async (e)=>{
+  state.settings.notif.daily.enabled = e.target.checked;
+  await saveSettings();
+  if(e.target.checked){
+    const ok = await scheduleDailyReminder(state.settings.notif.daily.time);
+    if(!ok){ state.settings.notif.daily.enabled = false; await saveSettings(); showToast("محتاجين إذن الإشعارات الأول"); }
+  } else { await cancelDailyReminder(); }
+  render();
+};
+document.getElementById("notifDailyTime").onchange = async (e)=>{
+  state.settings.notif.daily.time = e.target.value || "21:00";
+  await saveSettings();
+  if(state.settings.notif.daily.enabled) await scheduleDailyReminder(state.settings.notif.daily.time);
+};
+document.getElementById("notifWeeklyEnabled").onchange = async (e)=>{
+  state.settings.notif.weeklyBackup.enabled = e.target.checked;
+  await saveSettings();
+  if(e.target.checked){
+    const ok = await scheduleWeeklyBackupReminder();
+    if(!ok){ state.settings.notif.weeklyBackup.enabled = false; await saveSettings(); showToast("محتاجين إذن الإشعارات الأول"); }
+  } else { await cancelWeeklyBackupReminder(); }
+  render();
+};
+document.getElementById("notifCapEnabled").onchange = async (e)=>{ state.settings.notif.capAlert.enabled = e.target.checked; await saveSettings(); };
+document.getElementById("notifMaintEnabled").onchange = async (e)=>{ state.settings.notif.maintDue.enabled = e.target.checked; await saveSettings(); };
+
+document.getElementById("smsAutoEnabled").onchange = async (e)=>{
+  if(e.target.checked){
+    const granted = await ensureSmsPermission();
+    if(!granted){ e.target.checked = false; showToast("محتاجين إذن قراءة الرسائل عشان الميزة دي تشتغل"); return; }
+    await ensureNotifPermission(); // so the "معاملة بنكية جديدة" alert can actually show; SMS detection still works without it
+  }
+  state.settings.smsAuto.enabled = e.target.checked;
+  await saveSettings();
+  if(e.target.checked) checkPendingSmsTransactions();
+};
+document.getElementById("saveBankSendersBtn").onclick = async ()=>{
+  const value = document.getElementById("bankSendersInput").value.trim() || "QNB,CIB";
+  if(isNativeApp()){
+    try{ await window.Capacitor.Plugins.SmsReader.setBankSenders({ value }); }catch(e){}
+  }
+  showToast("اتحفظت البنوك المتابَعة ✅");
+};
+
 document.getElementById("addSourceBtn").onclick = async ()=>{
   const inp = document.getElementById("newSourceInput");
   const val = inp.value.trim();
@@ -1066,7 +1374,7 @@ document.getElementById("addItemBtn").onclick = async ()=>{
 document.getElementById("inOdometer").onchange = async (e)=>{
   state.car.odometer = Number(e.target.value)||0;
   state.car.odometerDate = new Date().toISOString().slice(0,10);
-  await saveCar(); renderMaintenance();
+  await saveCar(); renderMaintenance(); checkMaintDueNotify();
 };
 document.getElementById("addSchedBtn").onclick = async ()=>{
   state.maintenanceSchedule.push({km:0, price:0});
@@ -1077,6 +1385,7 @@ document.getElementById("obStart").onclick = async ()=>{
   state.settings.salary = Number(document.getElementById("obSalary").value)||0;
   state.settings.emergBal = Number(document.getElementById("obEmergBal").value)||0;
   state.settings.emergGoal = Number(document.getElementById("obEmergGoal").value)||0;
+  state.settings.hasCar = document.getElementById("obHasCar").checked;
   await saveSettings();
   hideOnboarding();
   render();
@@ -1097,7 +1406,7 @@ document.getElementById("importFile").onchange = async (e)=>{
     const text = await file.text();
     const data = JSON.parse(text);
     if(!confirm("هيتم استبدال كل البيانات الحالية بالنسخة المستوردة. متأكد؟")) return;
-    if(data.settings) state.settings = {...DEFAULT_SETTINGS, ...data.settings};
+    if(data.settings) state.settings = {...defaultSettings(), ...data.settings};
     if(data.items) state.items = data.items;
     if(data.expenses) state.expenses = data.expenses;
     if(data.allocations) state.allocations = data.allocations;
@@ -1117,10 +1426,12 @@ document.getElementById("importFile").onchange = async (e)=>{
 
 document.getElementById("resetBtn").onclick = async ()=>{
   if(!confirm("متأكد؟ هيتصفر كل حاجة (المصاريف، الالتزامات، الصيانة، الإعدادات) ويرجع التطبيق زي أول مرة تفتحه.")) return;
-  state = { settings:{...DEFAULT_SETTINGS, caps:{}}, items:[...DEFAULT_ITEMS], expenses:[], allocations:[],
+  state = { settings:{...defaultSettings(), caps:{}}, items:[...DEFAULT_ITEMS], expenses:[], allocations:[],
     car:{odometer:0, odometerDate:null}, maintenanceSchedule:[...DEFAULT_MAINT_SCHEDULE], maintenanceLog:[] };
   await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
   await saveCar(); await saveMaintSchedule(); await saveMaintLog();
+  await cancelDailyReminder(); await cancelWeeklyBackupReminder();
+  pendingSms = [];
   localStorage.removeItem("onboarded");
   render();
   showToast("اتصفرت البيانات");
@@ -1215,6 +1526,11 @@ document.getElementById("saveAdd").onclick = async ()=>{
   const date = document.getElementById("mDate").value || new Date().toISOString().slice(0,10);
   const note = document.getElementById("mNote").value.trim();
   const wasEditing = !!editingExpenseId;
+  const mk = date.slice(0,7);
+  const cap = Number(state.settings.caps[selectedCat]||0);
+  const prevTotal = cap>0
+    ? state.expenses.filter(e=>e.cat===selectedCat && e.date.slice(0,7)===mk && e.id!==editingExpenseId).reduce((s,e)=>s+Number(e.amount),0)
+    : 0;
   if(editingExpenseId){
     const ex = state.expenses.find(e=>e.id===editingExpenseId);
     if(ex){ ex.amount=amt; ex.cat=selectedCat; ex.source=selectedSource; ex.note=note; ex.date=date; }
@@ -1223,8 +1539,14 @@ document.getElementById("saveAdd").onclick = async ()=>{
   }
   await saveExpenses();
   modalBg.classList.remove("show");
-  curMonthKey = date.slice(0,7);
+  curMonthKey = mk;
   editingExpenseId = null;
+  if(cap>0 && state.settings.notif.capAlert.enabled){
+    const newTotal = state.expenses.filter(e=>e.cat===selectedCat && e.date.slice(0,7)===mk).reduce((s,e)=>s+Number(e.amount),0);
+    if(prevTotal<=cap && newTotal>cap){
+      notifyNow("تجاوزت حد "+selectedCat, "صرفت "+fmt(newTotal)+" ج من حد "+fmt(cap)+" ج المخصص لفئة "+selectedCat+" الشهر ده");
+    }
+  }
   render();
   showToast(wasEditing ? "اتحدّث المصروف ✅" : "اتسجل المصروف ✅");
 };
@@ -1309,6 +1631,7 @@ document.getElementById("saveMaintAdd").onclick = async ()=>{
   maintModalBg.classList.remove("show");
   curMonthKey = date.slice(0,7);
   render();
+  checkMaintDueNotify();
   showToast("اتسجلت الصيانة ✅");
 };
 
@@ -1371,12 +1694,21 @@ function setupNativeApp(){
     if(activeTab !== "home"){ document.querySelector('.tabbtn[data-tab="home"]').click(); return; }
     App.exitApp();
   });
+  // re-check for bank SMS every time the app comes back to the foreground
+  App.addListener("appStateChange", (s)=>{ if(s.isActive) checkPendingSmsTransactions(); });
+
+  const { SmsReader } = window.Capacitor.Plugins;
+  SmsReader.getBankSenders().then(res=>{
+    const el = document.getElementById("bankSendersInput");
+    if(el) el.value = res.value || "QNB,CIB";
+  }).catch(()=>{});
 }
 
 (async ()=>{
   await loadState();
   render();
   setupNativeApp();
+  checkPendingSmsTransactions();
   if(needsOnboarding()) showOnboarding();
 })();
 </script>
