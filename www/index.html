@@ -158,7 +158,7 @@
   .fchip.sel{background:var(--teal); color:#fff; border-color:var(--teal);}
 
   /* expenses list */
-  .exp-row{display:flex; align-items:center; gap:12px; background:#fff; border:1px solid var(--line); border-radius:16px; padding:12px 14px; margin-bottom:8px;}
+  .exp-row{display:flex; align-items:center; gap:12px; background:#fff; border:1px solid var(--line); border-radius:16px; padding:12px 14px; margin-bottom:8px; content-visibility:auto; contain-intrinsic-size:0 66px;}
   .exp-icon{width:38px;height:38px;border-radius:12px; background:var(--paper-dim); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;}
   .exp-mid{flex:1; min-width:0;}
   .exp-mid .cat{font-size:13.5px; font-weight:700; color:var(--ink);}
@@ -198,7 +198,7 @@
   input:checked + .slider{background:var(--teal);}
   input:checked + .slider:before{transform:translateX(-18px);}
 
-  .item-row-edit{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .item-row-edit{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); content-visibility:auto; contain-intrinsic-size:0 54px;}
   .item-row-edit:last-child{border-bottom:none;}
   .item-row-edit .ii{flex:1;}
   .item-row-edit .ii .n input{border:none;background:none;font-family:'Cairo';font-size:12.5px;font-weight:700;color:var(--ink);width:100%;padding:0;}
