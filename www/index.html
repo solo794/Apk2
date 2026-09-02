@@ -12,7 +12,10 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316302E'/%3E%3Ctext x='50' y='64' font-size='52' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316302E'/%3E%3Ctext x='50' y='64' font-size='52' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
 <link rel="manifest" href='data:application/manifest+json,{"name":"متابعة مصاريفي","short_name":"مصاريفي","start_url":".","display":"standalone","background_color":"%23F3EEDD","theme_color":"%2316302E"}'>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- xlsx-js-style: a drop-in SheetJS community fork that also supports cell styling (fills,
+     fonts, borders, number formats) — the plain "xlsx" package's free tier silently ignores all
+     of that, which is why the exported report used to come out as bare, unstyled Excel data. -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -2312,15 +2315,120 @@ function allExportMonths(){
   return [...set].sort();
 }
 
+// ---------- excel export styling (xlsx-js-style — see the CDN <script> comment in <head>) ----------
+// Brand palette, same hex values as the app's own CSS custom properties, so the exported report
+// reads as an extension of the app rather than a generic spreadsheet dump.
+const XL_COLOR = { teal:"1F6F6B", ink:"16302E", gold:"B8863B", sage:"4B7756", brick:"A8462E", stripe:"F3EEDD", border:"D9D0AE" };
+const XL_BORDER_SIDE = { style:"thin", color:{rgb:XL_COLOR.border} };
+const XL_BORDER = { top:XL_BORDER_SIDE, bottom:XL_BORDER_SIDE, left:XL_BORDER_SIDE, right:XL_BORDER_SIDE };
+
+// Applies the report's standard look to one worksheet: a bold teal header row (frozen, RTL to
+// match the app's Arabic content), thin borders + light zebra striping on the data rows,
+// centered alignment, and columns auto-sized to their content — instead of Excel's bare
+// unstyled default that json_to_sheet() produces on its own.
+function styleExportSheet(ws, rowCount, colCount){
+  for(let c=0;c<colCount;c++){
+    const addr = XLSX.utils.encode_cell({r:0,c});
+    if(!ws[addr]) ws[addr] = {t:"s", v:""};
+    ws[addr].s = {
+      font:{name:"Calibri", sz:11, bold:true, color:{rgb:"FFFFFF"}},
+      fill:{fgColor:{rgb:XL_COLOR.teal}},
+      alignment:{horizontal:"center", vertical:"center"},
+      border:XL_BORDER
+    };
+  }
+  for(let r=1;r<=rowCount;r++){
+    for(let c=0;c<colCount;c++){
+      const addr = XLSX.utils.encode_cell({r,c});
+      if(!ws[addr]) continue;
+      ws[addr].s = Object.assign({
+        font:{name:"Calibri", sz:10.5, color:{rgb:XL_COLOR.ink}},
+        alignment:{horizontal:"center", vertical:"center"},
+        border:XL_BORDER,
+        fill: (r%2===0) ? {fgColor:{rgb:XL_COLOR.stripe}} : undefined,
+      }, ws[addr].s); // any style already set on the cell (e.g. a status highlight) wins
+    }
+  }
+  const cols = [];
+  for(let c=0;c<colCount;c++){
+    let max = 10;
+    for(let r=0;r<=rowCount;r++){
+      const addr = XLSX.utils.encode_cell({r,c});
+      if(ws[addr] && ws[addr].v!=null){
+        const len = String(ws[addr].v).length;
+        if(len>max) max = len;
+      }
+    }
+    cols.push({wch: Math.min(max+3, 40)});
+  }
+  ws['!cols'] = cols;
+  // Deliberately not attempted here: a right-to-left sheet view and a frozen header row would
+  // both be nice, but this writer (checked directly against its bundled source) never emits
+  // <bookViews>/pane-split XML at all — setting either property is silently a no-op, not a
+  // partial effect, so it's left out rather than shipping dead configuration.
+}
+
+// Applies a thousands-separator number format to every numeric cell under a header whose text
+// matches headerTest (e.g. "مبلغ"/"قيمة"/"التكلفة"/"الرصيد" columns), so amounts read as "1,500"
+// instead of a bare unformatted "1500".
+function numberFormatColumns(ws, rowCount, colCount, headerTest){
+  for(let c=0;c<colCount;c++){
+    const headerAddr = XLSX.utils.encode_cell({r:0,c});
+    const headerVal = ws[headerAddr] ? String(ws[headerAddr].v) : "";
+    if(!headerTest(headerVal)) continue;
+    for(let r=1;r<=rowCount;r++){
+      const addr = XLSX.utils.encode_cell({r,c});
+      if(ws[addr] && typeof ws[addr].v === "number") ws[addr].z = "#,##0";
+    }
+  }
+}
+const XL_AMOUNT_HEADER = (h)=> /مبلغ|قيمة|التكلفة|الرصيد|كيلومتر/.test(h);
+
+// Builds one sheet the standard way: json_to_sheet -> number formatting -> optional per-row
+// highlight -> the shared teal/zebra/borders styling -> append to the workbook. Cuts the same
+// five-step boilerplate that would otherwise repeat for every one of the report's sheets.
+function addStyledSheet(wb, rows, placeholderRow, sheetName, highlightRowIf){
+  const data = rows.length ? rows : [placeholderRow];
+  const ws = XLSX.utils.json_to_sheet(data);
+  const colCount = Object.keys(data[0]).length;
+  const rowCount = data.length;
+  numberFormatColumns(ws, rowCount, colCount, XL_AMOUNT_HEADER);
+  if(rows.length && highlightRowIf){
+    rows.forEach((row,i)=>{
+      const hi = highlightRowIf(row);
+      if(hi) highlightRow(ws, i+1, colCount, hi.fill, hi.font);
+    });
+  }
+  styleExportSheet(ws, rowCount, colCount);
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+}
+
+// Tints every cell in a whole data row with a background/font color, overriding the default
+// zebra stripe for that row — used to make a specific row (a manually-corrected obligation
+// month, a withdrawal) stand out rather than blend into the rest of the table.
+function highlightRow(ws, r, colCount, fillRgb, fontRgb){
+  for(let c=0;c<colCount;c++){
+    const addr = XLSX.utils.encode_cell({r,c});
+    if(!ws[addr]) continue;
+    ws[addr].s = {
+      font:{name:"Calibri", sz:10.5, bold:!!fontRgb, color:{rgb:fontRgb||XL_COLOR.ink}},
+      alignment:{horizontal:"center", vertical:"center"},
+      border:XL_BORDER,
+      fill:{fgColor:{rgb:fillRgb}},
+    };
+  }
+}
+
 // excel export
 document.getElementById("exportExcel").onclick = async ()=>{
   if(typeof XLSX === "undefined"){ showToast("محتاج إنترنت لتحميل مكتبة الإكسيل أول مرة"); return; }
   const wb = XLSX.utils.book_new();
+  wb.Props = { Title:"تقرير مصاريفي الشامل", Author:"متابعة مصاريفي", CreatedDate:new Date() };
 
   const expRows = state.expenses.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>({
     التاريخ:e.date, الفئة:e.cat, المصدر:e.source||"", "المبلغ (ج)":e.amount, ملاحظة:e.note||""
   }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(expRows.length?expRows:[{التاريخ:"",الفئة:"",'المبلغ (ج)':"",ملاحظة:""}]), "المصاريف");
+  addStyledSheet(wb, expRows, {التاريخ:"",الفئة:"",'المبلغ (ج)':"",ملاحظة:""}, "المصاريف");
 
   // One row per item per month (its actual effective amount that month — the base value, or a
   // manual per-month correction if it has one) instead of a single flat "current config" row per
@@ -2336,32 +2444,35 @@ document.getElementById("exportExcel").onclick = async ()=>{
       });
     });
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(itemRows.length?itemRows:[{الشهر:"",البند:"","المبلغ (ج)":"",النوع:"","معدَّل لهذا الشهر؟":"",الحالة:""}]), "الالتزامات والأقساط");
+  addStyledSheet(wb, itemRows, {الشهر:"",البند:"","المبلغ (ج)":"",النوع:"","معدَّل لهذا الشهر؟":"",الحالة:""}, "الالتزامات والأقساط",
+    row => row["معدَّل لهذا الشهر؟"]==="نعم" ? {fill:"F7ECD9", font:XL_COLOR.gold} : null);
 
   const allocRows = state.allocations.sort((a,b)=>a.date.localeCompare(b.date)).map(a=>({
     التاريخ:a.date, البند:a.cat, "المبلغ (ج)":a.amount, ملاحظة:a.note||""
   }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(allocRows.length?allocRows:[{التاريخ:"",البند:"",'المبلغ (ج)':"",ملاحظة:""}]), "التوزيعات الفعلية");
+  addStyledSheet(wb, allocRows, {التاريخ:"",البند:"",'المبلغ (ج)':"",ملاحظة:""}, "التوزيعات الفعلية");
 
   const maintRows = state.maintenanceLog.sort((a,b)=>a.date.localeCompare(b.date)).map(m=>({
     التاريخ:m.date, الكيلومترات:m.km, "التكلفة (ج)":m.cost, "اللي اتعمل":(m.items||[]).join("، "), ملاحظة:m.note||""
   }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(maintRows.length?maintRows:[{التاريخ:"",الكيلومترات:"",'التكلفة (ج)':"",'اللي اتعمل':"",ملاحظة:""}]), "الصيانة");
+  addStyledSheet(wb, maintRows, {التاريخ:"",الكيلومترات:"",'التكلفة (ج)':"",'اللي اتعمل':"",ملاحظة:""}, "الصيانة");
 
   const moveRows = state.accountMoves.sort((a,b)=>a.date.localeCompare(b.date)).map(m=>({
     التاريخ:m.date, الحساب:m.source, النوع:m.type==="withdraw"?"سحب":"إيداع", "المبلغ (ج)":m.amount, ملاحظة:m.note||""
   }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(moveRows.length?moveRows:[{التاريخ:"",الحساب:"",النوع:"",'المبلغ (ج)':"",ملاحظة:""}]), "حركات الحسابات");
+  addStyledSheet(wb, moveRows, {التاريخ:"",الحساب:"",النوع:"",'المبلغ (ج)':"",ملاحظة:""}, "حركات الحسابات",
+    row => row["النوع"]==="سحب" ? {fill:"F5E3DE", font:XL_COLOR.brick}
+         : row["النوع"]==="إيداع" ? {fill:"E6EEE2", font:XL_COLOR.sage} : null);
 
   const accountBalanceRows = computeAllAccountBalances().map(b=>({الحساب:b.name, "الرصيد الحالي (ج)":b.balance}));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(accountBalanceRows.length?accountBalanceRows:[{الحساب:"", "الرصيد الحالي (ج)":""}]), "أرصدة الحسابات");
+  addStyledSheet(wb, accountBalanceRows, {الحساب:"", "الرصيد الحالي (ج)":""}, "أرصدة الحسابات");
 
   const summaryRows = [
     {البند:"المرتب", القيمة:state.settings.salary},
     {البند:"رصيد كاش الطوارئ الحالي", القيمة:state.settings.emergBal},
     {البند:"هدف كاش الطوارئ", القيمة:state.settings.emergGoal},
   ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), "ملخص الإعدادات");
+  addStyledSheet(wb, summaryRows, {البند:"",القيمة:""}, "ملخص الإعدادات");
 
   if(isNativeApp()){
     const b64 = XLSX.write(wb, {type:"base64", bookType:"xlsx"});
