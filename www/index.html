@@ -395,6 +395,11 @@
   <div class="content" id="tab-obligations" style="display:none;">
     <div class="set-card">
       <h3>📋 التزامات ثابتة / أقساط / جمعيات</h3>
+      <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;">
+        المبالغ تحت خاصة بالشهر المختار فوق (<span id="itemsMonthHint"></span>) بس — تعديل مبلغ بند وانت
+        شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط فيها مبلغ لبند جديد بتبقى قيمته
+        العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر اللي انت فيه بس.
+      </p>
       <div class="filter-scroll" id="itemsSortChips"></div>
       <div id="itemsEdit"></div>
       <button class="btn btn-ghost" id="addItemBtn" style="margin-top:10px;">+ إضافة بند جديد</button>
@@ -1207,12 +1212,22 @@ function hideOnboarding(){
   document.getElementById("onboardOverlay").classList.remove("show");
 }
 
+// Obligation items have one base "amount" (the normal recurring value) plus an optional
+// per-month override map, mirroring how settings.allocOverrides already isolates a single
+// month's emergency/invest/flex value from the rest. Editing an item while viewing a given
+// month only ever touches that month's override (see the itemsEdit wiring below), so a
+// correction made while browsing an old/other month can't silently change every other month —
+// that leak was the actual bug being fixed here.
+function itemAmountForMonth(it, monthKeyStr){
+  if(it.amountOverrides && it.amountOverrides[monthKeyStr]!==undefined) return Number(it.amountOverrides[monthKeyStr]);
+  return Number(it.amount||0);
+}
 function computeMonth(monthKeyStr){
   const active = state.items.filter(it=>it.active);
   const byCat = {"قسط":0,"ثابت":0,"جمعية":0};
   active.forEach(it=>{
     if(it.endMonth && monthKeyStr > it.endMonth) return;
-    byCat[it.cat] = (byCat[it.cat]||0) + Number(it.amount||0);
+    byCat[it.cat] = (byCat[it.cat]||0) + itemAmountForMonth(it, monthKeyStr);
   });
   const obligations = byCat["قسط"]+byCat["ثابت"]+byCat["جمعية"];
   let extraIncome = 0;
@@ -1525,22 +1540,51 @@ function renderSettings(){
     };
   });
 
+  document.getElementById("itemsMonthHint").textContent = monthLabelOf(curMonthKey);
   renderSortChips("itemsSortChips", SORT_OPTIONS_ITEMS, itemsSortBy, (k)=>{ itemsSortBy = k; render(); });
   const el = document.getElementById("itemsEdit");
-  const sortedItems = sortList(state.items, itemsSortBy, null, "amount");
-  el.innerHTML = collapseSlice(sortedItems, "items").map(it=>`
+  // sort by each item's *effective amount for the month being viewed*, not its static base
+  // value, so "highest/lowest amount" matches what's actually shown below
+  const itemsWithEffAmount = state.items.map(it=>({...it, _effAmount: itemAmountForMonth(it, curMonthKey)}));
+  const sortedItems = sortList(itemsWithEffAmount, itemsSortBy, null, "_effAmount");
+  el.innerHTML = collapseSlice(sortedItems, "items").map(it=>{
+    const overridden = it.amountOverrides && it.amountOverrides[curMonthKey]!==undefined;
+    return `
     <div class="item-row-edit" data-id="${it.id}">
       <label class="switch"><input type="checkbox" class="itmToggle" ${it.active?"checked":""}><span class="slider"></span></label>
       <div class="ii"><div class="n"><input class="itmName" value="${it.name}"></div>
-        <div class="m">${it.cat}${it.endMonth ? " · لحد "+monthLabelOf(it.endMonth) : ""}</div></div>
-      <input type="number" class="amt-in itmAmount" value="${it.amount}">
+        <div class="m">${it.cat}${it.endMonth ? " · لحد "+monthLabelOf(it.endMonth) : ""}${overridden ? ` · ✏️ مبلغ ${monthLabelOf(curMonthKey)} بس <span class="itmResetOverride" style="text-decoration:underline; cursor:pointer;">(رجّع للافتراضي: ${fmt(it.amount)})</span>` : ""}</div></div>
+      <input type="number" class="amt-in itmAmount" value="${itemAmountForMonth(it, curMonthKey)}">
       <button class="del-x">✕</button>
-    </div>`).join("");
+    </div>`;
+  }).join("");
   el.querySelectorAll(".item-row-edit").forEach(row=>{
     const id = row.dataset.id;
     row.querySelector(".itmToggle").onchange = async (e)=>{ state.items.find(x=>x.id===id).active = e.target.checked; await saveItems(); render(); };
     row.querySelector(".itmName").onchange = async (e)=>{ state.items.find(x=>x.id===id).name = e.target.value; await saveItems(); render(); };
-    row.querySelector(".itmAmount").onchange = async (e)=>{ state.items.find(x=>x.id===id).amount = Number(e.target.value)||0; await saveItems(); render(); };
+    row.querySelector(".itmAmount").onchange = async (e)=>{
+      const item = state.items.find(x=>x.id===id);
+      const val = Number(e.target.value)||0;
+      const neverSet = Number(item.amount||0)===0 && (!item.amountOverrides || Object.keys(item.amountOverrides).length===0);
+      if(neverSet){
+        // brand-new item (still at its 0 placeholder, never edited before) — this first value
+        // becomes its normal recurring amount for every month, same as before this feature.
+        item.amount = val;
+      } else {
+        // an established item — isolate the edit to the month currently being viewed, instead
+        // of silently changing every other month too (this was the reported bug).
+        item.amountOverrides = item.amountOverrides || {};
+        item.amountOverrides[curMonthKey] = val;
+      }
+      await saveItems(); render();
+    };
+    const resetLink = row.querySelector(".itmResetOverride");
+    if(resetLink) resetLink.onclick = async (ev)=>{
+      ev.stopPropagation();
+      const item = state.items.find(x=>x.id===id);
+      if(item.amountOverrides) delete item.amountOverrides[curMonthKey];
+      await saveItems(); render();
+    };
     row.querySelector(".del-x").onclick = async ()=>{ state.items = state.items.filter(x=>x.id!==id); await saveItems(); render(); showToast("اتمسح البند"); };
   });
   appendCollapseToggle(el, "items", sortedItems.length, render);
@@ -1898,7 +1942,7 @@ document.getElementById("addCatBtn").onclick = async ()=>{
 };
 
 async function addNewObligationItem(){
-  state.items.push({id:"c"+Date.now(), name:"بند جديد", amount:0, cat:"ثابت", endMonth:null, active:true});
+  state.items.push({id:"c"+Date.now(), name:"بند جديد", amount:0, cat:"ثابت", endMonth:null, active:true, amountOverrides:{}});
   await saveItems(); render();
   showToast("اتضاف بند جديد — عدّل اسمه وقيمته تحت");
 }
@@ -2255,6 +2299,19 @@ document.getElementById("saveAccountAdd").onclick = async ()=>{
   showToast("اتسجلت الحركة ✅");
 };
 
+// Every month that has any recorded activity anywhere in the app (plus the month currently
+// being viewed, and any month an obligation item was specifically corrected for), used to break
+// the obligations export out month-by-month instead of a single flat "current config" listing.
+function allExportMonths(){
+  const set = new Set([curMonthKey]);
+  state.expenses.forEach(e=>set.add(e.date.slice(0,7)));
+  state.allocations.forEach(a=>set.add(a.date.slice(0,7)));
+  state.accountMoves.forEach(m=>set.add(m.date.slice(0,7)));
+  state.maintenanceLog.forEach(m=>set.add(m.date.slice(0,7)));
+  state.items.forEach(it=>{ if(it.amountOverrides) Object.keys(it.amountOverrides).forEach(mk=>set.add(mk)); });
+  return [...set].sort();
+}
+
 // excel export
 document.getElementById("exportExcel").onclick = async ()=>{
   if(typeof XLSX === "undefined"){ showToast("محتاج إنترنت لتحميل مكتبة الإكسيل أول مرة"); return; }
@@ -2265,11 +2322,21 @@ document.getElementById("exportExcel").onclick = async ()=>{
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(expRows.length?expRows:[{التاريخ:"",الفئة:"",'المبلغ (ج)':"",ملاحظة:""}]), "المصاريف");
 
-  const itemRows = state.items.map(it=>({
-    البند:it.name, "المبلغ الشهري":it.amount, النوع:it.cat,
-    "تاريخ النهاية":it.endMonth||"مستمر", الحالة:it.active?"مفعّل":"موقوف"
-  }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(itemRows), "الالتزامات والأقساط");
+  // One row per item per month (its actual effective amount that month — the base value, or a
+  // manual per-month correction if it has one) instead of a single flat "current config" row per
+  // item, so each month's obligations total can be checked/reconciled independently in the sheet.
+  const itemRows = [];
+  allExportMonths().forEach(mk=>{
+    state.items.forEach(it=>{
+      if(it.endMonth && mk > it.endMonth) return;
+      itemRows.push({
+        الشهر:monthLabelOf(mk), البند:it.name, "المبلغ (ج)":itemAmountForMonth(it, mk), النوع:it.cat,
+        "معدَّل لهذا الشهر؟": (it.amountOverrides && it.amountOverrides[mk]!==undefined) ? "نعم" : "لا",
+        الحالة:it.active?"مفعّل":"موقوف"
+      });
+    });
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(itemRows.length?itemRows:[{الشهر:"",البند:"","المبلغ (ج)":"",النوع:"","معدَّل لهذا الشهر؟":"",الحالة:""}]), "الالتزامات والأقساط");
 
   const allocRows = state.allocations.sort((a,b)=>a.date.localeCompare(b.date)).map(a=>({
     التاريخ:a.date, البند:a.cat, "المبلغ (ج)":a.amount, ملاحظة:a.note||""
