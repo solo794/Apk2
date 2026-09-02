@@ -12,6 +12,8 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // Custom plugins must be registered before super.onCreate() builds the bridge.
         registerPlugin(SmsReaderPlugin.class);
+        registerPlugin(BiometricAuthPlugin.class);
+        registerPlugin(GoogleAuthPlugin.class);
         super.onCreate(savedInstanceState);
         requestHighestRefreshRate();
     }

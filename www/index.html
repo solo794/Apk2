@@ -282,6 +282,16 @@
   .onboard-hero h2{font-size:19px; margin:10px 0 8px; color:var(--ink);}
   .onboard-hero p{font-size:12.5px; color:var(--ink-soft); line-height:1.8; margin:0;}
 
+  .lock-overlay{
+    position:fixed; inset:0; z-index:99; background:linear-gradient(160deg,var(--teal-dark),var(--ink) 80%);
+    display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    padding:24px; text-align:center; color:var(--paper);
+  }
+  .lock-overlay.show{display:flex;}
+  .lock-overlay .lock-icon{font-size:56px;}
+  .lock-overlay h2{font-size:18px; margin:0; font-weight:700;}
+  .lock-overlay p{font-size:13px; color:rgba(243,238,221,.75); margin:0; max-width:260px; line-height:1.7;}
+
   .sms-banner{margin:14px 16px 0; background:#fff; border:1.5px solid var(--gold); border-radius:16px; padding:12px 14px;}
   .sms-banner .sb-title{font-size:12.5px; font-weight:800; color:var(--ink); margin-bottom:2px;}
   .sms-item{border-top:1px solid var(--line); padding-top:10px; margin-top:10px;}
@@ -392,6 +402,9 @@
   </div>
 
   <div class="content" id="tab-maintenance" style="display:none;">
+    <div class="section-title">⛽ مصاريف العربية الشهر ده <span class="hint">بنزين، جراج، صيانة... كل حاجة فئة عربية</span></div>
+    <div class="flex-card" id="carBudgetCard"></div>
+
     <div class="set-card">
       <h3>🚗 كيلومترات العربية الحالية</h3>
       <div class="field"><label>الكيلومترات الحالية (KM)</label><input type="number" id="inOdometer" placeholder="مثال: 15000"></div>
@@ -411,6 +424,15 @@
   </div>
 
   <div class="content" id="tab-settings" style="display:none;">
+    <div class="set-card">
+      <h3>🔒 الحماية</h3>
+      <div class="toggle-row" style="border-bottom:none;">
+        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">قفل بالبصمة قبل كل دخول</span>
+        <label class="switch"><input type="checkbox" id="biometricLockEnabled"><span class="slider"></span></label>
+      </div>
+      <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;">لو مفعّلة، هتحتاج بصمتك أو رمز قفل شاشة موبايلك كل ما تفتح التطبيق أو ترجعله من الخلفية. محتاج جهازك يكون فيه بصمة/وجه/قفل شاشة متفعّل الأول.</p>
+    </div>
+
     <div class="set-card">
       <h3>💵 الدخل والطوارئ</h3>
       <div class="field"><label>المرتب الشهري</label><input type="number" id="inSalary"></div>
@@ -487,6 +509,16 @@
         بيراقب رسائل SMS اللي جايه من البنوك دي بس، وبيقترح مصروف — مفيش حاجة بتتسجل تلقائيًا،
         دايمًا بتراجع وتأكد (أو تتجاهل) من الكارت اللي بيظهر فوق أي تبويب. تحليل نص الرسالة أول
         محاولة (مفيش عينات رسائل حقيقية من QNB/CIB اتجربت عليها)، فممكن يحتاج ضبط لو الصيغة مختلفة.
+      </p>
+    </div>
+
+    <div class="set-card">
+      <h3>☁️ حساب جوجل (نسخة احتياطية سحابية)</h3>
+      <div id="googleAccountArea"></div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-top:10px; line-height:1.7;">
+        بيرفع/يرجّع نفس ملف النسخة الاحتياطية (JSON) من مساحة خاصة بالتطبيق جوه Google Drive بتاعك —
+        مش هتشوفها في Drive العادي، ومحدش غير التطبيق نفسه يقدر يوصلها. محتاجة إعداد لمرة واحدة على
+        Google Cloud Console الأول (التفاصيل في README).
       </p>
     </div>
 
@@ -674,6 +706,13 @@
 
 <div class="toast" id="toast"></div>
 
+<div class="lock-overlay" id="lockOverlay">
+  <div class="lock-icon">🔒</div>
+  <h2>متابعة مصاريفي مقفولة</h2>
+  <p>افتحها ببصمتك أو رمز قفل موبايلك عشان بياناتك المالية تفضل سرية.</p>
+  <button class="btn btn-primary" id="lockRetryBtn" style="width:auto; min-width:180px; padding:12px 24px;">🔓 افتح دلوقتي</button>
+</div>
+
 <div class="onboard-overlay" id="onboardOverlay">
   <div class="onboard-hero">
     <div class="emoji">👋</div>
@@ -698,6 +737,19 @@
 </div>
 
 <script>
+// Runs synchronously, before anything else (including render()), so the lock overlay is already
+// covering the screen on the very first paint — no flash of real numbers before we know whether
+// this device even needs to authenticate.
+(function earlyLockCheck(){
+  try{
+    const raw = localStorage.getItem("settings");
+    const s = raw ? JSON.parse(raw) : null;
+    if(s && s.biometricLock && s.biometricLock.enabled){
+      document.getElementById("lockOverlay").classList.add("show");
+    }
+  }catch(e){}
+})();
+
 const MONTH_NAMES = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 const CATS = [
   {k:"أكل", i:"🍔"}, {k:"مواصلات", i:"🚕"}, {k:"عربية", i:"🚗"},
@@ -714,6 +766,7 @@ function defaultSettings(){
     hasCar: true,
     notif: { daily:{enabled:false, time:"21:00"}, weeklyBackup:{enabled:false}, capAlert:{enabled:true}, maintDue:{enabled:true} },
     smsAuto: { enabled:false },
+    biometricLock: { enabled:false },
   };
 }
 const NOTIF_IDS = { daily: 1001, weeklyBackup: 1002 };
@@ -785,6 +838,24 @@ function renderSortChips(containerId, options, current, onChange){
   el.querySelectorAll(".fchip").forEach(ch=>{
     ch.onclick = ()=>onChange(ch.dataset.k);
   });
+}
+
+// ---------- collapsible long lists (expenses / allocations / obligations / maintenance / account moves) ----------
+const LIST_COLLAPSE_THRESHOLD = 8;
+let listExpanded = { expenses:false, allocations:false, items:false, maintenance:false, accountMoves:false };
+// returns the slice to actually render; call appendCollapseToggle() after inserting that HTML
+function collapseSlice(list, key){
+  if(listExpanded[key] || list.length <= LIST_COLLAPSE_THRESHOLD) return list;
+  return list.slice(0, LIST_COLLAPSE_THRESHOLD);
+}
+function appendCollapseToggle(container, key, totalCount, onToggle){
+  if(totalCount <= LIST_COLLAPSE_THRESHOLD) return;
+  const btn = document.createElement("button");
+  btn.className = "btn btn-ghost";
+  btn.style.marginTop = "8px";
+  btn.textContent = listExpanded[key] ? "▲ اطوِ القايمة" : `▼ عرض الكل (${totalCount})`;
+  btn.onclick = ()=>{ listExpanded[key] = !listExpanded[key]; onToggle(); };
+  container.appendChild(btn);
 }
 
 function monthKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
@@ -940,6 +1011,106 @@ async function checkPendingSmsTransactions(){
     });
     render();
   }catch(e){}
+}
+
+// ---------- Google Sign-In + Drive backup (appDataFolder — a hidden per-app space, not the user's regular Drive) ----------
+let googleAccount = null; // {email, name, photoUrl} — not persisted; re-read from GoogleAuth.getCurrentAccount() on launch
+const DRIVE_BACKUP_FILENAME = "masarifi-backup.json";
+
+async function driveAccessToken(){
+  const { GoogleAuth } = window.Capacitor.Plugins;
+  const res = await GoogleAuth.getAccessToken();
+  return res.token;
+}
+async function driveFindBackupFileId(token){
+  const url = "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=" +
+    encodeURIComponent(`name='${DRIVE_BACKUP_FILENAME}'`) + "&fields=" + encodeURIComponent("files(id)");
+  const res = await fetch(url, { headers: { Authorization: "Bearer "+token } });
+  if(!res.ok) throw new Error("drive list failed: "+res.status);
+  const data = await res.json();
+  return (data.files && data.files[0]) ? data.files[0].id : null;
+}
+async function driveUploadBackup(){
+  const token = await driveAccessToken();
+  const existingId = await driveFindBackupFileId(token);
+  const metadata = { name: DRIVE_BACKUP_FILENAME, mimeType: "application/json" };
+  if(!existingId) metadata.parents = ["appDataFolder"];
+  const boundary = "-------masarifi"+Date.now();
+  const body =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`+
+    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(buildBackupPayload(),null,2)}\r\n--${boundary}--`;
+  const url = existingId
+    ? `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart`
+    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+  const res = await fetch(url, {
+    method: existingId ? "PATCH" : "POST",
+    headers: { Authorization: "Bearer "+token, "Content-Type": `multipart/related; boundary=${boundary}` },
+    body,
+  });
+  if(!res.ok) throw new Error("drive upload failed: "+res.status);
+}
+async function driveRestoreBackup(){
+  const token = await driveAccessToken();
+  const fileId = await driveFindBackupFileId(token);
+  if(!fileId) throw new Error("no backup found on Drive");
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    headers: { Authorization: "Bearer "+token },
+  });
+  if(!res.ok) throw new Error("drive download failed: "+res.status);
+  return await res.json();
+}
+
+function renderGoogleAccountCard(){
+  const el = document.getElementById("googleAccountArea");
+  if(!el) return;
+  if(!isNativeApp()){
+    el.innerHTML = `<p style="font-size:12px;color:var(--ink-soft);">شغالة بس جوه تطبيق الموبايل.</p>`;
+    return;
+  }
+  if(googleAccount){
+    el.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        ${googleAccount.photoUrl ? `<img src="${googleAccount.photoUrl}" style="width:36px;height:36px;border-radius:50%;">` : ""}
+        <div><div style="font-size:13px;font-weight:700;color:var(--ink);">${googleAccount.name||""}</div><div style="font-size:11px;color:var(--ink-soft);">${googleAccount.email||""}</div></div>
+      </div>
+      <button class="btn btn-primary" id="googleBackupNowBtn" style="margin-bottom:8px;">☁️ ارفع نسخة دلوقتي</button>
+      <button class="btn btn-ghost" id="googleRestoreBtn" style="margin-bottom:8px;">⬇️ استرجع من Drive</button>
+      <button class="btn btn-ghost" id="googleSignOutBtn">تسجيل خروج</button>`;
+    document.getElementById("googleBackupNowBtn").onclick = async ()=>{
+      showToast("بيترفع...");
+      try{ await driveUploadBackup(); showToast("اترفعت النسخة على Google Drive ✅"); }
+      catch(e){ showToast("تعذّر الرفع، جرب تاني"); }
+    };
+    document.getElementById("googleRestoreBtn").onclick = async ()=>{
+      if(!confirm("هيتم استبدال كل البيانات الحالية بالنسخة اللي على Drive. متأكد؟")) return;
+      try{
+        const data = await driveRestoreBackup();
+        await applyBackupData(data);
+        showToast("اترجعت البيانات من Google Drive ✅");
+      }catch(e){ showToast("مفيش نسخة محفوظة على Drive، أو حصل خطأ"); }
+    };
+    document.getElementById("googleSignOutBtn").onclick = async ()=>{
+      try{ await window.Capacitor.Plugins.GoogleAuth.signOut(); }catch(e){}
+      googleAccount = null;
+      renderGoogleAccountCard();
+      showToast("اتسجل خروج من جوجل");
+    };
+  } else {
+    el.innerHTML = `<button class="btn btn-primary" id="googleSignInBtn">تسجيل الدخول بجوجل</button>`;
+    document.getElementById("googleSignInBtn").onclick = async ()=>{
+      try{
+        const { GoogleAuth } = window.Capacitor.Plugins;
+        const res = await GoogleAuth.signIn();
+        if(res.success){
+          googleAccount = { email: res.email, name: res.name, photoUrl: res.photoUrl };
+          renderGoogleAccountCard();
+          showToast("سجّلت دخول بجوجل ✅");
+        } else {
+          showToast("اتلغى تسجيل الدخول");
+        }
+      }catch(e){ showToast("تعذّر تسجيل الدخول بجوجل — راجع إعداد Google Cloud Console (README)"); }
+    };
+  }
 }
 
 async function loadState(){
@@ -1105,6 +1276,7 @@ function render(){
   renderExpenses();
   renderAllocations();
   renderMaintenance();
+  renderCarBudget();
   renderAccounts();
   renderAccountMoves();
   renderSettings();
@@ -1158,7 +1330,8 @@ function renderExpenses(){
     el.innerHTML = `<div class="empty-state"><div class="big">🧾</div><p>لسه مفيش مصاريف تطابق البحث.<br>دوس على زرار + وسجّل مصروف.</p></div>`;
     return;
   }
-  el.innerHTML = list.map(e=>{
+  const fullCount = list.length;
+  el.innerHTML = collapseSlice(list, "expenses").map(e=>{
     const cat = CATS.find(c=>c.k===e.cat) || {i:"📦"};
     const d = new Date(e.date);
     const dateStr = d.getDate()+" "+MONTH_NAMES[d.getMonth()].slice(0,3);
@@ -1170,6 +1343,7 @@ function renderExpenses(){
       <button class="exp-del" data-id="${e.id}">🗑</button>
     </div>`;
   }).join("");
+  appendCollapseToggle(el, "expenses", fullCount, renderExpenses);
   el.querySelectorAll(".exp-edit").forEach(btn=>{
     btn.onclick = ()=>{
       const ex = state.expenses.find(e=>e.id===btn.dataset.id);
@@ -1231,7 +1405,8 @@ function renderAllocations(){
   if(list.length===0){
     el.innerHTML = `<div class="empty-state"><div class="big">🧾</div><p>مفيش عمليات تطابق الفلتر.</p></div>`;
   } else {
-    el.innerHTML = list.map(a=>{
+    const fullCount = list.length;
+    el.innerHTML = collapseSlice(list, "allocations").map(a=>{
       const c = ALLOC_CATS.find(x=>x.k===a.cat) || {i:"📦"};
       const d = new Date(a.date);
       const dateStr = d.getDate()+" "+MONTH_NAMES[d.getMonth()].slice(0,3)+" "+d.getFullYear();
@@ -1248,10 +1423,13 @@ function renderAllocations(){
         await saveAllocations(); render(); showToast("اتمسحت العملية");
       };
     });
+    appendCollapseToggle(el, "allocations", fullCount, renderAllocations);
   }
 }
 
 function renderSettings(){
+  renderGoogleAccountCard();
+  document.getElementById("biometricLockEnabled").checked = state.settings.biometricLock.enabled;
   document.getElementById("inSalary").value = state.settings.salary;
   document.getElementById("inEmergBal").value = state.settings.emergBal;
   document.getElementById("inEmergGoal").value = state.settings.emergGoal;
@@ -1293,7 +1471,8 @@ function renderSettings(){
 
   renderSortChips("itemsSortChips", SORT_OPTIONS_ITEMS, itemsSortBy, (k)=>{ itemsSortBy = k; render(); });
   const el = document.getElementById("itemsEdit");
-  el.innerHTML = sortList(state.items, itemsSortBy, null, "amount").map(it=>`
+  const sortedItems = sortList(state.items, itemsSortBy, null, "amount");
+  el.innerHTML = collapseSlice(sortedItems, "items").map(it=>`
     <div class="item-row-edit" data-id="${it.id}">
       <label class="switch"><input type="checkbox" class="itmToggle" ${it.active?"checked":""}><span class="slider"></span></label>
       <div class="ii"><div class="n"><input class="itmName" value="${it.name}"></div>
@@ -1308,6 +1487,38 @@ function renderSettings(){
     row.querySelector(".itmAmount").onchange = async (e)=>{ state.items.find(x=>x.id===id).amount = Number(e.target.value)||0; await saveItems(); render(); };
     row.querySelector(".del-x").onclick = async ()=>{ state.items = state.items.filter(x=>x.id!==id); await saveItems(); render(); showToast("اتمسح البند"); };
   });
+  appendCollapseToggle(el, "items", sortedItems.length, render);
+}
+
+// "عربية" category cap is the SAME field used in Settings > حدود شهرية للفئات and the cap-alert
+// notification — this card is just a more prominent, editable-in-place view of it, scoped to
+// ALL "عربية" expenses this month (fuel, garage, maintenance-linked ones included), not just
+// what was logged through the maintenance modal.
+function renderCarBudget(){
+  const el = document.getElementById("carBudgetCard");
+  if(!el) return;
+  const spent = categoryMonthTotal("عربية", curMonthKey, null);
+  const budget = Number(state.settings.caps["عربية"]||0);
+  const pct = budget>0 ? Math.min(100,(spent/budget)*100) : (spent>0?100:0);
+  const over = budget>0 && spent>budget;
+  el.innerHTML = `
+    <div class="flex-top">
+      <div><div class="t1">اتصرف من أصل</div><div class="t2">${fmt(spent)} ج</div></div>
+      <div style="text-align:left;"><div class="t3">${budget>0 ? "من "+fmt(budget)+" ج" : "مفيش ميزانية محددة"}</div></div>
+    </div>
+    <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${over ? "var(--brick)" : "var(--gold-soft)"}"></div></div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <input type="number" id="carBudgetInput" value="${budget||""}" placeholder="حدد ميزانية شهرية"
+        style="flex:1; border:1px solid rgba(255,255,255,.3); border-radius:8px; padding:9px 12px; background:rgba(255,255,255,.1); color:#fff; font-family:'Cairo'; font-size:13px;">
+      <button class="btn btn-ghost" id="saveCarBudgetBtn" style="width:auto; padding:9px 16px; flex-shrink:0;">حفظ</button>
+    </div>`;
+  document.getElementById("saveCarBudgetBtn").onclick = async ()=>{
+    const v = Number(document.getElementById("carBudgetInput").value)||0;
+    if(v>0) state.settings.caps["عربية"] = v; else delete state.settings.caps["عربية"];
+    await saveSettings();
+    render();
+    showToast("اتحفظت ميزانية العربية ✅");
+  };
 }
 
 function renderMaintenance(){
@@ -1372,7 +1583,7 @@ function renderMaintenance(){
   if(log.length===0){
     logEl.innerHTML = `<div class="empty-state"><div class="big">🔧</div><p>لسه مفيش صيانات مسجلة.<br>دوس + وسجّل أول صيانة.</p></div>`;
   } else {
-    logEl.innerHTML = log.map(m=>{
+    logEl.innerHTML = collapseSlice(log, "maintenance").map(m=>{
       const d = new Date(m.date);
       const dateStr = d.getDate()+" "+MONTH_NAMES[d.getMonth()].slice(0,3)+" "+d.getFullYear();
       const detail = [...(m.items||[]), m.note].filter(Boolean).join(" · ") || "بدون تفاصيل";
@@ -1394,6 +1605,7 @@ function renderMaintenance(){
         await saveMaintLog(); render(); showToast("اتمسحت الصيانة");
       };
     });
+    appendCollapseToggle(logEl, "maintenance", log.length, renderMaintenance);
   }
 }
 
@@ -1420,7 +1632,7 @@ function renderAccountMoves(){
     el.innerHTML = `<div class="empty-state"><div class="big">📜</div><p>لسه مفيش حركات مسجلة على أي حساب.</p></div>`;
     return;
   }
-  el.innerHTML = list.map(m=>{
+  el.innerHTML = collapseSlice(list, "accountMoves").map(m=>{
     const d = new Date(m.date);
     const dateStr = d.getDate()+" "+MONTH_NAMES[d.getMonth()].slice(0,3)+" "+d.getFullYear();
     const isDeposit = m.type!=="withdraw";
@@ -1437,6 +1649,7 @@ function renderAccountMoves(){
       await saveAccountMoves(); render(); showToast("اتمسحت الحركة");
     };
   });
+  appendCollapseToggle(el, "accountMoves", list.length, renderAccountMoves);
 }
 
 function renderPendingSms(){
@@ -1498,16 +1711,68 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
     document.getElementById("tab-settings").style.display = activeTab==="settings" ? "block":"none";
     document.getElementById("fabAdd").style.display = activeTab==="settings" ? "none":"flex";
     if(activeTab==="allocations") renderAllocations();
-    if(activeTab==="maintenance") renderMaintenance();
+    if(activeTab==="maintenance"){ renderMaintenance(); renderCarBudget(); }
     window.scrollTo(0, 0); // always start each tab from the top, never keep the previous tab's scroll position
   };
 });
+
+// ---------- swipe between tabs ----------
+// DOM order of .tabbtn matches this array; in RTL a swipe-left (finger moving right-to-left,
+// negative dx) advances to the next tab, matching the natural RTL reading direction.
+const SWIPE_TAB_ORDER = ["home","expenses","allocations","obligations","maintenance","settings"];
+(function setupSwipeNav(){
+  const surface = document.getElementById("app");
+  let startX = 0, startY = 0, tracking = false;
+
+  surface.addEventListener("touchstart", (e)=>{
+    if(e.touches.length !== 1){ tracking = false; return; }
+    // don't hijack swipes starting inside a horizontal chip-scroller, an open modal/overlay, or a text field
+    if(e.target.closest(".filter-scroll, .modal-bg.show, .onboard-overlay.show, input, textarea, select")){
+      tracking = false; return;
+    }
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, {passive:true});
+
+  surface.addEventListener("touchend", (e)=>{
+    if(!tracking) return;
+    tracking = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    if(Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return; // needs a deliberate, mostly-horizontal swipe
+
+    const visibleTabs = SWIPE_TAB_ORDER.filter(t => t !== "maintenance" || state.settings.hasCar);
+    const idx = visibleTabs.indexOf(activeTab);
+    if(idx === -1) return;
+    const nextIdx = Math.max(0, Math.min(visibleTabs.length - 1, dx < 0 ? idx + 1 : idx - 1));
+    if(nextIdx === idx) return;
+    document.querySelector(`.tabbtn[data-tab="${visibleTabs[nextIdx]}"]`).click();
+  }, {passive:true});
+})();
 
 document.getElementById("inSalary").onchange = async (e)=>{ state.settings.salary = Number(e.target.value)||0; await saveSettings(); render(); };
 document.getElementById("inEmergBal").onchange = async (e)=>{ state.settings.emergBal = Number(e.target.value)||0; await saveSettings(); render(); };
 document.getElementById("inEmergGoal").onchange = async (e)=>{ state.settings.emergGoal = Number(e.target.value)||0; await saveSettings(); render(); };
 
 document.getElementById("inHasCar").onchange = async (e)=>{ state.settings.hasCar = e.target.checked; await saveSettings(); render(); };
+
+document.getElementById("biometricLockEnabled").onchange = async (e)=>{
+  if(e.target.checked){
+    if(!isNativeApp()){ e.target.checked = false; showToast("الميزة دي شغالة بس جوه تطبيق الموبايل"); return; }
+    try{
+      const { BiometricAuth } = window.Capacitor.Plugins;
+      const avail = await BiometricAuth.isAvailable();
+      if(!avail.available){ e.target.checked = false; showToast("محتاج تفعّل بصمة أو قفل شاشة على جهازك الأول"); return; }
+      const res = await BiometricAuth.authenticate({ title:"تأكيد تفعيل القفل", subtitle:"تحقق ببصمتك عشان تفعّل الحماية" });
+      if(!res.success){ e.target.checked = false; showToast("اتلغى التفعيل"); return; }
+    }catch(err){ e.target.checked = false; showToast("تعذّر تفعيل الحماية"); return; }
+  }
+  state.settings.biometricLock.enabled = e.target.checked;
+  await saveSettings();
+  showToast(e.target.checked ? "اتفعلت الحماية بالبصمة ✅" : "اتقفلت الحماية بالبصمة");
+};
 
 document.getElementById("notifDailyEnabled").onchange = async (e)=>{
   state.settings.notif.daily.enabled = e.target.checked;
@@ -1589,12 +1854,31 @@ document.getElementById("obStart").onclick = async ()=>{
   render();
 };
 document.getElementById("obSkip").onclick = ()=>{ hideOnboarding(); render(); };
-document.getElementById("exportBackup").onclick = async ()=>{
-  const backup = { settings: state.settings, items: state.items, expenses: state.expenses, allocations: state.allocations,
+// shared by local export/import AND Google Drive backup/restore, so all three ways of moving
+// data in/out of the app agree on exactly one payload shape
+function buildBackupPayload(){
+  return { settings: state.settings, items: state.items, expenses: state.expenses, allocations: state.allocations,
     car: state.car, maintenanceSchedule: state.maintenanceSchedule, maintenanceLog: state.maintenanceLog,
     accountMoves: state.accountMoves,
     exportedAt: new Date().toISOString() };
-  await saveOrShareFile("نسخة_احتياطية_مصاريفي.json", JSON.stringify(backup,null,2), false);
+}
+async function applyBackupData(data){
+  if(data.settings) state.settings = {...defaultSettings(), ...data.settings};
+  if(data.items) state.items = data.items;
+  if(data.expenses) state.expenses = data.expenses;
+  if(data.allocations) state.allocations = data.allocations;
+  if(data.car) state.car = {...state.car, ...data.car};
+  if(data.maintenanceSchedule) state.maintenanceSchedule = data.maintenanceSchedule;
+  if(data.maintenanceLog) state.maintenanceLog = data.maintenanceLog;
+  if(data.accountMoves) state.accountMoves = data.accountMoves;
+  await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
+  await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
+  localStorage.setItem("onboarded", "1");
+  render();
+}
+
+document.getElementById("exportBackup").onclick = async ()=>{
+  await saveOrShareFile("نسخة_احتياطية_مصاريفي.json", JSON.stringify(buildBackupPayload(),null,2), false);
   showToast("اتصدرت النسخة الاحتياطية ✅");
 };
 document.getElementById("importBackup").onclick = ()=>{ document.getElementById("importFile").click(); };
@@ -1605,18 +1889,7 @@ document.getElementById("importFile").onchange = async (e)=>{
     const text = await file.text();
     const data = JSON.parse(text);
     if(!confirm("هيتم استبدال كل البيانات الحالية بالنسخة المستوردة. متأكد؟")) return;
-    if(data.settings) state.settings = {...defaultSettings(), ...data.settings};
-    if(data.items) state.items = data.items;
-    if(data.expenses) state.expenses = data.expenses;
-    if(data.allocations) state.allocations = data.allocations;
-    if(data.car) state.car = {...state.car, ...data.car};
-    if(data.maintenanceSchedule) state.maintenanceSchedule = data.maintenanceSchedule;
-    if(data.maintenanceLog) state.maintenanceLog = data.maintenanceLog;
-    if(data.accountMoves) state.accountMoves = data.accountMoves;
-    await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
-    await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
-    localStorage.setItem("onboarded", "1");
-    render();
+    await applyBackupData(data);
     showToast("اتستوردت النسخة الاحتياطية ✅");
   }catch(err){
     showToast("الملف مش سليم، جرب تاني");
@@ -1930,6 +2203,24 @@ document.getElementById("exportExcel").onclick = async ()=>{
 };
 
 // ---------- native app niceties (status bar + hardware back button) ----------
+// ---------- biometric app lock ----------
+function isLocked(){ return document.getElementById("lockOverlay").classList.contains("show"); }
+function hideLockOverlay(){ document.getElementById("lockOverlay").classList.remove("show"); }
+function showLockOverlay(){ document.getElementById("lockOverlay").classList.add("show"); }
+async function tryUnlock(){
+  if(!state.settings.biometricLock.enabled){ hideLockOverlay(); return; }
+  if(!isNativeApp()){ hideLockOverlay(); return; } // no way to verify outside the native shell — don't lock browser testing/preview out
+  try{
+    const { BiometricAuth } = window.Capacitor.Plugins;
+    const avail = await BiometricAuth.isAvailable();
+    if(!avail.available){ hideLockOverlay(); return; } // no fingerprint/PIN enrolled on this device — fail open rather than lock the user out with no recovery
+    const res = await BiometricAuth.authenticate({ title:"افتح متابعة مصاريفي", subtitle:"تحقق ببصمتك أو رمز قفل الشاشة" });
+    if(res.success) hideLockOverlay();
+    // on failure/cancel the overlay just stays up — the "افتح دلوقتي" button retries
+  }catch(e){ hideLockOverlay(); }
+}
+document.getElementById("lockRetryBtn").onclick = tryUnlock;
+
 function setupNativeApp(){
   if(!isNativeApp()) return;
   try{
@@ -1940,19 +2231,33 @@ function setupNativeApp(){
 
   const { App } = window.Capacitor.Plugins;
   App.addListener("backButton", ()=>{
+    if(isLocked()){ App.exitApp(); return; }
     if(document.getElementById("onboardOverlay").classList.contains("show")){ document.getElementById("obSkip").click(); return; }
     const openModal = [modalBg, allocModalBg, flexModalBg, maintModalBg, accountModalBg].find(m=>m.classList.contains("show"));
     if(openModal){ openModal.classList.remove("show"); return; }
     if(activeTab !== "home"){ document.querySelector('.tabbtn[data-tab="home"]').click(); return; }
     App.exitApp();
   });
-  // re-check for bank SMS every time the app comes back to the foreground
-  App.addListener("appStateChange", (s)=>{ if(s.isActive) checkPendingSmsTransactions(); });
+  App.addListener("appStateChange", (s)=>{
+    if(s.isActive){
+      checkPendingSmsTransactions();
+      if(state.settings.biometricLock.enabled) tryUnlock();
+    } else if(state.settings.biometricLock.enabled){
+      showLockOverlay(); // re-lock immediately on backgrounding — no gap where a resumed app shows data unlocked
+    }
+  });
 
-  const { SmsReader } = window.Capacitor.Plugins;
+  const { SmsReader, GoogleAuth } = window.Capacitor.Plugins;
   SmsReader.getBankSenders().then(res=>{
     const el = document.getElementById("bankSendersInput");
     if(el) el.value = res.value || "QNB,CIB";
+  }).catch(()=>{});
+
+  GoogleAuth.getCurrentAccount().then(res=>{
+    if(res.signedIn){
+      googleAccount = { email: res.email, name: res.name, photoUrl: res.photoUrl };
+      renderGoogleAccountCard();
+    }
   }).catch(()=>{});
 }
 
@@ -1961,6 +2266,7 @@ function setupNativeApp(){
   render();
   setupNativeApp();
   checkPendingSmsTransactions();
+  await tryUnlock();
   if(needsOnboarding()) showOnboarding();
 })();
 </script>
