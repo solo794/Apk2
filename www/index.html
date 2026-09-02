@@ -402,7 +402,8 @@
         المبالغ وحالة التفعيل تحت خاصة بالشهر المختار فوق (<span id="itemsMonthHint"></span>) بس —
         تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
         فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
-        اللي انت فيه بس. لو البند خلص خالص ومش هيرجع تاني، امسحه بدل ما توقفه.
+        اللي انت فيه بس. زرار ✕ كمان بيشيل البند من الشهر ده بس (زي ما توقفه بالظبط) — لو عايز
+        تمسحه نهائي من كل الشهور، استخدم رابط "🗑️ حذف نهائي من كل الشهور" جنب البند.
       </p>
       <div class="filter-scroll" id="itemsSortChips"></div>
       <div id="itemsEdit"></div>
@@ -1572,13 +1573,14 @@ function renderSettings(){
     const notes = [];
     if(amtOverridden) notes.push(`✏️ مبلغ ${monthLabelOf(curMonthKey)} بس <span class="itmResetAmountOverride" style="text-decoration:underline; cursor:pointer;">(رجّع للافتراضي: ${fmt(it.amount)})</span>`);
     if(activeOverridden) notes.push(`✏️ ${itemActiveForMonth(it,curMonthKey)?"مفعّل":"موقوف"} لشهر ${monthLabelOf(curMonthKey)} بس <span class="itmResetActiveOverride" style="text-decoration:underline; cursor:pointer;">(رجّع للافتراضي: ${it.active?"مفعّل":"موقوف"})</span>`);
+    notes.push(`<span class="itmDeleteForever" style="text-decoration:underline; cursor:pointer; color:var(--brick);">🗑️ حذف نهائي من كل الشهور</span>`);
     return `
     <div class="item-row-edit" data-id="${it.id}">
       <label class="switch"><input type="checkbox" class="itmToggle" ${itemActiveForMonth(it,curMonthKey)?"checked":""}><span class="slider"></span></label>
       <div class="ii"><div class="n"><input class="itmName" value="${it.name}"></div>
         <div class="m">${it.cat}${it.endMonth ? " · لحد "+monthLabelOf(it.endMonth) : ""}${notes.map(n=>" · "+n).join("")}</div></div>
       <input type="number" class="amt-in itmAmount" value="${itemAmountForMonth(it, curMonthKey)}">
-      <button class="del-x">✕</button>
+      <button class="del-x" title="شيل من شهر ${monthLabelOf(curMonthKey)} بس">✕</button>
     </div>`;
   }).join("");
   el.querySelectorAll(".item-row-edit").forEach(row=>{
@@ -1622,7 +1624,25 @@ function renderSettings(){
       if(item.activeOverrides) delete item.activeOverrides[curMonthKey];
       await saveItems(); render();
     };
-    row.querySelector(".del-x").onclick = async ()=>{ state.items = state.items.filter(x=>x.id!==id); await saveItems(); render(); showToast("اتمسح البند"); };
+    row.querySelector(".del-x").onclick = async ()=>{
+      // Removing a row here only ever meant "not this month" to begin with (installments/bills
+      // recur — deleting one shouldn't wipe it out of months it still applies to). Isolate it to
+      // the month being viewed, same mechanism as the toggle switch — this was reported as a bug
+      // (deleting in one month was deleting from every month) and this is the fix.
+      const item = state.items.find(x=>x.id===id);
+      item.activeOverrides = item.activeOverrides || {};
+      item.activeOverrides[curMonthKey] = false;
+      await saveItems(); render();
+      showToast("اتشال \""+item.name+"\" من شهر "+monthLabelOf(curMonthKey)+" بس");
+    };
+    row.querySelector(".itmDeleteForever").onclick = (ev)=>{
+      ev.stopPropagation();
+      const item = state.items.find(x=>x.id===id);
+      if(!confirm("متأكد إنك عايز تمسح \""+item.name+"\" نهائي من كل الشهور؟ الخطوة دي مينفعش ترجع فيها.")) return;
+      state.items = state.items.filter(x=>x.id!==id);
+      saveItems().then(render);
+      showToast("اتمسح \""+item.name+"\" نهائي");
+    };
   });
   appendCollapseToggle(el, "items", sortedItems.length, render);
 }
