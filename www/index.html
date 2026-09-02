@@ -984,8 +984,15 @@ function parseBankSms(sender, body){
   if(/otp|رمز التحقق|كود التحقق|verification code/i.test(text)) return null;
   if(/رصيدك الحالي|available balance|current balance/i.test(text) && !/(debit|خصم|purchase|شراء|دفع)/i.test(text)) return null;
 
-  const amountMatch = text.match(/(?:EGP|LE|ج\.م|جنيه)\s*[\d,]+(?:\.\d+)?|[\d,]+(?:\.\d+)?\s*(?:EGP|LE|ج\.م|جنيه)/i);
-  const amount = amountMatch ? Number(amountMatch[0].replace(/[^\d.]/g, "")) : null;
+  // Currency markers: EGP/LE (Latin), ج.م and جنيه (spelled out), and جم — the abbreviation
+  // real CIB messages actually use (e.g. "بمبلغ 14220.00 جم"), which ج\.م's literal dot doesn't match.
+  const amountMatch = text.match(/(?:EGP|LE|ج\.م|جنيه|جم)\s*[\d,]+(?:\.\d+)?|[\d,]+(?:\.\d+)?\s*(?:EGP|LE|ج\.م|جنيه|جم)/i);
+  // Fallback: "بمبلغ 14220.00" with no currency marker right next to the number at all —
+  // still a strong signal in Egyptian bank phrasing ("بمبلغ" = "in the amount of").
+  const byAmountMatch = !amountMatch && text.match(/بمبلغ\s*[\d,]+(?:\.\d+)?/);
+  const amount = amountMatch ? Number(amountMatch[0].replace(/[^\d.]/g, ""))
+    : byAmountMatch ? Number(byAmountMatch[0].replace(/[^\d.]/g, ""))
+    : null;
 
   const isCredit = /credited|إيداع|تحويل وارد|received/i.test(text) && !/debit|خصم|purchase|شراء/i.test(text);
 
@@ -1096,8 +1103,11 @@ function renderGoogleAccountCard(){
       showToast("اتسجل خروج من جوجل");
     };
   } else {
-    el.innerHTML = `<button class="btn btn-primary" id="googleSignInBtn">تسجيل الدخول بجوجل</button>`;
+    el.innerHTML = `<button class="btn btn-primary" id="googleSignInBtn">تسجيل الدخول بجوجل</button>
+      <p id="googleSignInError" style="font-size:11.5px; color:#c0392b; margin:8px 0 0; line-height:1.7; display:none;"></p>`;
     document.getElementById("googleSignInBtn").onclick = async ()=>{
+      const errEl = document.getElementById("googleSignInError");
+      errEl.style.display = "none";
       try{
         const { GoogleAuth } = window.Capacitor.Plugins;
         const res = await GoogleAuth.signIn();
@@ -1106,11 +1116,34 @@ function renderGoogleAccountCard(){
           renderGoogleAccountCard();
           showToast("سجّلت دخول بجوجل ✅");
         } else {
-          showToast("اتلغى تسجيل الدخول");
+          // res.error is "code:<Google Sign-In status code>" from the native side — show what it
+          // actually means instead of always claiming "cancelled", which was masking real failures
+          // (like a missing Google Cloud Console OAuth client) with a misleading message.
+          console.error("GoogleAuth.signIn failed:", res.error);
+          showGoogleSignInError(googleSignInErrorMessage(res.error));
         }
-      }catch(e){ showToast("تعذّر تسجيل الدخول بجوجل — راجع إعداد Google Cloud Console (README)"); }
+      }catch(e){
+        console.error("GoogleAuth.signIn threw:", e);
+        showGoogleSignInError("تعذّر تسجيل الدخول بجوجل (البلجن مش متاح؟) — تأكد إنك بتستخدم نسخة APK حديثة.");
+      }
     };
   }
+}
+// Maps a native "code:<n>" Google Sign-In status into an Arabic message that actually helps
+// diagnose it, instead of the old one-size-fits-all "cancelled" toast.
+function googleSignInErrorMessage(errorCode){
+  const code = String(errorCode||"").replace("code:", "");
+  if(code === "12501") return null; // user genuinely cancelled the account picker — not an error, no message needed
+  if(code === "10") return "إعداد جوجل ناقص (DEVELOPER_ERROR): لازم تعمل OAuth client من نوع Android على Google Cloud Console بنفس اسم الحزمة وبصمة SHA-1 بتاعة التطبيق. خطوات التفعيل في README.";
+  if(code === "7") return "مفيش إنترنت — جرب تاني وانت متصل.";
+  if(code === "12500" || code === "8") return "تسجيل الدخول فشل من جوجل نفسها، جرب تاني بعد شوية. لو فضل يفشل، راجع إعداد Google Cloud Console (README).";
+  return "تعذّر تسجيل الدخول بجوجل (كود "+(code||"غير معروف")+") — راجع إعداد Google Cloud Console (README).";
+}
+function showGoogleSignInError(msg){
+  if(!msg){ showToast("اتلغى تسجيل الدخول"); return; }
+  const errEl = document.getElementById("googleSignInError");
+  if(errEl){ errEl.textContent = msg; errEl.style.display = "block"; }
+  showToast("تعذّر تسجيل الدخول بجوجل");
 }
 
 async function loadState(){
