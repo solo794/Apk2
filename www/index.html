@@ -841,16 +841,24 @@ const SORT_OPTIONS_ITEMS = [
   {k:"amount_desc", l:"💰 الأعلى مبلغ"}, {k:"amount_asc", l:"💰 الأقل مبلغ"},
 ];
 
-// sorts a copy of `list` by `opt`; dateField/amountField name the fields to compare (amount also
-// used as the id-freshness proxy for "newest" on lists that have no date, e.g. obligation items)
+// Every record's id is "<prefix><Date.now()>" (e.g. expense id "e1788361100119") — this pulls
+// out that embedded creation-time millisecond timestamp. date_desc/date_asc only have a plain
+// "YYYY-MM-DD" to compare (date inputs don't capture a time), so two entries logged the same day
+// used to tie and fall back on incidental array order — sometimes right, sometimes not really
+// "the actual time" like it looked. Using this as a tiebreaker makes same-day ordering exact.
+function idTimestamp(id){
+  const m = String(id||"").match(/(\d+)$/);
+  return m ? Number(m[1]) : 0;
+}
+// sorts a copy of `list` by `opt`; dateField/amountField name the fields to compare
 function sortList(list, opt, dateField, amountField){
   const arr = [...list];
-  if(opt==="date_desc") arr.sort((a,b)=> String(b[dateField]||"").localeCompare(String(a[dateField]||"")));
-  else if(opt==="date_asc") arr.sort((a,b)=> String(a[dateField]||"").localeCompare(String(b[dateField]||"")));
+  if(opt==="date_desc") arr.sort((a,b)=> String(b[dateField]||"").localeCompare(String(a[dateField]||"")) || (idTimestamp(b.id)-idTimestamp(a.id)));
+  else if(opt==="date_asc") arr.sort((a,b)=> String(a[dateField]||"").localeCompare(String(b[dateField]||"")) || (idTimestamp(a.id)-idTimestamp(b.id)));
   else if(opt==="amount_desc") arr.sort((a,b)=> Number(b[amountField]||0)-Number(a[amountField]||0));
   else if(opt==="amount_asc") arr.sort((a,b)=> Number(a[amountField]||0)-Number(b[amountField]||0));
   else if(opt==="name_asc") arr.sort((a,b)=> String(a.name||"").localeCompare(String(b.name||""),"ar"));
-  else if(opt==="newest") arr.reverse(); // insertion order kept ascending in state; newest-added = last pushed
+  else if(opt==="newest") arr.sort((a,b)=> idTimestamp(b.id)-idTimestamp(a.id)); // exact creation-time order, not just insertion order
   return arr;
 }
 function renderSortChips(containerId, options, current, onChange){
