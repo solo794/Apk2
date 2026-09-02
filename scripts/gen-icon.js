@@ -1,5 +1,5 @@
 // Pure-Node PNG generator for the app icon — no native deps (sharp/canvas) required.
-// Draws a rounded dark-teal square with a centered gold coin (matches the app's brand colors).
+// Draws a rounded dark-teal square with a centered gold wallet (matches the app's brand colors).
 const fs = require("fs");
 const path = require("path");
 const zlib = require("zlib");
@@ -51,9 +51,54 @@ function makePng(size, draw) {
 
 function dist(x, y, cx, cy) { return Math.hypot(x - cx, y - cy); }
 
-// square icon with rounded corners, dark teal bg, gold coin with lighter ring
-function drawIcon(x, y, w, h) {
+// Point-in-rounded-rect test (rect given by top-left + size, uniform corner radius).
+function inRoundedRect(x, y, left, top, w, h, radius) {
+  if (x < left || x > left + w || y < top || y > top + h) return false;
+  const rLeft = left + radius, rRight = left + w - radius, rTop = top + radius, rBottom = top + h - radius;
+  if (x < rLeft && y < rTop) return dist(x, y, rLeft, rTop) <= radius;
+  if (x > rRight && y < rTop) return dist(x, y, rRight, rTop) <= radius;
+  if (x < rLeft && y > rBottom) return dist(x, y, rLeft, rBottom) <= radius;
+  if (x > rRight && y > rBottom) return dist(x, y, rRight, rBottom) <= radius;
+  return true;
+}
+
+// Wallet pictogram: a billfold body with a card peeking out above it and a round clasp/button
+// on its side — the standard flat-icon "wallet" silhouette (distinct from a plain card, which
+// is just a rectangle). `scale` shrinks the whole motif around the canvas center — used to keep
+// it inside the adaptive-icon safe zone for the foreground layer.
+function drawWallet(x, y, w, h, scale) {
   const cx = w / 2, cy = h / 2;
+
+  // main billfold body
+  const bw = w * 0.60 * scale, bh = h * 0.38 * scale;
+  const bLeft = cx - bw / 2, bTop = cy - bh / 2 + h * 0.05 * scale;
+  const bRadius = bh * 0.20;
+
+  // a card peeking out the top, offset toward the right, mostly hidden behind the body
+  const cw = w * 0.30 * scale, ch = h * 0.24 * scale;
+  const cLeft = cx - cw * 0.10, cTop = bTop - ch * 0.55;
+  const cRadius = ch * 0.16;
+
+  // clasp/button on the body's right side
+  const claspR = bh * 0.18;
+  const claspCx = bLeft + bw * 0.84, claspCy = bTop + bh * 0.55;
+
+  if (inRoundedRect(x, y, bLeft, bTop, bw, bh, bRadius)) {
+    const d = dist(x, y, claspCx, claspCy);
+    if (d < claspR) return [...INK, 255];
+    if (d < claspR * 1.45) return [...GOLD_SOFT, 255];
+    // thin fold crease near the top of the body
+    if (Math.abs(y - (bTop + bh * 0.24)) < h * 0.010 * scale) return [...INK, 255];
+    return [...GOLD_SOFT, 255];
+  }
+  if (inRoundedRect(x, y, cLeft, cTop, cw, ch, cRadius)) {
+    return [...GOLD, 255]; // the peeking card, darker gold for contrast against the body
+  }
+  return null; // outside the wallet shape
+}
+
+// square icon with rounded corners, dark teal bg, gold wallet centered on top
+function drawIcon(x, y, w, h) {
   const radius = w * 0.22; // corner radius
   const inCorner =
     (x < radius && y < radius && dist(x, y, radius, radius) > radius) ||
@@ -62,27 +107,15 @@ function drawIcon(x, y, w, h) {
     (x > w - radius && y > h - radius && dist(x, y, w - radius, h - radius) > radius);
   if (inCorner) return [0, 0, 0, 0];
 
-  const coinR = w * 0.28;
-  const d = dist(x, y, cx, cy);
-  if (d < coinR) {
-    if (d > coinR * 0.82) return [...GOLD_SOFT, 255]; // ring
-    // simple horizontal bar motif (like a bill/coin slot) inside the coin
-    if (Math.abs(y - cy) < h * 0.035) return [...INK, 255];
-    return [...GOLD, 255];
-  }
+  const wallet = drawWallet(x, y, w, h, 1);
+  if (wallet) return wallet;
   return [...INK, 255];
 }
 
-// adaptive-icon foreground: transparent bg, coin only, slightly smaller (safe zone)
+// adaptive-icon foreground: transparent bg, wallet only, slightly smaller (safe zone)
 function drawForeground(x, y, w, h) {
-  const cx = w / 2, cy = h / 2;
-  const coinR = w * 0.20;
-  const d = dist(x, y, cx, cy);
-  if (d < coinR) {
-    if (d > coinR * 0.82) return [...GOLD_SOFT, 255];
-    if (Math.abs(y - cy) < h * 0.03) return [...INK, 255];
-    return [...GOLD, 255];
-  }
+  const wallet = drawWallet(x, y, w, h, 0.72);
+  if (wallet) return wallet;
   return [0, 0, 0, 0];
 }
 

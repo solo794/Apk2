@@ -456,6 +456,16 @@
     </div>
 
     <div class="set-card">
+      <h3>🏷️ فئات المصاريف</h3>
+      <div id="catsEdit"></div>
+      <div class="field" style="display:flex; gap:8px; margin-top:10px;">
+        <input type="text" id="newCatEmojiInput" placeholder="🏷️" maxlength="4" style="width:56px; text-align:center; flex:none;">
+        <input type="text" id="newCatNameInput" placeholder="فئة جديدة (مثال: هدايا)" style="flex:1;">
+        <button class="btn btn-ghost" id="addCatBtn" style="width:auto; padding:10px 16px;">+ إضافة</button>
+      </div>
+    </div>
+
+    <div class="set-card">
       <h3>🎯 حدود شهرية للفئات (اختياري)</h3>
       <div id="capsEdit"></div>
     </div>
@@ -463,7 +473,7 @@
     <div class="set-card">
       <h3>🚗 العربية</h3>
       <div class="toggle-row">
-        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تتبع صيانة العربية (تبويب الصيانة)</span>
+        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تتبع صيانة العربية (تبويب السيارة)</span>
         <label class="switch"><input type="checkbox" id="inHasCar"><span class="slider"></span></label>
       </div>
     </div>
@@ -549,7 +559,7 @@
     <button class="tabbtn" data-tab="expenses"><span class="ic">🧾</span><span class="lb">المصاريف</span></button>
     <button class="tabbtn" data-tab="allocations"><span class="ic">📦</span><span class="lb">التوزيعات</span></button>
     <button class="tabbtn" data-tab="obligations"><span class="ic">📋</span><span class="lb">الالتزامات</span></button>
-    <button class="tabbtn" data-tab="maintenance"><span class="ic">🔧</span><span class="lb">الصيانة</span></button>
+    <button class="tabbtn" data-tab="maintenance"><span class="ic">🚗</span><span class="lb">السيارة</span></button>
     <button class="tabbtn" data-tab="settings"><span class="ic">⚙️</span><span class="lb">الإعدادات</span></button>
   </div>
 </div>
@@ -751,11 +761,14 @@
 })();
 
 const MONTH_NAMES = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
-const CATS = [
+// Built-in categories. User-added ones live in state.settings.customCats and are appended by
+// allCats() everywhere a category list is needed, so the two never need to be kept in sync by hand.
+const BASE_CATS = [
   {k:"أكل", i:"🍔"}, {k:"مواصلات", i:"🚕"}, {k:"عربية", i:"🚗"},
   {k:"تسوق", i:"🛍️"}, {k:"صحة", i:"💊"}, {k:"ترفيه", i:"🎮"},
   {k:"أولاد", i:"🧸"}, {k:"بيت", i:"🏠"}, {k:"تاني", i:"📦"}
 ];
+function allCats(){ return [...BASE_CATS, ...(state.settings.customCats||[])]; }
 
 // factory (not a shared object literal) — settings has nested objects (notif, sources...) and
 // every {...defaultSettings()} spread needs its own fresh copies, not shared references that a
@@ -763,7 +776,7 @@ const CATS = [
 function defaultSettings(){
   return {
     salary: 0, emergBal: 0, emergGoal: 0, caps: {}, sources: ["كاش","فيزا","بطاقة بنكية","فودافون كاش"], allocOverrides: {},
-    hasCar: true,
+    hasCar: true, customCats: [],
     notif: { daily:{enabled:false, time:"21:00"}, weeklyBackup:{enabled:false}, capAlert:{enabled:true}, maintDue:{enabled:true} },
     smsAuto: { enabled:false },
     biometricLock: { enabled:false },
@@ -794,7 +807,7 @@ let state = { settings: defaultSettings(), items: [...DEFAULT_ITEMS], expenses: 
 let curDate = new Date();
 let curMonthKey = monthKey(curDate);
 let activeTab = "home";
-let selectedCat = CATS[0].k;
+let selectedCat = BASE_CATS[0].k;
 let selectedSource = null;
 let editingExpenseId = null;
 let selectedAllocCat = ALLOC_CATS[0].k;
@@ -1326,7 +1339,7 @@ function oblRow(name, val){
 function renderCategoryBars(monthExpenses){
   document.getElementById("expMonthLbl2").textContent = "— " + monthLabelOf(curMonthKey);
   const totals = {};
-  CATS.forEach(c=>totals[c.k]=0);
+  allCats().forEach(c=>totals[c.k]=0);
   monthExpenses.forEach(e=>{ totals[e.cat] = (totals[e.cat]||0) + Number(e.amount); });
   const entries = Object.entries(totals).filter(([k,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   const el = document.getElementById("catBars");
@@ -1336,7 +1349,7 @@ function renderCategoryBars(monthExpenses){
     const cap = Number(state.settings.caps[cat]||0);
     const pct = Math.min(100, (val/max)*100);
     const over = cap>0 && val>cap;
-    const icon = (CATS.find(c=>c.k===cat)||{}).i || "📦";
+    const icon = (allCats().find(c=>c.k===cat)||{}).i || "📦";
     return `<div class="cat-bar-row">
       <div class="cat-bar-top"><span class="cn">${icon} ${cat}</span><span class="cv">${fmt(val)}${cap>0?" / "+fmt(cap):""} ج</span></div>
       <div class="cat-bar-track"><div class="cat-bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
@@ -1346,7 +1359,7 @@ function renderCategoryBars(monthExpenses){
 
 function renderExpenses(){
   const el = document.getElementById("expList");
-  document.getElementById("filterChips").innerHTML = ["الكل", ...CATS.map(c=>c.k)].map(c=>
+  document.getElementById("filterChips").innerHTML = ["الكل", ...allCats().map(c=>c.k)].map(c=>
     `<button class="fchip ${c===filterCat?'sel':''}" data-cat="${c}">${c}</button>`).join("");
   document.querySelectorAll("#filterChips .fchip").forEach(ch=>{
     ch.onclick = ()=>{ filterCat = ch.dataset.cat; render(); };
@@ -1365,7 +1378,7 @@ function renderExpenses(){
   }
   const fullCount = list.length;
   el.innerHTML = collapseSlice(list, "expenses").map(e=>{
-    const cat = CATS.find(c=>c.k===e.cat) || {i:"📦"};
+    const cat = allCats().find(c=>c.k===e.cat) || {i:"📦"};
     const d = new Date(e.date);
     const dateStr = d.getDate()+" "+MONTH_NAMES[d.getMonth()].slice(0,3);
     return `<div class="exp-row">
@@ -1489,7 +1502,17 @@ function renderSettings(){
     };
   });
 
-  document.getElementById("capsEdit").innerHTML = CATS.map(c=>`
+  document.getElementById("catsEdit").innerHTML =
+    BASE_CATS.map(c=>`<div class="cap-row"><span class="cl">${c.i} ${c.k} <span style="font-size:10.5px; color:var(--ink-soft); font-weight:600;">(أساسية)</span></span></div>`).join("") +
+    state.settings.customCats.map((c,idx)=>`<div class="cap-row"><span class="cl">${c.i} ${c.k}</span><button class="del-x" data-idx="${idx}">✕</button></div>`).join("");
+  document.querySelectorAll("#catsEdit .del-x").forEach(btn=>{
+    btn.onclick = async ()=>{
+      state.settings.customCats.splice(Number(btn.dataset.idx),1);
+      await saveSettings(); render();
+    };
+  });
+
+  document.getElementById("capsEdit").innerHTML = allCats().map(c=>`
     <div class="cap-row">
       <span class="cl">${c.i} ${c.k}</span>
       <input type="number" class="capIn" data-cat="${c.k}" placeholder="بدون حد" value="${state.settings.caps[c.k]||''}">
@@ -1717,7 +1740,7 @@ function renderPendingSms(){
   });
 }
 
-// hides the "الصيانة" tab entirely for users who don't have a car
+// hides the "السيارة" (car) tab entirely for users who don't have a car
 function updateTabsVisibility(){
   const btn = document.querySelector('.tabbtn[data-tab="maintenance"]');
   if(!btn) return;
@@ -1750,8 +1773,12 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
 });
 
 // ---------- swipe between tabs ----------
-// DOM order of .tabbtn matches this array; in RTL a swipe-left (finger moving right-to-left,
-// negative dx) advances to the next tab, matching the natural RTL reading direction.
+// DOM order of .tabbtn matches this array. The tab bar is a plain (non-reversed) flex row
+// inside dir="rtl", so the browser mirrors it: the first tab (home) renders on the *right*,
+// the last (settings) on the *left*. A swipe carries content along with the finger — dragging
+// right-to-left (negative dx) pulls the *previous* tab (the one physically to the right) into
+// view, same as it would in any RTL paged UI (e.g. RTL view-pagers) — the opposite of an LTR
+// layout, where the next item sits to the right and a left swipe advances forward instead.
 const SWIPE_TAB_ORDER = ["home","expenses","allocations","obligations","maintenance","settings"];
 (function setupSwipeNav(){
   const surface = document.getElementById("app");
@@ -1779,7 +1806,7 @@ const SWIPE_TAB_ORDER = ["home","expenses","allocations","obligations","maintena
     const visibleTabs = SWIPE_TAB_ORDER.filter(t => t !== "maintenance" || state.settings.hasCar);
     const idx = visibleTabs.indexOf(activeTab);
     if(idx === -1) return;
-    const nextIdx = Math.max(0, Math.min(visibleTabs.length - 1, dx < 0 ? idx + 1 : idx - 1));
+    const nextIdx = Math.max(0, Math.min(visibleTabs.length - 1, dx < 0 ? idx - 1 : idx + 1));
     if(nextIdx === idx) return;
     document.querySelector(`.tabbtn[data-tab="${visibleTabs[nextIdx]}"]`).click();
   }, {passive:true});
@@ -1858,6 +1885,16 @@ document.getElementById("addSourceBtn").onclick = async ()=>{
   if(!state.settings.sources.includes(val)) state.settings.sources.push(val);
   inp.value = "";
   await saveSettings(); render();
+};
+
+document.getElementById("addCatBtn").onclick = async ()=>{
+  const nameInp = document.getElementById("newCatNameInput");
+  const emojiInp = document.getElementById("newCatEmojiInput");
+  const added = await addCustomCategory(nameInp.value, emojiInp.value);
+  if(!added) return;
+  nameInp.value = ""; emojiInp.value = "";
+  render();
+  showToast("اتضافت فئة "+added.i+" "+added.k+" ✅");
 };
 
 async function addNewObligationItem(){
@@ -1985,6 +2022,42 @@ document.getElementById("saveFlexAdd").onclick = async ()=>{
   showToast("اتحدّث "+ALLOC_LABELS[editingAllocKey]+" ✅");
 };
 
+// ---------- custom expense categories ----------
+// Adds a user-defined category (name + optional icon) alongside the built-in BASE_CATS.
+// Returns the new {k,i} entry, or null if the name is empty/duplicate/cancelled.
+async function addCustomCategory(name, icon){
+  const k = (name||"").trim();
+  if(!k) return null;
+  if(allCats().some(c=>c.k===k)){ showToast("الفئة دي موجودة أصلاً"); return null; }
+  const entry = { k, i: (icon||"").trim() || "🏷️" };
+  state.settings.customCats.push(entry);
+  await saveSettings();
+  return entry;
+}
+// Quick-add flow used from the expense modal's "+ فئة جديدة" chip — two short native prompts
+// instead of a whole new modal, since this is a rare, one-off action.
+async function promptNewCategory(){
+  const name = window.prompt("اسم الفئة الجديدة:");
+  if(name===null) return null;
+  const icon = window.prompt("إيموجي للفئة (اختياري):", "🏷️");
+  return await addCustomCategory(name, icon===null ? "" : icon);
+}
+function renderCatChips(){
+  document.getElementById("catChips").innerHTML = allCats().map(c=>`<button class="chip ${c.k===selectedCat?'sel':''}" data-cat="${c.k}">${c.i} ${c.k}</button>`).join("") + '<button class="chip" id="addCatChipBtn">+ فئة جديدة</button>';
+  document.querySelectorAll("#catChips .chip[data-cat]").forEach(ch=>{
+    ch.onclick = ()=>{ selectedCat = ch.dataset.cat; document.querySelectorAll("#catChips .chip[data-cat]").forEach(c=>c.classList.toggle("sel", c===ch)); };
+  });
+  document.getElementById("addCatChipBtn").onclick = async ()=>{
+    const added = await promptNewCategory();
+    if(!added) return;
+    selectedCat = added.k;
+    renderCatChips();
+    render(); // keeps Settings' category list / caps editor / filter chips in sync right away,
+              // not just after the next unrelated state change — render() never touches the
+              // modal's own visibility or its #catChips (rebuilt separately just above).
+  };
+}
+
 // modal + mini calculator
 const modalBg = document.getElementById("expenseModalBg");
 function openModal(existing){
@@ -1993,12 +2066,9 @@ function openModal(existing){
   document.getElementById("mAmount").value = existing ? existing.amount : "";
   document.getElementById("mNote").value = existing ? (existing.note||"") : "";
   document.getElementById("mDate").value = existing ? existing.date : new Date().toISOString().slice(0,10);
-  selectedCat = existing ? existing.cat : CATS[0].k;
+  selectedCat = existing ? existing.cat : allCats()[0].k;
   selectedSource = existing ? (existing.source || state.settings.sources[0]) : state.settings.sources[0];
-  document.getElementById("catChips").innerHTML = CATS.map(c=>`<button class="chip ${c.k===selectedCat?'sel':''}" data-cat="${c.k}">${c.i} ${c.k}</button>`).join("");
-  document.querySelectorAll("#catChips .chip").forEach(ch=>{
-    ch.onclick = ()=>{ selectedCat = ch.dataset.cat; document.querySelectorAll("#catChips .chip").forEach(c=>c.classList.toggle("sel", c===ch)); };
-  });
+  renderCatChips();
   document.getElementById("sourceChips").innerHTML = state.settings.sources.map(s=>`<button class="chip ${s===selectedSource?'sel':''}" data-src="${s}">💳 ${s}</button>`).join("");
   document.querySelectorAll("#sourceChips .chip").forEach(ch=>{
     ch.onclick = ()=>{ selectedSource = ch.dataset.src; document.querySelectorAll("#sourceChips .chip").forEach(c=>c.classList.toggle("sel", c===ch)); };
