@@ -2561,9 +2561,19 @@ document.getElementById("exportExcel").onclick = async ()=>{
 function isLocked(){ return document.getElementById("lockOverlay").classList.contains("show"); }
 function hideLockOverlay(){ document.getElementById("lockOverlay").classList.remove("show"); }
 function showLockOverlay(){ document.getElementById("lockOverlay").classList.add("show"); }
+// Showing the system BiometricPrompt itself can make Capacitor's appStateChange fire an extra
+// isActive:true/false pair around it on some Android versions/OEMs (the prompt briefly takes
+// window focus, which reads the same as the app being backgrounded and resumed) — without a
+// guard, that spurious "resumed" event calls tryUnlock() again, popping a second fingerprint
+// prompt right after the user just passed the first one. Reported as the lock "hanging"/showing
+// repeatedly, needing an extra tap to get past.
+let unlockInFlight = false;
 async function tryUnlock(){
   if(!state.settings.biometricLock.enabled){ hideLockOverlay(); return; }
   if(!isNativeApp()){ hideLockOverlay(); return; } // no way to verify outside the native shell — don't lock browser testing/preview out
+  if(!isLocked()) return; // already unlocked — nothing to re-prompt for
+  if(unlockInFlight) return; // an authenticate() call is already in progress — don't stack another
+  unlockInFlight = true;
   try{
     const { BiometricAuth } = window.Capacitor.Plugins;
     const avail = await BiometricAuth.isAvailable();
@@ -2572,6 +2582,7 @@ async function tryUnlock(){
     if(res.success) hideLockOverlay();
     // on failure/cancel the overlay just stays up — the "افتح دلوقتي" button retries
   }catch(e){ hideLockOverlay(); }
+  finally{ unlockInFlight = false; }
 }
 document.getElementById("lockRetryBtn").onclick = tryUnlock;
 
@@ -2592,12 +2603,22 @@ function setupNativeApp(){
     if(activeTab !== "home"){ document.querySelector('.tabbtn[data-tab="home"]').click(); return; }
     App.exitApp();
   });
+  let relockTimer = null;
   App.addListener("appStateChange", (s)=>{
     if(s.isActive){
+      // Cancels a pending re-lock from the branch below — if this "resumed" arrives quickly
+      // after a "backgrounded", that pairing was very likely the biometric prompt's own system
+      // dialog briefly taking/returning window focus (a known quirk on some Android
+      // versions/OEMs), not a real app switch. Treating it as one meant tryUnlock() re-firing
+      // right after the user had just passed it, which is the "lock keeps reappearing" bug.
+      if(relockTimer){ clearTimeout(relockTimer); relockTimer = null; }
       checkPendingSmsTransactions();
       if(state.settings.biometricLock.enabled) tryUnlock();
     } else if(state.settings.biometricLock.enabled){
-      showLockOverlay(); // re-lock immediately on backgrounding — no gap where a resumed app shows data unlocked
+      // Real backgrounding still re-locks effectively instantly (300ms is well under human
+      // perception) — this delay exists only to give a same-cause "resumed" above a chance to
+      // cancel it first.
+      relockTimer = setTimeout(()=>{ relockTimer = null; showLockOverlay(); }, 300);
     }
   });
 
