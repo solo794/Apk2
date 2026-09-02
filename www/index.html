@@ -399,9 +399,10 @@
     <div class="set-card">
       <h3>📋 التزامات ثابتة / أقساط / جمعيات</h3>
       <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;">
-        المبالغ تحت خاصة بالشهر المختار فوق (<span id="itemsMonthHint"></span>) بس — تعديل مبلغ بند وانت
-        شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط فيها مبلغ لبند جديد بتبقى قيمته
-        العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر اللي انت فيه بس.
+        المبالغ وحالة التفعيل تحت خاصة بالشهر المختار فوق (<span id="itemsMonthHint"></span>) بس —
+        تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
+        فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
+        اللي انت فيه بس. لو البند خلص خالص ومش هيرجع تاني، امسحه بدل ما توقفه.
       </p>
       <div class="filter-scroll" id="itemsSortChips"></div>
       <div id="itemsEdit"></div>
@@ -1225,8 +1226,15 @@ function itemAmountForMonth(it, monthKeyStr){
   if(it.amountOverrides && it.amountOverrides[monthKeyStr]!==undefined) return Number(it.amountOverrides[monthKeyStr]);
   return Number(it.amount||0);
 }
+// Same idea as itemAmountForMonth, for the on/off switch: toggling an item while viewing a given
+// month only ever flips that month's override, so pausing it for one month (e.g. an installment
+// that was skipped, or a gam3iya share that wasn't due) doesn't turn it off everywhere else too.
+function itemActiveForMonth(it, monthKeyStr){
+  if(it.activeOverrides && it.activeOverrides[monthKeyStr]!==undefined) return it.activeOverrides[monthKeyStr];
+  return !!it.active;
+}
 function computeMonth(monthKeyStr){
-  const active = state.items.filter(it=>it.active);
+  const active = state.items.filter(it=>itemActiveForMonth(it, monthKeyStr));
   const byCat = {"قسط":0,"ثابت":0,"جمعية":0};
   active.forEach(it=>{
     if(it.endMonth && monthKeyStr > it.endMonth) return;
@@ -1551,19 +1559,30 @@ function renderSettings(){
   const itemsWithEffAmount = state.items.map(it=>({...it, _effAmount: itemAmountForMonth(it, curMonthKey)}));
   const sortedItems = sortList(itemsWithEffAmount, itemsSortBy, null, "_effAmount");
   el.innerHTML = collapseSlice(sortedItems, "items").map(it=>{
-    const overridden = it.amountOverrides && it.amountOverrides[curMonthKey]!==undefined;
+    const amtOverridden = it.amountOverrides && it.amountOverrides[curMonthKey]!==undefined;
+    const activeOverridden = it.activeOverrides && it.activeOverrides[curMonthKey]!==undefined;
+    const notes = [];
+    if(amtOverridden) notes.push(`✏️ مبلغ ${monthLabelOf(curMonthKey)} بس <span class="itmResetAmountOverride" style="text-decoration:underline; cursor:pointer;">(رجّع للافتراضي: ${fmt(it.amount)})</span>`);
+    if(activeOverridden) notes.push(`✏️ ${itemActiveForMonth(it,curMonthKey)?"مفعّل":"موقوف"} لشهر ${monthLabelOf(curMonthKey)} بس <span class="itmResetActiveOverride" style="text-decoration:underline; cursor:pointer;">(رجّع للافتراضي: ${it.active?"مفعّل":"موقوف"})</span>`);
     return `
     <div class="item-row-edit" data-id="${it.id}">
-      <label class="switch"><input type="checkbox" class="itmToggle" ${it.active?"checked":""}><span class="slider"></span></label>
+      <label class="switch"><input type="checkbox" class="itmToggle" ${itemActiveForMonth(it,curMonthKey)?"checked":""}><span class="slider"></span></label>
       <div class="ii"><div class="n"><input class="itmName" value="${it.name}"></div>
-        <div class="m">${it.cat}${it.endMonth ? " · لحد "+monthLabelOf(it.endMonth) : ""}${overridden ? ` · ✏️ مبلغ ${monthLabelOf(curMonthKey)} بس <span class="itmResetOverride" style="text-decoration:underline; cursor:pointer;">(رجّع للافتراضي: ${fmt(it.amount)})</span>` : ""}</div></div>
+        <div class="m">${it.cat}${it.endMonth ? " · لحد "+monthLabelOf(it.endMonth) : ""}${notes.map(n=>" · "+n).join("")}</div></div>
       <input type="number" class="amt-in itmAmount" value="${itemAmountForMonth(it, curMonthKey)}">
       <button class="del-x">✕</button>
     </div>`;
   }).join("");
   el.querySelectorAll(".item-row-edit").forEach(row=>{
     const id = row.dataset.id;
-    row.querySelector(".itmToggle").onchange = async (e)=>{ state.items.find(x=>x.id===id).active = e.target.checked; await saveItems(); render(); };
+    row.querySelector(".itmToggle").onchange = async (e)=>{
+      const item = state.items.find(x=>x.id===id);
+      // isolated to the month currently being viewed, same as the amount override below — never
+      // flips the item on/off for every other month too (that was the reported bug).
+      item.activeOverrides = item.activeOverrides || {};
+      item.activeOverrides[curMonthKey] = e.target.checked;
+      await saveItems(); render();
+    };
     row.querySelector(".itmName").onchange = async (e)=>{ state.items.find(x=>x.id===id).name = e.target.value; await saveItems(); render(); };
     row.querySelector(".itmAmount").onchange = async (e)=>{
       const item = state.items.find(x=>x.id===id);
@@ -1581,11 +1600,18 @@ function renderSettings(){
       }
       await saveItems(); render();
     };
-    const resetLink = row.querySelector(".itmResetOverride");
-    if(resetLink) resetLink.onclick = async (ev)=>{
+    const resetAmountLink = row.querySelector(".itmResetAmountOverride");
+    if(resetAmountLink) resetAmountLink.onclick = async (ev)=>{
       ev.stopPropagation();
       const item = state.items.find(x=>x.id===id);
       if(item.amountOverrides) delete item.amountOverrides[curMonthKey];
+      await saveItems(); render();
+    };
+    const resetActiveLink = row.querySelector(".itmResetActiveOverride");
+    if(resetActiveLink) resetActiveLink.onclick = async (ev)=>{
+      ev.stopPropagation();
+      const item = state.items.find(x=>x.id===id);
+      if(item.activeOverrides) delete item.activeOverrides[curMonthKey];
       await saveItems(); render();
     };
     row.querySelector(".del-x").onclick = async ()=>{ state.items = state.items.filter(x=>x.id!==id); await saveItems(); render(); showToast("اتمسح البند"); };
@@ -1945,7 +1971,7 @@ document.getElementById("addCatBtn").onclick = async ()=>{
 };
 
 async function addNewObligationItem(){
-  state.items.push({id:"c"+Date.now(), name:"بند جديد", amount:0, cat:"ثابت", endMonth:null, active:true, amountOverrides:{}});
+  state.items.push({id:"c"+Date.now(), name:"بند جديد", amount:0, cat:"ثابت", endMonth:null, active:true, amountOverrides:{}, activeOverrides:{}});
   await saveItems(); render();
   showToast("اتضاف بند جديد — عدّل اسمه وقيمته تحت");
 }
@@ -2311,7 +2337,10 @@ function allExportMonths(){
   state.allocations.forEach(a=>set.add(a.date.slice(0,7)));
   state.accountMoves.forEach(m=>set.add(m.date.slice(0,7)));
   state.maintenanceLog.forEach(m=>set.add(m.date.slice(0,7)));
-  state.items.forEach(it=>{ if(it.amountOverrides) Object.keys(it.amountOverrides).forEach(mk=>set.add(mk)); });
+  state.items.forEach(it=>{
+    if(it.amountOverrides) Object.keys(it.amountOverrides).forEach(mk=>set.add(mk));
+    if(it.activeOverrides) Object.keys(it.activeOverrides).forEach(mk=>set.add(mk));
+  });
   return [...set].sort();
 }
 
@@ -2437,10 +2466,12 @@ document.getElementById("exportExcel").onclick = async ()=>{
   allExportMonths().forEach(mk=>{
     state.items.forEach(it=>{
       if(it.endMonth && mk > it.endMonth) return;
+      const amtOverridden = it.amountOverrides && it.amountOverrides[mk]!==undefined;
+      const activeOverridden = it.activeOverrides && it.activeOverrides[mk]!==undefined;
       itemRows.push({
         الشهر:monthLabelOf(mk), البند:it.name, "المبلغ (ج)":itemAmountForMonth(it, mk), النوع:it.cat,
-        "معدَّل لهذا الشهر؟": (it.amountOverrides && it.amountOverrides[mk]!==undefined) ? "نعم" : "لا",
-        الحالة:it.active?"مفعّل":"موقوف"
+        "معدَّل لهذا الشهر؟": (amtOverridden || activeOverridden) ? "نعم" : "لا",
+        الحالة: itemActiveForMonth(it, mk) ? "مفعّل" : "موقوف"
       });
     });
   });
