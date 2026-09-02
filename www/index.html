@@ -402,8 +402,9 @@
         المبالغ وحالة التفعيل تحت خاصة بالشهر المختار فوق (<span id="itemsMonthHint"></span>) بس —
         تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
         فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
-        اللي انت فيه بس. زرار ✕ كمان بيشيل البند من الشهر ده بس (زي ما توقفه بالظبط) — لو عايز
-        تمسحه نهائي من كل الشهور، استخدم رابط "🗑️ حذف نهائي من كل الشهور" جنب البند.
+        اللي انت فيه بس. زرار ✕ بيشيل البند من الشهر ده بس (زي ما توقفه بالظبط). زرار ⏸️/▶️ بيشغّل
+        أو يوقف البند في <b>كل الشهور</b> مرة واحدة (وبيشيل أي استثناءات شهرية كانت متسجلة له). لو
+        عايز تمسحه نهائي، استخدم رابط "🗑️ حذف نهائي من كل الشهور" جنب البند.
       </p>
       <div class="filter-scroll" id="itemsSortChips"></div>
       <div id="itemsEdit"></div>
@@ -1580,7 +1581,8 @@ function renderSettings(){
       <div class="ii"><div class="n"><input class="itmName" value="${it.name}"></div>
         <div class="m">${it.cat}${it.endMonth ? " · لحد "+monthLabelOf(it.endMonth) : ""}${notes.map(n=>" · "+n).join("")}</div></div>
       <input type="number" class="amt-in itmAmount" value="${itemAmountForMonth(it, curMonthKey)}">
-      <button class="del-x" title="شيل من شهر ${monthLabelOf(curMonthKey)} بس">✕</button>
+      <button class="del-x itmToggleGlobal" title="${it.active?"إيقاف":"تشغيل"} البند في كل الشهور" style="color:${it.active?"var(--sage)":"var(--ink-soft)"};">${it.active?"⏸️":"▶️"}</button>
+      <button class="del-x itmDeleteMonth" title="شيل من شهر ${monthLabelOf(curMonthKey)} بس">✕</button>
     </div>`;
   }).join("");
   el.querySelectorAll(".item-row-edit").forEach(row=>{
@@ -1624,7 +1626,7 @@ function renderSettings(){
       if(item.activeOverrides) delete item.activeOverrides[curMonthKey];
       await saveItems(); render();
     };
-    row.querySelector(".del-x").onclick = async ()=>{
+    row.querySelector(".itmDeleteMonth").onclick = async ()=>{
       // Removing a row here only ever meant "not this month" to begin with (installments/bills
       // recur — deleting one shouldn't wipe it out of months it still applies to). Isolate it to
       // the month being viewed, same mechanism as the toggle switch — this was reported as a bug
@@ -1634,6 +1636,18 @@ function renderSettings(){
       item.activeOverrides[curMonthKey] = false;
       await saveItems(); render();
       showToast("اتشال \""+item.name+"\" من شهر "+monthLabelOf(curMonthKey)+" بس");
+    };
+    row.querySelector(".itmToggleGlobal").onclick = async ()=>{
+      // The master switch: flips the item's base state AND clears every per-month exception
+      // (both amountOverrides... no, just activeOverrides — amounts are untouched) so the new
+      // state is clean and uniform across every month, not layered under leftover per-month
+      // pauses from the switch/✕ above. This is the deliberate "apply to all months" action the
+      // per-month controls intentionally don't do.
+      const item = state.items.find(x=>x.id===id);
+      item.active = !item.active;
+      item.activeOverrides = {};
+      await saveItems(); render();
+      showToast("\""+item.name+"\" بقى "+(item.active?"مفعّل":"موقوف")+" في كل الشهور");
     };
     row.querySelector(".itmDeleteForever").onclick = (ev)=>{
       ev.stopPropagation();
