@@ -1150,6 +1150,7 @@ const I18N = {
     "voice.permissionDenied":"🎤 محتاج إذن الميكروفون عشان يسمعك", "voice.failed":"⚠️ حصل خطأ في التعرف على الصوت",
     "voice.notSupportedWeb":"🎤 الإدخال الصوتي مش متاح على المتصفح ده، جرب الكتابة",
     "voice.autoSavedTitle":"✅ اتسجل مصروف بالصوت", "voice.autoSavedBody":"{1} {0} ج — دوس تراجع لو غلط",
+    "voice.failedTitle":"⚠️ الإضافة بالصوت مكملتش",
     "toast.nativeOnlyFeature":"الميزة دي شغالة بس جوه تطبيق الموبايل", "toast.needBiometricSetup":"محتاج تفعّل بصمة أو قفل شاشة على جهازك الأول",
     "biometric.confirmTitle":"تأكيد تفعيل القفل", "biometric.confirmSubtitle":"تحقق ببصمتك عشان تفعّل الحماية",
     "toast.enableCancelled":"اتلغى التفعيل", "toast.enableLockFailed":"تعذّر تفعيل الحماية",
@@ -1339,6 +1340,7 @@ const I18N = {
     "voice.permissionDenied":"🎤 Needs microphone permission to listen", "voice.failed":"⚠️ Voice recognition failed",
     "voice.notSupportedWeb":"🎤 Voice input isn't supported in this browser, try typing instead",
     "voice.autoSavedTitle":"✅ Expense logged by voice", "voice.autoSavedBody":"{1} {0} EGP — tap Undo if that's wrong",
+    "voice.failedTitle":"⚠️ Voice add didn't go through",
     "toast.nativeOnlyFeature":"This feature only works inside the mobile app", "toast.needBiometricSetup":"You need to set up a fingerprint or screen lock on your device first",
     "biometric.confirmTitle":"Confirm enabling lock", "biometric.confirmSubtitle":"Verify your fingerprint to enable protection",
     "toast.enableCancelled":"Enabling cancelled", "toast.enableLockFailed":"Couldn't enable protection",
@@ -1655,9 +1657,22 @@ async function checkPendingSmsTransactions(){
 // (same two call sites as checkPendingSmsTransactions: app boot + resume-from-background)
 // instead of native code injecting JS directly, since openModal/startVoiceExpenseInput depend
 // on state that's only ready once loadState() has finished.
-// Returns true when a pending action was found and acted on (voice auto-save, or the "type"
-// button's plain modal) — callers use this to skip the biometric-lock prompt for this launch,
-// since the whole point of the widget is not making the user step into the app first.
+// hideLockOverlay() runs the moment ANY pending action is found — a fresh launch can already have
+// the lock overlay showing from an earlier backgrounding (the relockTimer in setupNativeApp), and
+// leaving it up is exactly the "opens the app to the fingerprint screen" flash a quick widget tap
+// shouldn't cause. What happens next depends on the outcome:
+//  - Confident voice auto-save: saves in the background, confirms via notification, then sends
+//    the app back out of sight (QuickAdd.finishQuickAdd() → moveTaskToBack) — the resulting real
+//    "backgrounded" event re-arms the lock through the normal appStateChange path, so nothing
+//    extra is needed here.
+//  - Recognition failed outright: nothing to show — re-arm the lock immediately so nothing stays
+//    exposed (the failure was already reported via notification, not an in-app toast the user
+//    would never see behind a locked screen anyway).
+//  - Voice with no clear amount, or the "type" button: the review modal needs to be visible —
+//    the lock stays down just for that interaction (quickAddLockBypassActive) and re-arms the
+//    moment it's closed (see the closeModal/cancelAdd/saveAdd listeners near tryUnlock()).
+// Returns true whenever this function has already handled the lock for this launch — callers use
+// it to skip their own tryUnlock() call.
 async function checkPendingQuickAdd(){
   if(!isNativeApp()) return false;
   try{
@@ -1665,8 +1680,22 @@ async function checkPendingQuickAdd(){
     const res = await QuickAdd.getPendingAction();
     if(!res.mode) return false;
     await QuickAdd.clearPendingAction();
-    if(res.mode==="voice") return await runQuickAddVoice();
-    openModal(null);
+    hideLockOverlay();
+    if(res.mode==="voice"){
+      const recognized = await runQuickAddVoice();
+      if(!recognized){
+        if(state.settings.biometricLock.enabled) showLockOverlay();
+        return true;
+      }
+      if(modalBg.classList.contains("show")){
+        quickAddLockBypassActive = true;
+      } else {
+        try{ await QuickAdd.finishQuickAdd(); }catch(e){}
+      }
+    } else {
+      openModal(null);
+      quickAddLockBypassActive = true;
+    }
     return true;
   }catch(e){ return false; }
 }
@@ -1795,8 +1824,12 @@ async function startVoiceExpenseInput(){
 async function runQuickAddVoice(){
   const res = await recognizeSpeech();
   if(!res.success){
-    showToast(res.error==="permission_denied" ? t("voice.permissionDenied")
-      : res.error==="not_supported" ? t("voice.notSupportedWeb") : t("voice.failed"));
+    // Also notified (not just toasted) since the caller re-locks the app right after a failure —
+    // an in-app toast would be invisible behind the lock overlay by the time it'd be seen.
+    const msg = res.error==="permission_denied" ? t("voice.permissionDenied")
+      : res.error==="not_supported" ? t("voice.notSupportedWeb") : t("voice.failed");
+    showToast(msg);
+    notifyNow(t("voice.failedTitle"), msg);
     return false;
   }
   const parsed = parseVoiceExpense(res.text);
@@ -3770,19 +3803,13 @@ function setupNativeApp(){
       // right after the user had just passed it, which is the "lock keeps reappearing" bug.
       if(relockTimer){ clearTimeout(relockTimer); relockTimer = null; }
       checkPendingSmsTransactions();
-      await checkPendingQuickAdd();
+      // checkPendingQuickAdd() fully owns the lock overlay when it finds something pending
+      // (hides it, and either re-arms it itself or leaves the bypass up for an open modal) — see
+      // its own comment for the full breakdown. Only run the normal tryUnlock() when it found
+      // nothing to do, so a plain resume still locks exactly as before.
+      const quickAdded = await checkPendingQuickAdd();
       syncLinkedItemWithdrawals().then(changed=>{ if(changed) render(); }); // catches a month rollover while the app sat backgrounded
-      if(modalBg.classList.contains("show")){
-        // Quick-add opened the review modal (typed entry, or voice that couldn't tell the amount)
-        // — let the user see/finish it without unlocking first; the modal's own backdrop still
-        // dims the dashboard behind it. A confident voice auto-save never reaches this branch (no
-        // modal opens for it), so it never needs to touch the lock at all. The lock re-engages the
-        // moment this modal closes — see the closeModal/cancelAdd/saveAdd listeners near tryUnlock().
-        quickAddLockBypassActive = true;
-        hideLockOverlay();
-      } else if(state.settings.biometricLock.enabled){
-        tryUnlock();
-      }
+      if(!quickAdded && state.settings.biometricLock.enabled) tryUnlock();
     } else if(state.settings.biometricLock.enabled){
       // Real backgrounding still re-locks effectively instantly (300ms is well under human
       // perception) — this delay exists only to give a same-cause "resumed" above a chance to
@@ -3828,18 +3855,11 @@ function checkQuickAddUrlParam(){
   render();
   setupNativeApp();
   checkPendingSmsTransactions();
-  await checkPendingQuickAdd();
+  // Same reasoning as the appStateChange resume listener: checkPendingQuickAdd() fully owns the
+  // lock overlay when it finds something pending, so tryUnlock() only runs when it didn't.
+  const quickAdded = await checkPendingQuickAdd();
   checkQuickAddUrlParam();
-  if(modalBg.classList.contains("show")){
-    // Same reasoning as the appStateChange resume listener: a quick-add modal is open (typed
-    // entry, or voice that couldn't tell the amount) — skip the lock prompt just for this launch
-    // so it's usable right away, and re-arm the lock the moment it closes. A confident voice
-    // auto-save never opens this modal, so it never reaches this branch at all.
-    quickAddLockBypassActive = true;
-    hideLockOverlay();
-  } else {
-    await tryUnlock();
-  }
+  if(!quickAdded) await tryUnlock();
   if(needsOnboarding()) showOnboarding();
 })();
 

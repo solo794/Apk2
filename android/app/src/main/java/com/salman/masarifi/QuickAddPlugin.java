@@ -1,5 +1,6 @@
 package com.salman.masarifi;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import com.getcapacitor.JSObject;
@@ -31,6 +32,20 @@ public class QuickAddPlugin extends Plugin {
     @PluginMethod
     public void clearPendingAction(PluginCall call) {
         prefs().edit().remove(KEY_MODE).apply();
+        call.resolve();
+    }
+
+    // Called after a confident voice auto-save finishes with nothing left to review — sends the
+    // app back behind whatever the user was doing (like tapping Home) instead of leaving it
+    // sitting in the foreground. moveTaskToBack doesn't kill the process/WebView, just backgrounds
+    // it, so the app's own appStateChange listener sees a real "backgrounded" event afterward and
+    // re-arms the biometric lock through its normal path — no separate re-lock call needed here.
+    @PluginMethod
+    public void finishQuickAdd(PluginCall call) {
+        Activity activity = getActivity();
+        if (activity != null) {
+            activity.runOnUiThread(() -> activity.moveTaskToBack(true));
+        }
         call.resolve();
     }
 
