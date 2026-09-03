@@ -1,7 +1,7 @@
 {
   "name": "masarifi-app",
   "version": "1.0.0",
-  "description": "تطبيق متابعة مصاريفي - Android app (Capacitor wrapper)",
+  "description": "فلوسفة (Floosfa) - تطبيق متابعة مصاريفي - Android app (Capacitor wrapper)",
   "private": true,
   "scripts": {
     "sync": "cap sync android",
