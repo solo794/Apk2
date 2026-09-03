@@ -1300,7 +1300,19 @@ function computeAccountBalance(sourceName){
   return netMoves - spent;
 }
 function computeAllAccountBalances(){
-  return state.settings.sources.map(name=>({ name, balance: computeAccountBalance(name) }));
+  // Union of currently-configured sources AND any source name still referenced by an existing
+  // expense or account movement. Deleting/renaming a source in Settings (a single tap, no
+  // confirmation) used to silently drop every expense still tagged with the old name out of
+  // every balance view — home card, Settings list, Excel export — since they only ever iterated
+  // the *current* sources list. The money was still real; it just stopped being subtracted from
+  // anything. `legacy:true` marks a name that's no longer an active source, so callers can label
+  // it instead of presenting it as an ordinary account.
+  const names = new Set(state.settings.sources);
+  state.expenses.forEach(e=>{ if(e.source) names.add(e.source); });
+  state.accountMoves.forEach(m=>{ if(m.source) names.add(m.source); });
+  return [...names].map(name=>({
+    name, balance: computeAccountBalance(name), legacy: !state.settings.sources.includes(name)
+  }));
 }
 
 // ---------- onboarding (first run) ----------
@@ -1625,6 +1637,14 @@ function renderSettings(){
   `).join("");
   document.querySelectorAll("#sourcesEdit .del-x").forEach(btn=>{
     btn.onclick = async ()=>{
+      const name = state.settings.sources[Number(btn.dataset.idx)];
+      // Deleting a source used to be a silent one-tap action that dropped every expense/movement
+      // still tagged with that name out of all balance calculations (they don't get renamed —
+      // same as deleting a category — so their old name just stops matching anything). Balances
+      // now survive that (computeAllAccountBalances() picks orphaned names back up as "legacy"),
+      // but a warning here is still worth it before the source disappears from Settings itself.
+      const stillUsed = state.expenses.some(e=>e.source===name) || state.accountMoves.some(m=>m.source===name);
+      if(stillUsed && !confirm(`فيه مصاريف أو حركات مسجلة على "${name}"، وهتفضل زي ما هي (مش هتتمسح) لكن هتظهر كمصدر قديم منفصل بدل ما تتدار من هنا. تكمل الحذف؟`)) return;
       state.settings.sources.splice(Number(btn.dataset.idx),1);
       await saveSettings(); render();
     };
@@ -1902,7 +1922,7 @@ function renderAccounts(){
   }
   const total = balances.reduce((s,b)=>s+b.balance, 0);
   el.innerHTML = balances.map(b=>
-    `<div class="obl-row"><span class="name">${b.name}</span><span class="val" style="color:${b.balance<0?'var(--brick)':'var(--sage)'}">${fmt(b.balance)} ج</span></div>`
+    `<div class="obl-row"><span class="name">${b.name}${b.legacy?' <span style="font-size:10px; color:var(--ink-soft); font-weight:600;">(مصدر محذوف — لسه له مصاريف)</span>':''}</span><span class="val" style="color:${b.balance<0?'var(--brick)':'var(--sage)'}">${fmt(b.balance)} ج</span></div>`
   ).join("") + `<div class="obl-row total"><span class="name">الإجمالي</span><span class="val" style="color:${total<0?'var(--brick)':'var(--sage)'}">${fmt(total)} ج</span></div>`;
 }
 
@@ -2649,8 +2669,10 @@ document.getElementById("exportExcel").onclick = async ()=>{
     row => row["النوع"]==="سحب" ? {fill:"F5E3DE", font:XL_COLOR.brick}
          : row["النوع"]==="إيداع" ? {fill:"E6EEE2", font:XL_COLOR.sage} : null);
 
-  const accountBalanceRows = computeAllAccountBalances().map(b=>({الحساب:b.name, "الرصيد الحالي (ج)":b.balance}));
-  addStyledSheet(wb, accountBalanceRows, {الحساب:"", "الرصيد الحالي (ج)":""}, "أرصدة الحسابات");
+  const accountBalanceRows = computeAllAccountBalances().map(b=>({
+    الحساب:b.name, "الرصيد الحالي (ج)":b.balance, الحالة: b.legacy ? "مصدر محذوف من الإعدادات" : "نشط"
+  }));
+  addStyledSheet(wb, accountBalanceRows, {الحساب:"", "الرصيد الحالي (ج)":"", الحالة:""}, "أرصدة الحسابات");
 
   const summaryRows = [
     {البند:"المرتب", القيمة:state.settings.salary},
