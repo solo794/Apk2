@@ -82,6 +82,10 @@
   }
   .month-switch button:active{background:rgba(255,255,255,.2);}
   .month-switch span{font-size:12.5px;font-weight:600;min-width:82px;text-align:center;}
+  .undo-redo-pill{display:flex; align-items:center; gap:2px; background:rgba(255,255,255,.12); border-radius:999px; padding:4px 6px;}
+  .undo-redo-pill button{background:none;border:none;color:var(--paper); font-family:'Cairo'; font-size:14px; width:26px;height:26px;border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer;}
+  .undo-redo-pill button:active:not(:disabled){background:rgba(255,255,255,.2);}
+  .undo-redo-pill button:disabled{opacity:.3; cursor:default;}
 
   .hero{display:flex; flex-direction:column; gap:4px;}
   .hero .label{font-size:12.5px; opacity:.75; font-weight:500;}
@@ -324,10 +328,16 @@
   <div class="topbar">
     <div class="brand">
       <h1>💰 متابعة مصاريفي</h1>
-      <div class="month-switch">
-        <button id="prevMonth">‹</button>
-        <span id="monthLabel">سبتمبر 2026</span>
-        <button id="nextMonth">›</button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="undo-redo-pill">
+          <button id="undoBtn" title="تراجع عن آخر تغيير" disabled>↩️</button>
+          <button id="redoBtn" title="إعادة آخر تراجع" disabled>↪️</button>
+        </div>
+        <div class="month-switch">
+          <button id="prevMonth">‹</button>
+          <span id="monthLabel">سبتمبر 2026</span>
+          <button id="nextMonth">›</button>
+        </div>
       </div>
     </div>
     <div class="hero">
@@ -1198,6 +1208,86 @@ async function saveMaintSchedule(){ try{ localStorage.setItem("maintenanceSchedu
 async function saveMaintLog(){ try{ localStorage.setItem("maintenanceLog", JSON.stringify(state.maintenanceLog)); }catch(e){} }
 async function saveAccountMoves(){ try{ localStorage.setItem("accountMoves", JSON.stringify(state.accountMoves)); }catch(e){} }
 
+// ---------- undo/redo ----------
+// One general mechanism instead of hand-wiring every single button that changes something:
+// every click/change is captured (cheaply — just a JSON string) in the capture phase, *before*
+// its own handler runs and mutates state. render() is called as the last step of essentially
+// every mutating action in the app (however many separate saveX() calls happened along the way),
+// so committing the captured "before" snapshot there — only when it actually differs from "after"
+// — turns each user action into exactly one undo step, without touching the dozens of individual
+// handlers themselves.
+const UNDO_STACK_LIMIT = 30;
+let undoStack = [];
+let redoStack = [];
+let pendingUndoSnapshot = null;
+let undoRedoInProgress = false; // true while performUndo()/performRedo() is itself applying a
+                                 // snapshot, so that render() call doesn't get captured as a new step
+
+function snapshotState(){
+  // state is the same plain JSON-serializable shape buildBackupPayload() already assumes —
+  // a JSON round-trip is a simple, safe deep clone/compare of it.
+  return JSON.stringify({
+    settings: state.settings, items: state.items, expenses: state.expenses,
+    allocations: state.allocations, car: state.car, maintenanceSchedule: state.maintenanceSchedule,
+    maintenanceLog: state.maintenanceLog, accountMoves: state.accountMoves,
+  });
+}
+function applySnapshot(json){
+  const d = JSON.parse(json);
+  state.settings = d.settings; state.items = d.items; state.expenses = d.expenses;
+  state.allocations = d.allocations; state.car = d.car;
+  state.maintenanceSchedule = d.maintenanceSchedule; state.maintenanceLog = d.maintenanceLog;
+  state.accountMoves = d.accountMoves;
+}
+async function persistAllSlices(){
+  await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
+  await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
+}
+document.addEventListener("click", ()=>{ if(!undoRedoInProgress) pendingUndoSnapshot = snapshotState(); }, {capture:true});
+document.addEventListener("change", ()=>{ if(!undoRedoInProgress) pendingUndoSnapshot = snapshotState(); }, {capture:true});
+
+function commitUndoCheckpointIfNeeded(){
+  if(undoRedoInProgress || pendingUndoSnapshot===null) return;
+  const before = pendingUndoSnapshot;
+  pendingUndoSnapshot = null;
+  if(before === snapshotState()) return; // nothing actually changed — don't clutter the stack
+  undoStack.push(before);
+  if(undoStack.length > UNDO_STACK_LIMIT) undoStack.shift();
+  redoStack = []; // a genuinely new change invalidates whatever could have been redone
+  updateUndoRedoButtons();
+}
+function updateUndoRedoButtons(){
+  const undoBtn = document.getElementById("undoBtn"), redoBtn = document.getElementById("redoBtn");
+  if(undoBtn) undoBtn.disabled = undoStack.length===0;
+  if(redoBtn) redoBtn.disabled = redoStack.length===0;
+}
+async function performUndo(){
+  if(undoStack.length===0) return;
+  undoRedoInProgress = true;
+  redoStack.push(snapshotState());
+  applySnapshot(undoStack.pop());
+  await persistAllSlices();
+  pendingUndoSnapshot = null; // discard whatever this same click just captured above
+  render();
+  undoRedoInProgress = false;
+  updateUndoRedoButtons();
+  showToast("اتراجعت آخر خطوة ↩️");
+}
+async function performRedo(){
+  if(redoStack.length===0) return;
+  undoRedoInProgress = true;
+  undoStack.push(snapshotState());
+  applySnapshot(redoStack.pop());
+  await persistAllSlices();
+  pendingUndoSnapshot = null;
+  render();
+  undoRedoInProgress = false;
+  updateUndoRedoButtons();
+  showToast("اتعمل Redo للخطوة ↪️");
+}
+document.getElementById("undoBtn").onclick = performUndo;
+document.getElementById("redoBtn").onclick = performRedo;
+
 // ---------- account balances (per payment source: cash, Visa 1, Visa 2...) ----------
 // balance = sum(deposits) - sum(withdrawals) - sum(expenses tagged with this source), all-time
 function computeAccountBalance(sourceName){
@@ -1301,6 +1391,7 @@ function maybeNotifyCapExceeded(cat, mk, prevTotal){
 }
 
 function render(){
+  commitUndoCheckpointIfNeeded();
   document.getElementById("monthLabel").textContent = monthLabelOf(curMonthKey);
   const m = computeMonth(curMonthKey);
   const monthExpenses = expensesForMonth(curMonthKey);
