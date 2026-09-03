@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<title>متابعة مصاريفي</title>
+<title data-i18n="app.title">متابعة مصاريفي</title>
 <meta name="theme-color" content="#16302E">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -83,6 +83,9 @@
     cursor:pointer;
   }
   .month-switch button:active{background:rgba(255,255,255,.2);}
+  /* ‹/› read as "back/forward" — under LTR the reading direction flips, so the glyphs must mirror
+     to keep pointing the right way (prevMonth should still point toward the earlier month visually) */
+  [dir="ltr"] .dir-arrow{display:inline-block; transform:scaleX(-1);}
   .month-switch span{font-size:12.5px;font-weight:600;min-width:82px;text-align:center;}
   .undo-redo-pill{display:flex; align-items:center; gap:2px; background:rgba(255,255,255,.12); border-radius:999px; padding:4px 6px;}
   .undo-redo-pill button{background:none;border:none;color:var(--paper); font-family:'Cairo'; font-size:14px; width:26px;height:26px;border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer;}
@@ -224,6 +227,9 @@
   .slider:before{content:""; position:absolute; width:20px; height:20px; border-radius:50%; background:#fff; top:3px; right:3px; transition:.2s;}
   input:checked + .slider{background:var(--teal);}
   input:checked + .slider:before{transform:translateX(-18px);}
+  /* under LTR (English), "on" should slide toward the end (right) instead of the start (left) —
+     translateX has no logical-property equivalent, so this is a plain dir-scoped override */
+  [dir="ltr"] input:checked + .slider:before{transform:translateX(18px);}
 
   .item-row-edit{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); content-visibility:auto; contain-intrinsic-size:0 54px;}
   .item-row-edit:last-child{border-bottom:none;}
@@ -300,7 +306,7 @@
   .calc-row button:active{transform:scale(.92);}
   .modal-actions{display:flex; gap:10px; margin-top:16px;}
   .modal-actions .btn{flex:1;}
-  .close-x{position:absolute; top:14px; left:16px; background:none; border:none; font-size:18px; color:var(--ink-soft); cursor:pointer; transition:transform .1s ease;}
+  .close-x{position:absolute; top:14px; inset-inline-start:16px; background:none; border:none; font-size:18px; color:var(--ink-soft); cursor:pointer; transition:transform .1s ease;}
   .close-x:active{transform:scale(.8);}
   .toast{
     position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--paper);
@@ -357,22 +363,22 @@
 
   <div class="topbar">
     <div class="brand">
-      <h1>💰 متابعة مصاريفي</h1>
+      <h1 data-i18n="app.title">💰 متابعة مصاريفي</h1>
       <div style="display:flex; align-items:center; gap:8px;">
         <div class="undo-redo-pill">
-          <button id="undoBtn" title="تراجع عن آخر تغيير" disabled>↩️</button>
-          <button id="redoBtn" title="إعادة آخر تراجع" disabled>↪️</button>
+          <button id="undoBtn" data-i18n-title="undo.title" title="تراجع عن آخر تغيير" disabled>↩️</button>
+          <button id="redoBtn" data-i18n-title="redo.title" title="إعادة آخر تراجع" disabled>↪️</button>
         </div>
         <div class="month-switch">
-          <button id="prevMonth">‹</button>
+          <button id="prevMonth" class="dir-arrow">‹</button>
           <span id="monthLabel">سبتمبر 2026</span>
-          <button id="nextMonth">›</button>
+          <button id="nextMonth" class="dir-arrow">›</button>
         </div>
       </div>
     </div>
     <div class="hero">
-      <div class="label" id="heroLabel">معايا كام؟</div>
-      <div class="amount" id="heroAmount">0 <small>ج</small></div>
+      <div class="label" id="heroLabel" data-i18n="hero.label">معايا كام؟</div>
+      <div class="amount" id="heroAmount">0 <small data-i18n="common.currency">ج</small></div>
       <div class="phase-chip" id="phaseChip">—</div>
     </div>
   </div>
@@ -380,10 +386,10 @@
   <div id="pendingSmsWrap"></div>
 
   <div class="content" id="tab-home">
-    <div class="section-title">🎯 مرونة الشهر ده</div>
+    <div class="section-title" data-i18n="home.flexTitle">🎯 مرونة الشهر ده</div>
     <div class="flex-card">
       <div class="flex-top">
-        <div><div class="t1">اتصرف من أصل</div><div class="t2" id="flexSpent">0 ج</div></div>
+        <div><div class="t1" data-i18n="home.spentOf">اتصرف من أصل</div><div class="t2" id="flexSpent">0 ج</div></div>
         <div style="text-align:left;">
           <div class="t3" id="flexBudget">من 0 ج</div>
         </div>
@@ -391,49 +397,49 @@
       <div class="bar-track"><div class="bar-fill" id="flexBar" style="width:0%"></div></div>
     </div>
 
-    <div class="section-title">💳 أرصدة الحسابات <span class="hint">مستقلة عن "معايا كام؟"</span></div>
+    <div class="section-title"><span data-i18n="home.accountsTitle">💳 أرصدة الحسابات</span> <span class="hint" data-i18n="home.accountsHint">مستقلة عن "معايا كام؟"</span></div>
     <div class="obl-list" id="accountsList"></div>
-    <button class="btn btn-ghost" id="addMoveBtn" style="margin-top:8px;">+ تسجيل حركة (إيداع/سحب)</button>
+    <button class="btn btn-ghost" id="addMoveBtn" style="margin-top:8px;" data-i18n="home.addMove">+ تسجيل حركة (إيداع/سحب)</button>
 
-    <div class="section-title">📌 نظرة سريعة</div>
+    <div class="section-title" data-i18n="home.quickLookTitle">📌 نظرة سريعة</div>
     <div class="stat-grid">
-      <div class="stat-card"><div class="k">أكتر فئة صرف</div><div class="v" id="topCat">—</div></div>
-      <div class="stat-card"><div class="k">متوسط يومي (مرونة)</div><div class="v" id="avgDaily">0 <span>ج</span></div></div>
+      <div class="stat-card"><div class="k" data-i18n="home.topCatLabel">أكتر فئة صرف</div><div class="v" id="topCat">—</div></div>
+      <div class="stat-card"><div class="k" data-i18n="home.avgDailyLabel">متوسط يومي (مرونة)</div><div class="v" id="avgDaily">0 <span data-i18n="common.currency">ج</span></div></div>
     </div>
 
-    <div class="section-title">📊 التزامات الشهر</div>
+    <div class="section-title" data-i18n="home.obligationsTitle">📊 التزامات الشهر</div>
     <div class="obl-list" id="oblList"></div>
   </div>
 
   <div class="content" id="tab-expenses" style="display:none;">
-    <div class="section-title">🥧 المصروفات حسب الفئة <span id="expMonthLbl2" class="hint"></span></div>
+    <div class="section-title"><span data-i18n="expenses.byCatTitle">🥧 المصروفات حسب الفئة</span> <span id="expMonthLbl2" class="hint"></span></div>
     <div class="cat-bars" id="catBars"></div>
 
-    <div class="section-title" style="margin-top:20px;">🧾 كل المصاريف</div>
+    <div class="section-title" style="margin-top:20px;" data-i18n="expenses.allTitle">🧾 كل المصاريف</div>
     <div class="search-wrap">
-      <input type="text" id="searchBox" placeholder="دور بالملاحظة...">
+      <input type="text" id="searchBox" data-i18n-placeholder="expenses.searchPlaceholder" placeholder="دور بالملاحظة...">
     </div>
     <div class="filter-scroll" id="filterChips"></div>
     <div class="filter-scroll" id="expSortChips"></div>
     <div id="expList"></div>
-    <button class="btn btn-ghost" id="exportCsv" style="margin-top:6px;">⬇️ تصدير مصاريف الشهر (CSV)</button>
+    <button class="btn btn-ghost" id="exportCsv" style="margin-top:6px;" data-i18n="expenses.exportCsv">⬇️ تصدير مصاريف الشهر (CSV)</button>
   </div>
 
   <div class="content" id="tab-allocations" style="display:none;">
-    <div class="section-title">📦 توزيع الفائض المقترح <span class="hint" id="allocSuggestionMonthLbl"></span></div>
+    <div class="section-title"><span data-i18n="allocations.suggestTitle">📦 توزيع الفائض المقترح</span> <span class="hint" id="allocSuggestionMonthLbl"></span></div>
     <div class="alloc-grid" id="allocGrid"></div>
 
-    <div class="section-title" style="margin-top:20px;">📦 التوزيعات التراكمية (فعليًا)</div>
+    <div class="section-title" style="margin-top:20px;" data-i18n="allocations.cumulativeTitle">📦 التوزيعات التراكمية (فعليًا)</div>
     <div class="stat-grid" id="allocStatGrid" style="margin-bottom:14px;"></div>
 
     <div class="acc-group">
-      <button class="acc-header" data-acc="allocMonthly">📅 تراكمي شهري <span class="chev">▾</span></button>
+      <button class="acc-header" data-acc="allocMonthly"><span data-i18n="allocations.monthlyTitle">📅 تراكمي شهري</span> <span class="chev">▾</span></button>
       <div class="acc-body" id="acc-allocMonthly" hidden>
         <div class="obl-list" id="allocMonthlyList" style="margin-bottom:16px;"></div>
       </div>
     </div>
 
-    <div class="section-title">🧾 كل العمليات</div>
+    <div class="section-title" data-i18n="allocations.allTitle">🧾 كل العمليات</div>
     <div class="filter-scroll" id="allocFilterChips"></div>
     <div class="filter-scroll" id="allocSortChips"></div>
     <div id="allocList"></div>
@@ -441,13 +447,13 @@
 
   <div class="content" id="tab-obligations" style="display:none;">
     <div class="set-card">
-      <h3>📋 التزامات ثابتة / أقساط / جمعيات</h3>
+      <h3 data-i18n="obligations.title">📋 التزامات ثابتة / أقساط / جمعيات</h3>
       <p style="font-size:11px; color:var(--ink-soft); margin:0 0 8px; line-height:1.6;">
-        المبالغ تحت خاصة بشهر <span id="itemsMonthHint"></span> بس.
-        <span class="acc-header" data-acc="oblHelp" style="display:inline; padding:0; border:none; background:none; font-size:11px; font-weight:700; color:var(--teal); text-decoration:underline; cursor:pointer;">اعرف أكتر ↓</span>
+        <span data-i18n="obligations.helpIntro">المبالغ تحت خاصة بشهر</span> <span id="itemsMonthHint"></span> <span data-i18n="obligations.helpIntroSuffix">بس.</span>
+        <span class="acc-header" data-acc="oblHelp" style="display:inline; padding:0; border:none; background:none; font-size:11px; font-weight:700; color:var(--teal); text-decoration:underline; cursor:pointer;" data-i18n="obligations.knowMore">اعرف أكتر ↓</span>
       </p>
       <div class="acc-body" id="acc-oblHelp" hidden>
-        <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;">
+        <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;" data-i18n="obligations.helpFull">
           تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
           فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
           اللي انت فيه بس. زرار ✕ بيشيل البند من الشهر ده بس (زي ما توقفه بالظبط). زرار ⏸️/▶️ بيشغّل
@@ -458,54 +464,54 @@
       <div class="filter-scroll" id="itemsSortChips"></div>
       <div id="itemsEdit"></div>
       <div id="itemsPausedWrap" style="margin-top:10px;"></div>
-      <button class="btn btn-ghost" id="addItemBtn" style="margin-top:10px;">+ إضافة بند جديد</button>
+      <button class="btn btn-ghost" id="addItemBtn" style="margin-top:10px;" data-i18n="obligations.addItem">+ إضافة بند جديد</button>
     </div>
   </div>
 
   <div class="content" id="tab-maintenance" style="display:none;">
     <div class="set-card">
-      <h3>🚗 حالة العربية</h3>
-      <div class="section-title" style="margin:0 4px 8px;">⛽ مصاريف العربية الشهر ده <span class="hint">بنزين، جراج، صيانة... كل حاجة فئة عربية</span></div>
+      <h3 data-i18n="maintenance.statusTitle">🚗 حالة العربية</h3>
+      <div class="section-title" style="margin:0 4px 8px;"><span data-i18n="maintenance.budgetTitle">⛽ مصاريف العربية الشهر ده</span> <span class="hint" data-i18n="maintenance.budgetHint">بنزين، جراج، صيانة... كل حاجة فئة عربية</span></div>
       <div class="flex-card" id="carBudgetCard" style="margin-bottom:14px;"></div>
 
-      <div class="field"><label>الكيلومترات الحالية (KM)</label><input type="number" id="inOdometer" placeholder="مثال: 15000"></div>
+      <div class="field"><label data-i18n="maintenance.odometerLabel">الكيلومترات الحالية (KM)</label><input type="number" id="inOdometer" data-i18n-placeholder="maintenance.odometerPlaceholder" placeholder="مثال: 15000"></div>
       <div class="field" style="margin-bottom:14px;"><label id="odometerDateLbl" style="font-weight:500;"></label></div>
 
-      <div class="section-title" style="margin:0 4px 8px;">⏭️ الصيانة الجاية</div>
+      <div class="section-title" style="margin:0 4px 8px;" data-i18n="maintenance.nextTitle">⏭️ الصيانة الجاية</div>
       <div class="flex-card" id="nextMaintCard"></div>
     </div>
 
-    <div class="section-title" style="margin-top:20px;">📋 جدول الصيانة الدورية <span class="hint">حسب موقع الوكيل الرسمي</span></div>
+    <div class="section-title" style="margin-top:20px;"><span data-i18n="maintenance.scheduleTitle">📋 جدول الصيانة الدورية</span> <span class="hint" data-i18n="maintenance.scheduleHint">حسب موقع الوكيل الرسمي</span></div>
     <div id="maintSchedule"></div>
-    <button class="btn btn-ghost" id="addSchedBtn" style="margin-top:8px;">+ إضافة نقطة صيانة</button>
+    <button class="btn btn-ghost" id="addSchedBtn" style="margin-top:8px;" data-i18n="maintenance.addSched">+ إضافة نقطة صيانة</button>
 
-    <div class="section-title" style="margin-top:20px;">🧾 سجل الصيانة الفعلي</div>
+    <div class="section-title" style="margin-top:20px;" data-i18n="maintenance.logTitle">🧾 سجل الصيانة الفعلي</div>
     <div class="filter-scroll" id="maintSortChips"></div>
     <div id="maintLog"></div>
   </div>
 
   <div class="content" id="tab-settings" style="display:none;">
     <div class="acc-group">
-      <button class="acc-header" data-acc="money">💰 المال والحسابات <span class="chev">▾</span></button>
+      <button class="acc-header" data-acc="money"><span data-i18n="settings.moneyGroup">💰 المال والحسابات</span> <span class="chev">▾</span></button>
       <div class="acc-body" id="acc-money">
         <div class="set-card">
-          <h3>💵 الدخل والطوارئ</h3>
-          <div class="field"><label>المرتب الشهري</label><input type="number" id="inSalary"></div>
-          <div class="field"><label>رصيد كاش الطوارئ الحالي</label><input type="number" id="inEmergBal"></div>
-          <div class="field"><label>هدف كاش الطوارئ</label><input type="number" id="inEmergGoal"></div>
+          <h3 data-i18n="settings.incomeTitle">💵 الدخل والطوارئ</h3>
+          <div class="field"><label data-i18n="settings.salaryLabel">المرتب الشهري</label><input type="number" id="inSalary"></div>
+          <div class="field"><label data-i18n="settings.emergBalLabel">رصيد كاش الطوارئ الحالي</label><input type="number" id="inEmergBal"></div>
+          <div class="field"><label data-i18n="settings.emergGoalLabel">هدف كاش الطوارئ</label><input type="number" id="inEmergGoal"></div>
         </div>
 
         <div class="set-card">
-          <h3>💳 مصادر الصرف</h3>
+          <h3 data-i18n="settings.sourcesTitle">💳 مصادر الصرف</h3>
           <div id="sourcesEdit"></div>
           <div class="field" style="display:flex; gap:8px; margin-top:10px;">
-            <input type="text" id="newSourceInput" placeholder="مصدر جديد (مثال: انستاباي)" style="flex:1;">
-            <button class="btn btn-ghost" id="addSourceBtn" style="width:auto; padding:10px 16px;">+ إضافة</button>
+            <input type="text" id="newSourceInput" data-i18n-placeholder="settings.newSourcePlaceholder" placeholder="مصدر جديد (مثال: انستاباي)" style="flex:1;">
+            <button class="btn btn-ghost" id="addSourceBtn" style="width:auto; padding:10px 16px;" data-i18n="common.add">+ إضافة</button>
           </div>
         </div>
 
         <div class="set-card">
-          <h3>📜 حركات الحسابات</h3>
+          <h3 data-i18n="settings.movesTitle">📜 حركات الحسابات</h3>
           <div class="filter-scroll" id="accountMoveSortChips"></div>
           <div id="accountMovesList"></div>
         </div>
@@ -513,66 +519,66 @@
     </div>
 
     <div class="acc-group">
-      <button class="acc-header" data-acc="cats">🏷️ الفئات والحدود <span class="chev">▾</span></button>
+      <button class="acc-header" data-acc="cats"><span data-i18n="settings.catsGroup">🏷️ الفئات والحدود</span> <span class="chev">▾</span></button>
       <div class="acc-body" id="acc-cats" hidden>
         <div class="set-card">
-          <h3>🏷️ فئات المصاريف</h3>
+          <h3 data-i18n="settings.catsTitle">🏷️ فئات المصاريف</h3>
           <div id="catsEdit"></div>
           <div class="field" style="display:flex; gap:8px; margin-top:10px;">
             <input type="text" id="newCatEmojiInput" placeholder="🏷️" maxlength="4" style="width:56px; text-align:center; flex:none;">
-            <input type="text" id="newCatNameInput" placeholder="فئة جديدة (مثال: هدايا)" style="flex:1;">
-            <button class="btn btn-ghost" id="addCatBtn" style="width:auto; padding:10px 16px;">+ إضافة</button>
+            <input type="text" id="newCatNameInput" data-i18n-placeholder="settings.newCatPlaceholder" placeholder="فئة جديدة (مثال: هدايا)" style="flex:1;">
+            <button class="btn btn-ghost" id="addCatBtn" style="width:auto; padding:10px 16px;" data-i18n="common.add">+ إضافة</button>
           </div>
         </div>
 
         <div class="set-card">
-          <h3>🎯 حدود شهرية للفئات (اختياري)</h3>
+          <h3 data-i18n="settings.capsTitle">🎯 حدود شهرية للفئات (اختياري)</h3>
           <div id="capsEdit"></div>
         </div>
       </div>
     </div>
 
     <div class="acc-group">
-      <button class="acc-header" data-acc="notif">🔔 الإشعارات والأتمتة <span class="chev">▾</span></button>
+      <button class="acc-header" data-acc="notif"><span data-i18n="settings.notifGroup">🔔 الإشعارات والأتمتة</span> <span class="chev">▾</span></button>
       <div class="acc-body" id="acc-notif" hidden>
         <div class="set-card">
-          <h3>🔔 التذكيرات</h3>
+          <h3 data-i18n="settings.remindersTitle">🔔 التذكيرات</h3>
           <div class="toggle-row">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تذكير يومي بتسجيل المصاريف</span>
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.dailyReminder">تذكير يومي بتسجيل المصاريف</span>
             <label class="switch"><input type="checkbox" id="notifDailyEnabled"><span class="slider"></span></label>
           </div>
           <div class="field" id="notifDailyTimeField" style="margin-top:2px;">
             <input type="time" id="notifDailyTime">
           </div>
           <div class="toggle-row">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تذكير أسبوعي بعمل نسخة احتياطية (كل اتنين الساعة 10ص)</span>
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.weeklyReminder">تذكير أسبوعي بعمل نسخة احتياطية (كل اتنين الساعة 10ص)</span>
             <label class="switch"><input type="checkbox" id="notifWeeklyEnabled"><span class="slider"></span></label>
           </div>
           <div class="toggle-row">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تنبيه لما أتجاوز حد فئة مصروف</span>
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.capReminder">تنبيه لما أتجاوز حد فئة مصروف</span>
             <label class="switch"><input type="checkbox" id="notifCapEnabled"><span class="slider"></span></label>
           </div>
           <div class="toggle-row" id="notifMaintRow">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تنبيه قرب موعد صيانة العربية</span>
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.maintReminder">تنبيه قرب موعد صيانة العربية</span>
             <label class="switch"><input type="checkbox" id="notifMaintEnabled"><span class="slider"></span></label>
           </div>
-          <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;">بعض الأجهزة بتأخر التذكيرات المجدولة بسبب إعدادات توفير البطارية — لو التذكير مش بيوصل، جرّب تستثني التطبيق من توفير البطارية من إعدادات الأندرويد.</p>
+          <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;" data-i18n="settings.remindersNote">بعض الأجهزة بتأخر التذكيرات المجدولة بسبب إعدادات توفير البطارية — لو التذكير مش بيوصل، جرّب تستثني التطبيق من توفير البطارية من إعدادات الأندرويد.</p>
         </div>
 
         <div class="set-card">
-          <h3>🏦 كشف مصاريف من رسائل البنك (تجريبي)</h3>
+          <h3 data-i18n="settings.smsTitle">🏦 كشف مصاريف من رسائل البنك (تجريبي)</h3>
           <div class="toggle-row">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تفعيل الكشف التلقائي</span>
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.smsEnable">تفعيل الكشف التلقائي</span>
             <label class="switch"><input type="checkbox" id="smsAutoEnabled"><span class="slider"></span></label>
           </div>
           <div class="field" style="margin-top:10px;">
-            <label>البنوك المتابَعة (افصل بفاصلة)</label>
+            <label data-i18n="settings.smsSendersLabel">البنوك المتابَعة (افصل بفاصلة)</label>
             <div style="display:flex; gap:8px;">
               <input type="text" id="bankSendersInput" placeholder="QNB,CIB" style="flex:1;">
-              <button class="btn btn-ghost" id="saveBankSendersBtn" style="width:auto; padding:10px 16px;">حفظ</button>
+              <button class="btn btn-ghost" id="saveBankSendersBtn" style="width:auto; padding:10px 16px;" data-i18n="common.save">حفظ</button>
             </div>
           </div>
-          <p style="font-size:11px; color:var(--ink-soft); margin:10px 0 0; line-height:1.7;">
+          <p style="font-size:11px; color:var(--ink-soft); margin:10px 0 0; line-height:1.7;" data-i18n="settings.smsNote">
             بيراقب رسائل SMS اللي جايه من البنوك دي بس، وبيقترح مصروف — مفيش حاجة بتتسجل تلقائيًا،
             دايمًا بتراجع وتأكد (أو تتجاهل) من الكارت اللي بيظهر فوق أي تبويب. تحليل نص الرسالة أول
             محاولة (مفيش عينات رسائل حقيقية من QNB/CIB اتجربت عليها)، فممكن يحتاج ضبط لو الصيغة مختلفة.
@@ -582,12 +588,12 @@
     </div>
 
     <div class="acc-group">
-      <button class="acc-header" data-acc="backup">☁️ البيانات والنسخ الاحتياطي <span class="chev">▾</span></button>
+      <button class="acc-header" data-acc="backup"><span data-i18n="settings.backupGroup">☁️ البيانات والنسخ الاحتياطي</span> <span class="chev">▾</span></button>
       <div class="acc-body" id="acc-backup" hidden>
         <div class="set-card">
-          <h3>☁️ حساب جوجل (نسخة احتياطية سحابية)</h3>
+          <h3 data-i18n="settings.googleTitle">☁️ حساب جوجل (نسخة احتياطية سحابية)</h3>
           <div id="googleAccountArea"></div>
-          <p style="font-size:11px; color:var(--ink-soft); margin-top:10px; line-height:1.7;">
+          <p style="font-size:11px; color:var(--ink-soft); margin-top:10px; line-height:1.7;" data-i18n="settings.googleNote">
             بيرفع/يرجّع نفس ملف النسخة الاحتياطية (JSON) من مساحة خاصة بالتطبيق جوه Google Drive بتاعك —
             مش هتشوفها في Drive العادي، ومحدش غير التطبيق نفسه يقدر يوصلها. محتاجة إعداد لمرة واحدة على
             Google Cloud Console الأول (التفاصيل في README).
@@ -595,44 +601,49 @@
         </div>
 
         <div class="set-card">
-          <h3>💾 نسخة احتياطية (لنقل بياناتك بين المتصفحات)</h3>
+          <h3 data-i18n="settings.localBackupTitle">💾 نسخة احتياطية (لنقل بياناتك بين المتصفحات)</h3>
           <div class="field" style="margin-bottom:8px;">
-            <label style="margin-bottom:8px;">البيانات محفوظة داخل المتصفح اللي بتفتح بيه الملف بس. لو فتحته من متصفح تاني، صدّر نسخة من هنا واستوردها هناك.</label>
+            <label style="margin-bottom:8px;" data-i18n="settings.localBackupNote">البيانات محفوظة داخل المتصفح اللي بتفتح بيه الملف بس. لو فتحته من متصفح تاني، صدّر نسخة من هنا واستوردها هناك.</label>
           </div>
-          <button class="btn btn-primary" id="exportBackup" style="margin-bottom:8px;">⬆️ تصدير نسخة احتياطية</button>
+          <button class="btn btn-primary" id="exportBackup" style="margin-bottom:8px;" data-i18n="settings.exportBackupBtn">⬆️ تصدير نسخة احتياطية</button>
           <input type="file" id="importFile" accept=".json" style="display:none;">
-          <button class="btn btn-ghost" id="importBackup">⬇️ استيراد نسخة احتياطية</button>
+          <button class="btn btn-ghost" id="importBackup" data-i18n="settings.importBackupBtn">⬇️ استيراد نسخة احتياطية</button>
         </div>
 
         <div class="set-card">
-          <h3>📊 تقرير إكسيل — <span id="exportExcelMonthLbl">الشهر الحالي</span></h3>
-          <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;">
+          <h3><span data-i18n="settings.excelTitle">📊 تقرير إكسيل —</span> <span id="exportExcelMonthLbl">الشهر الحالي</span></h3>
+          <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;" data-i18n="settings.excelNote">
             كل التفاصيل الخاصة بالشهر المختار فوق (مصاريف، التزامات، توزيعات، صيانة،
             حركات حسابات) في ملف واحد، كل قايمة في شيت لوحدها ومجموع تحتها. أرصدة
             الحسابات نفسها بتفضل إجمالية (من أول ما بدأت التطبيق)، مش خاصة بشهر واحد،
             لإنها رصيد لحظي مش حركة شهر.
           </p>
-          <button class="btn btn-primary" id="exportExcel">تصدير تقرير الشهر (مصاريف + التزامات + توزيعات + حسابات)</button>
+          <button class="btn btn-primary" id="exportExcel" data-i18n="settings.exportExcelBtn">تصدير تقرير الشهر (مصاريف + التزامات + توزيعات + حسابات)</button>
         </div>
       </div>
     </div>
 
     <div class="acc-group">
-      <button class="acc-header" data-acc="general">🔧 عام <span class="chev">▾</span></button>
+      <button class="acc-header" data-acc="general"><span data-i18n="settings.generalGroup">🔧 عام</span> <span class="chev">▾</span></button>
       <div class="acc-body" id="acc-general" hidden>
         <div class="set-card">
-          <h3>🔒 الحماية</h3>
-          <div class="toggle-row" style="border-bottom:none;">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">قفل بالبصمة قبل كل دخول</span>
-            <label class="switch"><input type="checkbox" id="biometricLockEnabled"><span class="slider"></span></label>
-          </div>
-          <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;">لو مفعّلة، هتحتاج بصمتك أو رمز قفل شاشة موبايلك كل ما تفتح التطبيق أو ترجعله من الخلفية. محتاج جهازك يكون فيه بصمة/وجه/قفل شاشة متفعّل الأول.</p>
+          <h3 data-i18n="settings.langTitle">🌐 اللغة / Language</h3>
+          <div class="chip-row" id="langChips"></div>
         </div>
 
         <div class="set-card">
-          <h3>🚗 العربية</h3>
+          <h3 data-i18n="settings.lockTitle">🔒 الحماية</h3>
+          <div class="toggle-row" style="border-bottom:none;">
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.lockToggle">قفل بالبصمة قبل كل دخول</span>
+            <label class="switch"><input type="checkbox" id="biometricLockEnabled"><span class="slider"></span></label>
+          </div>
+          <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;" data-i18n="settings.lockNote">لو مفعّلة، هتحتاج بصمتك أو رمز قفل شاشة موبايلك كل ما تفتح التطبيق أو ترجعله من الخلفية. محتاج جهازك يكون فيه بصمة/وجه/قفل شاشة متفعّل الأول.</p>
+        </div>
+
+        <div class="set-card">
+          <h3 data-i18n="settings.carTitle">🚗 العربية</h3>
           <div class="toggle-row">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تتبع صيانة العربية (تبويب السيارة)</span>
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.carToggle">تتبع صيانة العربية (تبويب السيارة)</span>
             <label class="switch"><input type="checkbox" id="inHasCar"><span class="slider"></span></label>
           </div>
         </div>
@@ -640,45 +651,45 @@
     </div>
 
     <div class="set-card">
-      <button class="btn btn-danger" id="resetBtn">تصفير كل البيانات</button>
+      <button class="btn btn-danger" id="resetBtn" data-i18n="settings.resetBtn">تصفير كل البيانات</button>
     </div>
   </div>
 
   <button class="fab" id="fabAdd">+</button>
 
   <div class="tabbar">
-    <button class="tabbtn active" data-tab="home"><span class="ic">🏠</span><span class="lb">الرئيسية</span></button>
-    <button class="tabbtn" data-tab="expenses"><span class="ic">🧾</span><span class="lb">المصاريف</span></button>
-    <button class="tabbtn" data-tab="allocations"><span class="ic">📦</span><span class="lb">التوزيعات</span></button>
-    <button class="tabbtn" data-tab="obligations"><span class="ic">📋</span><span class="lb">الالتزامات</span></button>
-    <button class="tabbtn" data-tab="maintenance"><span class="ic">🚗</span><span class="lb">السيارة</span></button>
-    <button class="tabbtn" data-tab="settings"><span class="ic">⚙️</span><span class="lb">الإعدادات</span></button>
+    <button class="tabbtn active" data-tab="home"><span class="ic">🏠</span><span class="lb" data-i18n="nav.home">الرئيسية</span></button>
+    <button class="tabbtn" data-tab="expenses"><span class="ic">🧾</span><span class="lb" data-i18n="nav.expenses">المصاريف</span></button>
+    <button class="tabbtn" data-tab="allocations"><span class="ic">📦</span><span class="lb" data-i18n="nav.allocations">التوزيعات</span></button>
+    <button class="tabbtn" data-tab="obligations"><span class="ic">📋</span><span class="lb" data-i18n="nav.obligations">الالتزامات</span></button>
+    <button class="tabbtn" data-tab="maintenance"><span class="ic">🚗</span><span class="lb" data-i18n="nav.maintenance">السيارة</span></button>
+    <button class="tabbtn" data-tab="settings"><span class="ic">⚙️</span><span class="lb" data-i18n="nav.settings">الإعدادات</span></button>
   </div>
 </div>
 
 <div class="modal-bg" id="allocModalBg">
   <div class="modal">
     <button class="close-x" id="closeAllocModal">✕</button>
-    <h2>تسجيل توزيع فعلي</h2>
+    <h2 data-i18n="modal.alloc.title">تسجيل توزيع فعلي</h2>
     <div class="field">
-      <label>البند</label>
+      <label data-i18n="modal.alloc.catLabel">البند</label>
       <div class="chip-row" id="allocCatChips"></div>
     </div>
     <div class="field">
-      <label>المبلغ (ج)</label>
+      <label data-i18n="common.amountCurrency">المبلغ (ج)</label>
       <input type="number" id="aAmount" placeholder="مثال: 3000">
     </div>
     <div class="field">
-      <label>ملاحظة (اختياري)</label>
-      <input type="text" id="aNote" placeholder="مثال: شريت أسهم ADIB">
+      <label data-i18n="common.noteOptional">ملاحظة (اختياري)</label>
+      <input type="text" id="aNote" data-i18n-placeholder="modal.alloc.notePlaceholder" placeholder="مثال: شريت أسهم ADIB">
     </div>
     <div class="field">
-      <label>التاريخ</label>
+      <label data-i18n="common.date">التاريخ</label>
       <input type="date" id="aDate">
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="cancelAllocAdd">إلغاء</button>
-      <button class="btn btn-primary" id="saveAllocAdd">حفظ</button>
+      <button class="btn btn-ghost" id="cancelAllocAdd" data-i18n="common.cancel">إلغاء</button>
+      <button class="btn btn-primary" id="saveAllocAdd" data-i18n="common.save">حفظ</button>
     </div>
   </div>
 </div>
@@ -688,34 +699,34 @@
     <button class="close-x" id="closeModal">✕</button>
     <h2 id="expenseModalTitle">مصروف جديد</h2>
     <div class="field">
-      <label>المبلغ (ج) — تقدر تكتب عملية زي 50+30</label>
+      <label data-i18n="modal.expense.amountLabel">المبلغ (ج) — تقدر تكتب عملية زي 50+30</label>
       <input type="text" id="mAmount" placeholder="مثال: 150" inputmode="decimal">
       <div class="calc-row">
         <button type="button" class="calcBtn" data-op="+">+</button>
         <button type="button" class="calcBtn" data-op="-">−</button>
         <button type="button" id="calcEval">=</button>
-        <button type="button" id="calcClear">مسح</button>
+        <button type="button" id="calcClear" data-i18n="modal.expense.clear">مسح</button>
       </div>
     </div>
     <div class="field">
-      <label>النوع</label>
+      <label data-i18n="modal.expense.catLabel">النوع</label>
       <div class="chip-row" id="catChips"></div>
     </div>
     <div class="field">
-      <label>المصدر (هيتخصم منين)</label>
+      <label data-i18n="modal.sourceLabel">المصدر (هيتخصم منين)</label>
       <div class="chip-row" id="sourceChips"></div>
     </div>
     <div class="field">
-      <label>ملاحظة (اختياري)</label>
-      <input type="text" id="mNote" placeholder="مثال: غدا مع الأصحاب">
+      <label data-i18n="common.noteOptional">ملاحظة (اختياري)</label>
+      <input type="text" id="mNote" data-i18n-placeholder="modal.expense.notePlaceholder" placeholder="مثال: غدا مع الأصحاب">
     </div>
     <div class="field">
-      <label>التاريخ</label>
+      <label data-i18n="common.date">التاريخ</label>
       <input type="date" id="mDate">
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="cancelAdd">إلغاء</button>
-      <button class="btn btn-primary" id="saveAdd">حفظ المصروف</button>
+      <button class="btn btn-ghost" id="cancelAdd" data-i18n="common.cancel">إلغاء</button>
+      <button class="btn btn-primary" id="saveAdd" data-i18n="modal.expense.save">حفظ المصروف</button>
     </div>
   </div>
 </div>
@@ -728,10 +739,10 @@
       <label id="flexModalLabel">القيمة (ج)</label>
       <input type="number" id="fAmount" placeholder="مثال: 3000">
     </div>
-    <p style="font-size:11.5px;color:var(--ink-soft);margin-top:-6px;">تقدر تحط أي رقم حتى لو كان الفائض كله — البندين التانيين هيفضلوا زي ما هما لحد ما تعدّلهم بنفسك.</p>
+    <p style="font-size:11.5px;color:var(--ink-soft);margin-top:-6px;" data-i18n="modal.flex.note">تقدر تحط أي رقم حتى لو كان الفائض كله — البندين التانيين هيفضلوا زي ما هما لحد ما تعدّلهم بنفسك.</p>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="flexAutoBtn">رجوع للحساب التلقائي</button>
-      <button class="btn btn-primary" id="saveFlexAdd">حفظ</button>
+      <button class="btn btn-ghost" id="flexAutoBtn" data-i18n="modal.flex.autoBtn">رجوع للحساب التلقائي</button>
+      <button class="btn btn-primary" id="saveFlexAdd" data-i18n="common.save">حفظ</button>
     </div>
   </div>
 </div>
@@ -739,38 +750,38 @@
 <div class="modal-bg" id="maintModalBg">
   <div class="modal">
     <button class="close-x" id="closeMaintModal">✕</button>
-    <h2>تسجيل صيانة</h2>
+    <h2 data-i18n="modal.maint.title">تسجيل صيانة</h2>
     <div class="field">
-      <label>الكيلومترات وقت الصيانة</label>
+      <label data-i18n="modal.maint.kmLabel">الكيلومترات وقت الصيانة</label>
       <input type="number" id="maKm" placeholder="مثال: 20000">
     </div>
     <div class="field">
-      <label>التكلفة (ج)</label>
+      <label data-i18n="modal.maint.costLabel">التكلفة (ج)</label>
       <input type="number" id="maCost" placeholder="مثال: 5837">
     </div>
     <div class="field">
-      <label>المصدر (هيتخصم منين)</label>
+      <label data-i18n="modal.sourceLabel">المصدر (هيتخصم منين)</label>
       <div class="chip-row" id="maintSourceChips"></div>
     </div>
     <div class="field">
-      <label>اللي اتعمل</label>
+      <label data-i18n="modal.maint.itemsLabel">اللي اتعمل</label>
       <div class="chip-row" id="maintItemChips"></div>
     </div>
     <div class="field">
-      <label>ملاحظة (اختياري)</label>
-      <input type="text" id="maNote" placeholder="مثال: توكيل مدينة نصر">
+      <label data-i18n="common.noteOptional">ملاحظة (اختياري)</label>
+      <input type="text" id="maNote" data-i18n-placeholder="modal.maint.notePlaceholder" placeholder="مثال: توكيل مدينة نصر">
     </div>
     <div class="field">
-      <label>التاريخ</label>
+      <label data-i18n="common.date">التاريخ</label>
       <input type="date" id="maDate">
     </div>
     <div class="toggle-row" style="border-bottom:none; padding-top:2px;">
-      <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">سجّلها كمان كمصروف الشهر (فئة عربية)</span>
+      <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="modal.maint.linkExpense">سجّلها كمان كمصروف الشهر (فئة عربية)</span>
       <label class="switch"><input type="checkbox" id="maLinkExpense" checked><span class="slider"></span></label>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="cancelMaintAdd">إلغاء</button>
-      <button class="btn btn-primary" id="saveMaintAdd">حفظ</button>
+      <button class="btn btn-ghost" id="cancelMaintAdd" data-i18n="common.cancel">إلغاء</button>
+      <button class="btn btn-primary" id="saveMaintAdd" data-i18n="common.save">حفظ</button>
     </div>
   </div>
 </div>
@@ -778,30 +789,30 @@
 <div class="modal-bg" id="accountModalBg">
   <div class="modal">
     <button class="close-x" id="closeAccountModal">✕</button>
-    <h2>تسجيل حركة على حساب</h2>
+    <h2 data-i18n="modal.account.title">تسجيل حركة على حساب</h2>
     <div class="field">
-      <label>الحساب</label>
+      <label data-i18n="modal.account.accountLabel">الحساب</label>
       <div class="chip-row" id="accountChips"></div>
     </div>
     <div class="field">
-      <label>نوع الحركة</label>
+      <label data-i18n="modal.account.typeLabel">نوع الحركة</label>
       <div class="chip-row" id="accountTypeChips"></div>
     </div>
     <div class="field">
-      <label>المبلغ (ج)</label>
+      <label data-i18n="common.amountCurrency">المبلغ (ج)</label>
       <input type="number" id="acAmount" placeholder="مثال: 5000">
     </div>
     <div class="field">
-      <label>ملاحظة (اختياري)</label>
-      <input type="text" id="acNote" placeholder="مثال: تحويل المرتب">
+      <label data-i18n="common.noteOptional">ملاحظة (اختياري)</label>
+      <input type="text" id="acNote" data-i18n-placeholder="modal.account.notePlaceholder" placeholder="مثال: تحويل المرتب">
     </div>
     <div class="field">
-      <label>التاريخ</label>
+      <label data-i18n="common.date">التاريخ</label>
       <input type="date" id="acDate">
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="cancelAccountAdd">إلغاء</button>
-      <button class="btn btn-primary" id="saveAccountAdd">حفظ</button>
+      <button class="btn btn-ghost" id="cancelAccountAdd" data-i18n="common.cancel">إلغاء</button>
+      <button class="btn btn-primary" id="saveAccountAdd" data-i18n="common.save">حفظ</button>
     </div>
   </div>
 </div>
@@ -811,47 +822,47 @@
     <button class="close-x" id="closeItemModal">✕</button>
     <h2 id="itemModalTitle">بند التزام جديد</h2>
     <div class="field">
-      <label>النوع</label>
+      <label data-i18n="modal.expense.catLabel">النوع</label>
       <div class="chip-row" id="itemCatChips"></div>
     </div>
     <div class="field">
-      <label>الاسم</label>
-      <input type="text" id="itName" placeholder="مثال: قسط العربية">
+      <label data-i18n="modal.item.nameLabel">الاسم</label>
+      <input type="text" id="itName" data-i18n-placeholder="modal.item.namePlaceholder" placeholder="مثال: قسط العربية">
     </div>
     <div class="field">
       <label id="itAmountLabel">القيمة الشهرية (ج)</label>
       <input type="number" id="itAmount" placeholder="مثال: 1500">
     </div>
     <div class="field">
-      <label>هيبدأ شهر إيه؟</label>
+      <label data-i18n="modal.item.startLabel">هيبدأ شهر إيه؟</label>
       <input type="month" id="itStartMonth">
     </div>
     <div class="field">
-      <label>هينتهي شهر إيه؟ (سيبه فاضي لو مالوش نهاية معروفة)</label>
+      <label data-i18n="modal.item.endLabel">هينتهي شهر إيه؟ (سيبه فاضي لو مالوش نهاية معروفة)</label>
       <input type="month" id="itEndMonth">
     </div>
     <div id="itGam3iyaFields">
       <div class="field">
-        <label>هتتقبض كام؟ (إجمالي مبلغ القبضة كاملة)</label>
+        <label data-i18n="modal.item.payoutAmountLabel">هتتقبض كام؟ (إجمالي مبلغ القبضة كاملة)</label>
         <input type="number" id="itPayoutAmount" placeholder="مثال: 18000">
       </div>
       <div class="field">
-        <label>دورك في القبض إمتى؟ (الشهر اللي هتاخد فيه القبضة)</label>
+        <label data-i18n="modal.item.payoutMonthLabel">دورك في القبض إمتى؟ (الشهر اللي هتاخد فيه القبضة)</label>
         <input type="month" id="itPayoutMonth">
       </div>
     </div>
     <div class="field">
-      <label>🔗 يتخصم من مصدر إيه؟ (اختياري)</label>
+      <label data-i18n="modal.item.sourceLabel">🔗 يتخصم من مصدر إيه؟ (اختياري)</label>
       <div class="chip-row" id="itSourceChips"></div>
-      <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.6;">
+      <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.6;" data-i18n="modal.item.sourceNote">
         لو اخترت مصدر، القيمة الشهرية هتتسجّل تلقائيًا كحركة سحب حقيقية على
         الحساب ده (تقدر تشوفها في "📜 حركات الحسابات")، بادئ من الشهر الحالي
         وبعده بس — مش رجعي على شهور فاتت.
       </p>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="cancelItemAdd">إلغاء</button>
-      <button class="btn btn-primary" id="saveItemAdd">حفظ</button>
+      <button class="btn btn-ghost" id="cancelItemAdd" data-i18n="common.cancel">إلغاء</button>
+      <button class="btn btn-primary" id="saveItemAdd" data-i18n="common.save">حفظ</button>
     </div>
   </div>
 </div>
@@ -860,32 +871,32 @@
 
 <div class="lock-overlay" id="lockOverlay">
   <div class="lock-icon">🔒</div>
-  <h2>متابعة مصاريفي مقفولة</h2>
-  <p>افتحها ببصمتك أو رمز قفل موبايلك عشان بياناتك المالية تفضل سرية.</p>
-  <button class="btn btn-primary" id="lockRetryBtn" style="width:auto; min-width:180px; padding:12px 24px;">🔓 افتح دلوقتي</button>
+  <h2 data-i18n="lock.title">متابعة مصاريفي مقفولة</h2>
+  <p data-i18n="lock.body">افتحها ببصمتك أو رمز قفل موبايلك عشان بياناتك المالية تفضل سرية.</p>
+  <button class="btn btn-primary" id="lockRetryBtn" style="width:auto; min-width:180px; padding:12px 24px;" data-i18n="lock.retry">🔓 افتح دلوقتي</button>
 </div>
 
 <div class="onboard-overlay" id="onboardOverlay">
   <div class="onboard-hero">
     <div class="emoji">👋</div>
-    <h2>أهلاً بيك!</h2>
-    <p>خلينا نظبط بياناتك الأساسية الأول. تقدر تعدّل أي حاجة تاني من تبويب الإعدادات في أي وقت،
+    <h2 data-i18n="onboard.title">أهلاً بيك!</h2>
+    <p data-i18n="onboard.body">خلينا نظبط بياناتك الأساسية الأول. تقدر تعدّل أي حاجة تاني من تبويب الإعدادات في أي وقت،
       وتضيف التزاماتك (أقساط، جمعيات، مصروفات ثابتة) من تبويب الالتزامات.</p>
   </div>
   <div class="set-card">
-    <h3>💵 الدخل والطوارئ</h3>
-    <div class="field"><label>المرتب الشهري</label><input type="number" id="obSalary" placeholder="مثال: 20000"></div>
-    <div class="field"><label>رصيد كاش الطوارئ الحالي (اختياري)</label><input type="number" id="obEmergBal" placeholder="0"></div>
-    <div class="field" style="margin-bottom:0;"><label>هدف كاش الطوارئ (اختياري)</label><input type="number" id="obEmergGoal" placeholder="0"></div>
+    <h3 data-i18n="settings.incomeTitle">💵 الدخل والطوارئ</h3>
+    <div class="field"><label data-i18n="settings.salaryLabel">المرتب الشهري</label><input type="number" id="obSalary" placeholder="مثال: 20000"></div>
+    <div class="field"><label data-i18n="onboard.emergBalLabel">رصيد كاش الطوارئ الحالي (اختياري)</label><input type="number" id="obEmergBal" placeholder="0"></div>
+    <div class="field" style="margin-bottom:0;"><label data-i18n="onboard.emergGoalLabel">هدف كاش الطوارئ (اختياري)</label><input type="number" id="obEmergGoal" placeholder="0"></div>
   </div>
   <div class="set-card">
     <div class="toggle-row" style="border-bottom:none;">
-      <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">🚗 عندك عربية؟ (بيظهر تبويب صيانة)</span>
+      <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="onboard.hasCar">🚗 عندك عربية؟ (بيظهر تبويب صيانة)</span>
       <label class="switch"><input type="checkbox" id="obHasCar" checked><span class="slider"></span></label>
     </div>
   </div>
-  <button class="btn btn-primary" id="obStart" style="margin-top:16px;">يلا نبدأ 🚀</button>
-  <button class="btn btn-ghost" id="obSkip" style="margin-top:10px;">هعبي البيانات بعدين</button>
+  <button class="btn btn-primary" id="obStart" style="margin-top:16px;" data-i18n="onboard.start">يلا نبدأ 🚀</button>
+  <button class="btn btn-ghost" id="obSkip" style="margin-top:10px;" data-i18n="onboard.skip">هعبي البيانات بعدين</button>
 </div>
 
 <script>
@@ -903,14 +914,21 @@
 })();
 
 const MONTH_NAMES = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const MONTH_NAMES_EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 // Built-in categories. User-added ones live in state.settings.customCats and are appended by
 // allCats() everywhere a category list is needed, so the two never need to be kept in sync by hand.
+// `k` is the STORED/COMPARED key (state.expenses[].cat, filters, ===checks elsewhere) — it must
+// never change or existing saved data stops matching. `lEn` is display-only, read through
+// catLabel() below; the Arabic display text is just `k` itself (no separate `l` needed for these).
 const BASE_CATS = [
-  {k:"أكل", i:"🍔"}, {k:"مواصلات", i:"🚕"}, {k:"عربية", i:"🚗"},
-  {k:"تسوق", i:"🛍️"}, {k:"صحة", i:"💊"}, {k:"ترفيه", i:"🎮"},
-  {k:"أولاد", i:"🧸"}, {k:"بيت", i:"🏠"}, {k:"تاني", i:"📦"}
+  {k:"أكل", i:"🍔", lEn:"Food"}, {k:"مواصلات", i:"🚕", lEn:"Transport"}, {k:"عربية", i:"🚗", lEn:"Car"},
+  {k:"تسوق", i:"🛍️", lEn:"Shopping"}, {k:"صحة", i:"💊", lEn:"Health"}, {k:"ترفيه", i:"🎮", lEn:"Fun"},
+  {k:"أولاد", i:"🧸", lEn:"Kids"}, {k:"بيت", i:"🏠", lEn:"Home"}, {k:"تاني", i:"📦", lEn:"Other"}
 ];
 function allCats(){ return [...BASE_CATS, ...(state.settings.customCats||[])]; }
+// Display label for a category/alloc/item-type chip entry — falls back to the Arabic key itself
+// when English has nothing for it (a user's own custom category, which only ever has one name).
+function catLabel(entry){ return (state.settings.lang==="en" && entry.lEn) ? entry.lEn : entry.k; }
 
 // factory (not a shared object literal) — settings has nested objects (notif, sources...) and
 // every {...defaultSettings()} spread needs its own fresh copies, not shared references that a
@@ -918,7 +936,7 @@ function allCats(){ return [...BASE_CATS, ...(state.settings.customCats||[])]; }
 function defaultSettings(){
   return {
     salary: 0, emergBal: 0, emergGoal: 0, caps: {}, sources: ["كاش","فيزا","بطاقة بنكية","فودافون كاش"], allocOverrides: {},
-    hasCar: true, customCats: [],
+    hasCar: true, customCats: [], lang: "ar",
     notif: { daily:{enabled:false, time:"21:00"}, weeklyBackup:{enabled:false}, capAlert:{enabled:true}, maintDue:{enabled:true} },
     smsAuto: { enabled:false },
     biometricLock: { enabled:false },
@@ -926,7 +944,7 @@ function defaultSettings(){
 }
 const NOTIF_IDS = { daily: 1001, weeklyBackup: 1002 };
 const ALLOC_CATS = [
-  {k:"طوارئ", i:"🛟"}, {k:"استثمار", i:"📈"}, {k:"مرونة", i:"🎯"}
+  {k:"طوارئ", i:"🛟", lEn:"Emergency"}, {k:"استثمار", i:"📈", lEn:"Invest"}, {k:"مرونة", i:"🎯", lEn:"Flex"}
 ];
 
 // لا بيانات افتراضية شخصية — كل مستخدم بيضيف التزاماته بنفسه من تبويب "الالتزامات"
@@ -943,6 +961,418 @@ const DEFAULT_MAINT_SCHEDULE = [
   {km:50000, price:5837},
 ];
 const MAINT_ITEMS = ["زيت المحرك","فلتر الزيت","فلتر الهواء","فلتر البنزين","فلتر التكييف","تيار السير","صيانة عامة","تاني"];
+const MAINT_ITEMS_EN = ["Engine oil","Oil filter","Air filter","Fuel filter","AC filter","Drive belt","General service","Other"];
+function maintItemLabel(name){ const i = MAINT_ITEMS.indexOf(name); return (state.settings.lang==="en" && i>=0) ? MAINT_ITEMS_EN[i] : name; }
+
+// ---------- i18n ----------
+// Every user-visible string in the app, keyed once. `k` values used as STORED/COMPARED data
+// (category names, sort option keys, item cat "قسط"/"ثابت"/"جمعية", etc.) are never routed
+// through this table — they stay Arabic forever so existing saved data keeps matching. This table
+// is display text only: static HTML labels (via data-i18n/data-i18n-placeholder/data-i18n-title,
+// applied by applyStaticI18n()) and dynamic strings built in render()/toast/confirm call sites
+// (via t()/tf()).
+const I18N = {
+  ar: {
+    "app.title":"💰 متابعة مصاريفي", "undo.title":"تراجع عن آخر تغيير", "redo.title":"إعادة آخر تراجع",
+    "hero.label":"معايا كام؟", "common.currency":"ج",
+    "home.flexTitle":"🎯 مرونة الشهر ده", "home.spentOf":"اتصرف من أصل",
+    "home.accountsTitle":"💳 أرصدة الحسابات", "home.accountsHint":'مستقلة عن "معايا كام؟"',
+    "home.addMove":"+ تسجيل حركة (إيداع/سحب)", "home.quickLookTitle":"📌 نظرة سريعة",
+    "home.topCatLabel":"أكتر فئة صرف", "home.avgDailyLabel":"متوسط يومي (مرونة)",
+    "home.obligationsTitle":"📊 التزامات الشهر",
+    "expenses.byCatTitle":"🥧 المصروفات حسب الفئة", "expenses.allTitle":"🧾 كل المصاريف",
+    "expenses.searchPlaceholder":"دور بالملاحظة...", "expenses.exportCsv":"⬇️ تصدير مصاريف الشهر (CSV)",
+    "allocations.suggestTitle":"📦 توزيع الفائض المقترح", "allocations.cumulativeTitle":"📦 التوزيعات التراكمية (فعليًا)",
+    "allocations.monthlyTitle":"📅 تراكمي شهري", "allocations.allTitle":"🧾 كل العمليات",
+    "obligations.title":"📋 التزامات ثابتة / أقساط / جمعيات",
+    "obligations.helpIntro":"المبالغ تحت خاصة بشهر", "obligations.helpIntroSuffix":"بس.",
+    "obligations.knowMore":"اعرف أكتر ↓",
+    "obligations.helpFull":`تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
+          فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
+          اللي انت فيه بس. زرار ✕ بيشيل البند من الشهر ده بس (زي ما توقفه بالظبط). زرار ⏸️/▶️ بيشغّل
+          أو يوقف البند في <b>كل الشهور</b> مرة واحدة (وبيشيل أي استثناءات شهرية كانت متسجلة له). لو
+          عايز تمسحه نهائي، استخدم رابط "🗑️ حذف نهائي" جنب البند.`,
+    "obligations.addItem":"+ إضافة بند جديد",
+    "maintenance.statusTitle":"🚗 حالة العربية", "maintenance.budgetTitle":"⛽ مصاريف العربية الشهر ده",
+    "maintenance.budgetHint":"بنزين، جراج، صيانة... كل حاجة فئة عربية",
+    "maintenance.odometerLabel":"الكيلومترات الحالية (KM)", "maintenance.odometerPlaceholder":"مثال: 15000",
+    "maintenance.nextTitle":"⏭️ الصيانة الجاية", "maintenance.scheduleTitle":"📋 جدول الصيانة الدورية",
+    "maintenance.scheduleHint":"حسب موقع الوكيل الرسمي", "maintenance.addSched":"+ إضافة نقطة صيانة",
+    "maintenance.logTitle":"🧾 سجل الصيانة الفعلي",
+    "settings.moneyGroup":"💰 المال والحسابات", "settings.incomeTitle":"💵 الدخل والطوارئ",
+    "settings.salaryLabel":"المرتب الشهري", "settings.emergBalLabel":"رصيد كاش الطوارئ الحالي",
+    "settings.emergGoalLabel":"هدف كاش الطوارئ", "settings.sourcesTitle":"💳 مصادر الصرف",
+    "settings.newSourcePlaceholder":"مصدر جديد (مثال: انستاباي)", "common.add":"+ إضافة",
+    "settings.movesTitle":"📜 حركات الحسابات",
+    "settings.catsGroup":"🏷️ الفئات والحدود", "settings.catsTitle":"🏷️ فئات المصاريف",
+    "settings.newCatPlaceholder":"فئة جديدة (مثال: هدايا)", "settings.capsTitle":"🎯 حدود شهرية للفئات (اختياري)",
+    "settings.notifGroup":"🔔 الإشعارات والأتمتة", "settings.remindersTitle":"🔔 التذكيرات",
+    "settings.dailyReminder":"تذكير يومي بتسجيل المصاريف",
+    "settings.weeklyReminder":"تذكير أسبوعي بعمل نسخة احتياطية (كل اتنين الساعة 10ص)",
+    "settings.capReminder":"تنبيه لما أتجاوز حد فئة مصروف", "settings.maintReminder":"تنبيه قرب موعد صيانة العربية",
+    "settings.remindersNote":"بعض الأجهزة بتأخر التذكيرات المجدولة بسبب إعدادات توفير البطارية — لو التذكير مش بيوصل، جرّب تستثني التطبيق من توفير البطارية من إعدادات الأندرويد.",
+    "settings.smsTitle":"🏦 كشف مصاريف من رسائل البنك (تجريبي)", "settings.smsEnable":"تفعيل الكشف التلقائي",
+    "settings.smsSendersLabel":"البنوك المتابَعة (افصل بفاصلة)", "common.save":"حفظ",
+    "settings.smsNote":`بيراقب رسائل SMS اللي جايه من البنوك دي بس، وبيقترح مصروف — مفيش حاجة بتتسجل تلقائيًا،
+            دايمًا بتراجع وتأكد (أو تتجاهل) من الكارت اللي بيظهر فوق أي تبويب. تحليل نص الرسالة أول
+            محاولة (مفيش عينات رسائل حقيقية من QNB/CIB اتجربت عليها)، فممكن يحتاج ضبط لو الصيغة مختلفة.`,
+    "settings.backupGroup":"☁️ البيانات والنسخ الاحتياطي", "settings.googleTitle":"☁️ حساب جوجل (نسخة احتياطية سحابية)",
+    "settings.googleNote":`بيرفع/يرجّع نفس ملف النسخة الاحتياطية (JSON) من مساحة خاصة بالتطبيق جوه Google Drive بتاعك —
+            مش هتشوفها في Drive العادي، ومحدش غير التطبيق نفسه يقدر يوصلها. محتاجة إعداد لمرة واحدة على
+            Google Cloud Console الأول (التفاصيل في README).`,
+    "settings.localBackupTitle":"💾 نسخة احتياطية (لنقل بياناتك بين المتصفحات)",
+    "settings.localBackupNote":"البيانات محفوظة داخل المتصفح اللي بتفتح بيه الملف بس. لو فتحته من متصفح تاني، صدّر نسخة من هنا واستوردها هناك.",
+    "settings.exportBackupBtn":"⬆️ تصدير نسخة احتياطية", "settings.importBackupBtn":"⬇️ استيراد نسخة احتياطية",
+    "settings.excelTitle":"📊 تقرير إكسيل —",
+    "settings.excelNote":`كل التفاصيل الخاصة بالشهر المختار فوق (مصاريف، التزامات، توزيعات، صيانة،
+            حركات حسابات) في ملف واحد، كل قايمة في شيت لوحدها ومجموع تحتها. أرصدة
+            الحسابات نفسها بتفضل إجمالية (من أول ما بدأت التطبيق)، مش خاصة بشهر واحد،
+            لإنها رصيد لحظي مش حركة شهر.`,
+    "settings.exportExcelBtn":"تصدير تقرير الشهر (مصاريف + التزامات + توزيعات + حسابات)",
+    "settings.generalGroup":"🔧 عام", "settings.langTitle":"🌐 اللغة / Language",
+    "settings.lockTitle":"🔒 الحماية", "settings.lockToggle":"قفل بالبصمة قبل كل دخول",
+    "settings.lockNote":"لو مفعّلة، هتحتاج بصمتك أو رمز قفل شاشة موبايلك كل ما تفتح التطبيق أو ترجعله من الخلفية. محتاج جهازك يكون فيه بصمة/وجه/قفل شاشة متفعّل الأول.",
+    "settings.carTitle":"🚗 العربية", "settings.carToggle":"تتبع صيانة العربية (تبويب السيارة)",
+    "settings.resetBtn":"تصفير كل البيانات",
+    "nav.home":"الرئيسية", "nav.expenses":"المصاريف", "nav.allocations":"التوزيعات",
+    "nav.obligations":"الالتزامات", "nav.maintenance":"السيارة", "nav.settings":"الإعدادات",
+    "modal.alloc.title":"تسجيل توزيع فعلي", "modal.alloc.catLabel":"البند",
+    "common.amountCurrency":"المبلغ (ج)", "common.noteOptional":"ملاحظة (اختياري)",
+    "modal.alloc.notePlaceholder":"مثال: شريت أسهم ADIB", "common.date":"التاريخ", "common.cancel":"إلغاء",
+    "modal.expense.amountLabel":"المبلغ (ج) — تقدر تكتب عملية زي 50+30", "modal.expense.clear":"مسح",
+    "modal.expense.catLabel":"النوع", "modal.sourceLabel":"المصدر (هيتخصم منين)",
+    "modal.expense.notePlaceholder":"مثال: غدا مع الأصحاب", "modal.expense.save":"حفظ المصروف",
+    "modal.flex.note":"تقدر تحط أي رقم حتى لو كان الفائض كله — البندين التانيين هيفضلوا زي ما هما لحد ما تعدّلهم بنفسك.",
+    "modal.flex.autoBtn":"رجوع للحساب التلقائي",
+    "modal.maint.title":"تسجيل صيانة", "modal.maint.kmLabel":"الكيلومترات وقت الصيانة",
+    "modal.maint.costLabel":"التكلفة (ج)", "modal.maint.itemsLabel":"اللي اتعمل",
+    "modal.maint.notePlaceholder":"مثال: توكيل مدينة نصر", "modal.maint.linkExpense":"سجّلها كمان كمصروف الشهر (فئة عربية)",
+    "modal.account.title":"تسجيل حركة على حساب", "modal.account.accountLabel":"الحساب",
+    "modal.account.typeLabel":"نوع الحركة", "modal.account.notePlaceholder":"مثال: تحويل المرتب",
+    "modal.item.nameLabel":"الاسم", "modal.item.namePlaceholder":"مثال: قسط العربية",
+    "modal.item.startLabel":"هيبدأ شهر إيه؟", "modal.item.endLabel":"هينتهي شهر إيه؟ (سيبه فاضي لو مالوش نهاية معروفة)",
+    "modal.item.payoutAmountLabel":"هتتقبض كام؟ (إجمالي مبلغ القبضة كاملة)",
+    "modal.item.payoutMonthLabel":"دورك في القبض إمتى؟ (الشهر اللي هتاخد فيه القبضة)",
+    "modal.item.sourceLabel":"🔗 يتخصم من مصدر إيه؟ (اختياري)",
+    "modal.item.sourceNote":`لو اخترت مصدر، القيمة الشهرية هتتسجّل تلقائيًا كحركة سحب حقيقية على
+        الحساب ده (تقدر تشوفها في "📜 حركات الحسابات")، بادئ من الشهر الحالي
+        وبعده بس — مش رجعي على شهور فاتت.`,
+    "lock.title":"متابعة مصاريفي مقفولة", "lock.body":"افتحها ببصمتك أو رمز قفل موبايلك عشان بياناتك المالية تفضل سرية.",
+    "lock.retry":"🔓 افتح دلوقتي",
+    "onboard.title":"أهلاً بيك!",
+    "onboard.body":`خلينا نظبط بياناتك الأساسية الأول. تقدر تعدّل أي حاجة تاني من تبويب الإعدادات في أي وقت،
+      وتضيف التزاماتك (أقساط، جمعيات، مصروفات ثابتة) من تبويب الالتزامات.`,
+    "onboard.emergBalLabel":"رصيد كاش الطوارئ الحالي (اختياري)", "onboard.emergGoalLabel":"هدف كاش الطوارئ (اختياري)",
+    "onboard.hasCar":"🚗 عندك عربية؟ (بيظهر تبويب صيانة)", "onboard.start":"يلا نبدأ 🚀",
+    "onboard.skip":"هعبي البيانات بعدين",
+    "collapse.fold":"▲ اطوِ القايمة", "collapse.showAll":"▼ عرض الكل ({0})",
+    "toast.saveShareTitle":"حفظ أو مشاركة الملف", "toast.saveFileFailed":"تعذّر حفظ الملف: {0}", "toast.unknownError":"خطأ غير معروف",
+    "notif.dailyBody":"متنساش تسجّل مصاريف النهاردة 🧾", "notif.weeklyBody":"متنساش تاخد نسخة احتياطية من بياناتك 💾",
+    "notif.maintTitle":"صيانة العربية قربت 🔧", "notif.maintBody":"باقيلك حوالي {0} كم على صيانة {1} كم (السعر المتوقع {2} ج)",
+    "google.nativeOnly":"شغالة بس جوه تطبيق الموبايل.", "google.backupNow":"☁️ ارفع نسخة دلوقتي",
+    "google.restore":"⬇️ استرجع من Drive", "google.signOut":"تسجيل خروج",
+    "toast.uploading":"بيترفع...", "toast.driveUploadOk":"اترفعت النسخة على Google Drive ✅", "toast.driveUploadFail":"تعذّر الرفع، جرب تاني",
+    "confirm.driveRestore":"هيتم استبدال كل البيانات الحالية بالنسخة اللي على Drive. متأكد؟",
+    "toast.driveRestoreOk":"اترجعت البيانات من Google Drive ✅", "toast.driveRestoreFail":"مفيش نسخة محفوظة على Drive، أو حصل خطأ",
+    "toast.googleSignedOut":"اتسجل خروج من جوجل", "google.signIn":"تسجيل الدخول بجوجل", "toast.googleSignedIn":"سجّلت دخول بجوجل ✅",
+    "google.pluginError":"تعذّر تسجيل الدخول بجوجل (البلجن مش متاح؟) — تأكد إنك بتستخدم نسخة APK حديثة.",
+    "google.errDeveloper":"إعداد جوجل ناقص (DEVELOPER_ERROR): لازم تعمل OAuth client من نوع Android على Google Cloud Console بنفس اسم الحزمة وبصمة SHA-1 بتاعة التطبيق. خطوات التفعيل في README.",
+    "google.errNoInternet":"مفيش إنترنت — جرب تاني وانت متصل.",
+    "google.errGoogleSide":"تسجيل الدخول فشل من جوجل نفسها، جرب تاني بعد شوية. لو فضل يفشل، راجع إعداد Google Cloud Console (README).",
+    "google.errGeneric":"تعذّر تسجيل الدخول بجوجل (كود {0}) — راجع إعداد Google Cloud Console (README).", "google.unknownCode":"غير معروف",
+    "toast.signInCancelled":"اتلغى تسجيل الدخول", "toast.googleSignInFailed":"تعذّر تسجيل الدخول بجوجل",
+    "toast.undoDone":"اتراجعت آخر خطوة ↩️", "toast.redoDone":"اتعمل Redo للخطوة ↪️",
+    "autoDeduct.note":"خصم تلقائي: {0}",
+    "notif.capExceededTitle":"تجاوزت حد {0}", "notif.capExceededBody":"صرفت {0} ج من حد {1} ج المخصص لفئة {2} الشهر ده",
+    "phase.deficit":"⚠️ عجز في الميزانية", "phase.pressure":"🔴 مرحلة الضغط",
+    "phase.transition":"🟡 مرحلة الانتقال", "phase.launch":"🟢 مرحلة الانطلاق",
+    "obl.salary":"المرتب", "obl.extraIncome":"دخل إضافي (جمعية)", "obl.installments":"أقساط",
+    "obl.fixed":"مصروفات ثابتة", "obl.gam3iyas":"جمعيات", "obl.recurringSurplus":"الفائض الشهري المتكرر",
+    "common.overriddenSuffix":" (معدّلة)", "home.outOf":"من", "common.perDay":"ج/يوم",
+    "expenses.emptyMonth":"لسه مفيش مصاريف الشهر ده", "common.all":"الكل",
+    "expenses.emptyList":"لسه مفيش مصاريف تطابق البحث.<br>دوس على زرار + وسجّل مصروف.",
+    "common.noNote":"بدون ملاحظة", "toast.expenseDeleted":"اتمسح المصروف",
+    "allocations.cumulativeSuffix":"(تراكمي)", "allocations.emptyMonthly":"لسه مفيش توزيعات مسجلة.<br>دوس + وسجّل أول عملية.",
+    "allocations.emptyFiltered":"مفيش عمليات تطابق الفلتر.", "toast.allocDeleted":"اتمسحت العملية",
+    "confirm.sourceLinkedWarning":"وفيه {0} بند التزام مرتبط بيه ({1}) هيوقف يتخصم منه تلقائيًا بعد الحذف.",
+    "confirm.deleteSource":`فيه مصاريف أو حركات مسجلة على "{0}"، وهتفضل زي ما هي (مش هتتمسح) لكن هتظهر كمصدر قديم منفصل بدل ما تتدار من هنا. تكمل الحذف؟`,
+    "settings.baseTag":"أساسية", "settings.noLimitPlaceholder":"بدون حد",
+    "obligations.amountOverrideNote":"مبلغ {0} بس", "obligations.resetTo":"رجّع للافتراضي: {0}",
+    "obligations.activeOverrideNote":"{0} لشهر {1} بس", "obligations.active":"مفعّل", "obligations.paused":"موقوف",
+    "obligations.fromMonth":"من", "obligations.toMonth":"لحد",
+    "obligations.payoutNote":"هتقبض {0} في {1}", "obligations.autoDeductFrom":"يتخصم من {0}",
+    "obligations.pause":"إيقاف", "obligations.resume":"تشغيل", "obligations.everyMonth":"البند في كل الشهور",
+    "obligations.removeThisMonthOnly":"شيل من شهر {0} بس",
+    "obligations.editDetails":"تعديل", "obligations.editDetailsGam3iya":" (النوع/الشهور/القبض)", "obligations.editDetailsPlain":" (النوع/الشهور)",
+    "obligations.deleteForever":"حذف نهائي",
+    "obligations.pausedItemsBtn":"بنود موقوفة لشهر {0} ({1})", "obligations.foldPaused":"▲ اطوِ البنود الموقوفة",
+    "toast.itemRemovedThisMonth":`اتشال "{0}" من شهر {1} بس`, "toast.itemToggledAllMonths":`"{0}" بقى {1} في كل الشهور`,
+    "confirm.deleteItemForever":`متأكد إنك عايز تمسح "{0}" نهائي من كل الشهور؟ الخطوة دي مينفعش ترجع فيها.`,
+    "toast.itemDeletedForever":`اتمسح "{0}" نهائي`,
+    "maintenance.noBudget":"مفيش ميزانية محددة", "maintenance.setBudgetPlaceholder":"حدد ميزانية شهرية",
+    "toast.carBudgetSaved":"اتحفظت ميزانية العربية ✅",
+    "maintenance.lastUpdated":"آخر تحديث: {0}", "maintenance.noUpdateYet":"لسه متسجّلش تاريخ تحديث",
+    "maintenance.dueAt":"الصيانة الجاية عند", "common.km":"كم", "maintenance.expectedPrice":"السعر المتوقع",
+    "maintenance.remainingKm":"باقيلك حوالي {0} كم على الصيانة الجاية",
+    "maintenance.noPointYet":"مفيش نقطة صيانة متسجّلة بعد {0} كم", "maintenance.addMorePoints":"ضيف نقط صيانة جديدة من الجدول تحت لو عايز تكمّل أبعد من كده.",
+    "maintenance.done":"✅ اتعملت", "maintenance.upcoming":"🔜 الجاية", "maintenance.emptySchedule":"لسه مفيش نقط صيانة في الجدول.",
+    "toast.schedPointDeleted":"اتمسحت نقطة الصيانة",
+    "maintenance.emptyLog":"لسه مفيش صيانات مسجلة.<br>دوس + وسجّل أول صيانة.", "maintenance.noDetails":"بدون تفاصيل",
+    "toast.maintDeleted":"اتمسحت الصيانة",
+    "home.addSourceFirst":"ضيف مصدر صرف الأول من الإعدادات (زي فيزا أو كاش).", "home.legacySource":"مصدر محذوف — لسه له مصاريف",
+    "common.total":"الإجمالي", "settings.movesEmpty":"لسه مفيش حركات مسجلة على أي حساب.",
+    "modal.account.deposit":"إيداع", "modal.account.withdraw":"سحب", "toast.moveDeleted":"اتمسحت الحركة",
+    "sms.bannerTitle":"معاملات بنكية مكتشفة ({0}) — مراجعتك مطلوبة", "sms.unclearAmount":"المبلغ مش واضح",
+    "sms.addAsExpense":"إضافة كمصروف", "sms.openManual":"افتح وسجّل يدوي", "sms.dismiss":"تجاهل", "sms.fromSender":"من {0}",
+    "toast.nativeOnlyFeature":"الميزة دي شغالة بس جوه تطبيق الموبايل", "toast.needBiometricSetup":"محتاج تفعّل بصمة أو قفل شاشة على جهازك الأول",
+    "biometric.confirmTitle":"تأكيد تفعيل القفل", "biometric.confirmSubtitle":"تحقق ببصمتك عشان تفعّل الحماية",
+    "toast.enableCancelled":"اتلغى التفعيل", "toast.enableLockFailed":"تعذّر تفعيل الحماية",
+    "toast.lockEnabled":"اتفعلت الحماية بالبصمة ✅", "toast.lockDisabled":"اتقفلت الحماية بالبصمة",
+    "toast.needNotifPermission":"محتاجين إذن الإشعارات الأول", "toast.needSmsPermission":"محتاجين إذن قراءة الرسائل عشان الميزة دي تشتغل",
+    "toast.bankSendersSaved":"اتحفظت البنوك المتابَعة ✅", "toast.categoryAdded":"اتضافت فئة {0} {1} ✅",
+    "modal.item.gam3iyaAmountLabel":"قيمتك الشهرية في الجمعية (ج)", "modal.item.amountLabel":"القيمة الشهرية (ج)",
+    "modal.item.editTitle":"تعديل بند الالتزام", "modal.item.newTitle":"بند التزام جديد", "modal.item.noAutoDeduct":"بدون خصم تلقائي",
+    "toast.enterItemName":"اكتب اسم البند", "toast.enterValidMonthlyAmount":"اكتب قيمة شهرية صحيحة",
+    "toast.endBeforeStart":"شهر النهاية لازم يكون بعد شهر البداية",
+    "toast.itemEdited":"اتحفظت التعديلات ✅", "toast.itemAdded":"اتضاف بند جديد ✅",
+    "backup.exportFilename":"نسخة_احتياطية_مصاريفي", "toast.backupExported":"اتصدرت النسخة الاحتياطية ✅",
+    "confirm.importBackup":"هيتم استبدال كل البيانات الحالية بالنسخة المستوردة. متأكد؟",
+    "toast.backupImported":"اتستوردت النسخة الاحتياطية ✅", "toast.badFile":"الملف مش سليم، جرب تاني",
+    "confirm.resetAll":"متأكد؟ هيتصفر كل حاجة (المصاريف، الالتزامات، الصيانة، أرصدة الحسابات، الإعدادات) ويرجع التطبيق زي أول مرة تفتحه.",
+    "toast.dataReset":"اتصفرت البيانات", "toast.nothingToExport":"مفيش مصاريف تتصدّر",
+    "modal.sourceLabelShort":"المصدر", "csv.amount":"المبلغ", "csv.filenamePrefix":"مصاريف",
+    "modal.flex.editTitle":"تعديل {0}", "modal.flex.valueLabel":"قيمة {0} لشهر {1} (ج)",
+    "toast.flexAutoRestored":"رجعنا للحساب التلقائي", "toast.enterValidNumber":"اكتب رقم صحيح",
+    "toast.flexUpdated":"اتحدّث {0} ✅", "toast.categoryExists":"الفئة دي موجودة أصلاً",
+    "prompt.newCategoryName":"اسم الفئة الجديدة:", "prompt.newCategoryIcon":"إيموجي للفئة (اختياري):",
+    "expenses.newCategory":"فئة جديدة", "modal.expense.editTitle":"تعديل المصروف", "modal.expense.newTitle":"مصروف جديد",
+    "toast.enterValidAmount":"اكتب مبلغ صحيح", "toast.expenseUpdated":"اتحدّث المصروف ✅", "toast.expenseSaved":"اتسجل المصروف ✅",
+    "toast.allocSaved":"اتسجلت العملية ✅", "toast.enterValidKm":"اكتب كيلومترات صحيحة", "toast.enterValidCost":"اكتب تكلفة صحيحة",
+    "maintenance.expenseNotePrefix":"صيانة", "toast.maintSaved":"اتسجلت الصيانة ✅",
+    "toast.addSourceFirstShort":"ضيف مصدر صرف الأول من الإعدادات", "toast.moveSaved":"اتسجلت الحركة ✅",
+    "lock.unlockPromptTitle":"افتح متابعة مصاريفي", "lock.unlockPromptSubtitle":"تحقق ببصمتك أو رمز قفل الشاشة",
+  },
+  en: {
+    "app.title":"💰 My Expenses", "undo.title":"Undo last change", "redo.title":"Redo last undo",
+    "hero.label":"What's left?", "common.currency":"EGP",
+    "home.flexTitle":"🎯 This Month's Flex", "home.spentOf":"Spent out of",
+    "home.accountsTitle":"💳 Account Balances", "home.accountsHint":'Independent of "What\'s left?"',
+    "home.addMove":"+ Log a Move (Deposit/Withdraw)", "home.quickLookTitle":"📌 Quick Look",
+    "home.topCatLabel":"Top Spend Category", "home.avgDailyLabel":"Daily Avg (Flex)",
+    "home.obligationsTitle":"📊 This Month's Obligations",
+    "expenses.byCatTitle":"🥧 Spending by Category", "expenses.allTitle":"🧾 All Expenses",
+    "expenses.searchPlaceholder":"Search notes...", "expenses.exportCsv":"⬇️ Export This Month's Expenses (CSV)",
+    "allocations.suggestTitle":"📦 Suggested Surplus Allocation", "allocations.cumulativeTitle":"📦 Cumulative Allocations (Actual)",
+    "allocations.monthlyTitle":"📅 Monthly Breakdown", "allocations.allTitle":"🧾 All Transactions",
+    "obligations.title":"📋 Fixed Bills / Installments / Gam3iya",
+    "obligations.helpIntro":"Amounts below are specific to", "obligations.helpIntroSuffix":"only.",
+    "obligations.knowMore":"Learn more ↓",
+    "obligations.helpFull":`Editing an item's amount or turning it on/off while viewing a specific month doesn't
+          affect other months. The first time you set an amount for a new item it becomes its
+          regular value for every month, and any edit after that stays specific to the month
+          you're on. The ✕ button removes the item from this month only (same as pausing it). The
+          ⏸️/▶️ button turns the item on or off for <b>every month</b> at once (and clears any
+          monthly exceptions recorded for it). To delete it permanently, use the "🗑️ Delete
+          permanently" link next to the item.`,
+    "obligations.addItem":"+ Add New Item",
+    "maintenance.statusTitle":"🚗 Car Status", "maintenance.budgetTitle":"⛽ This Month's Car Spending",
+    "maintenance.budgetHint":"Gas, garage, maintenance... anything in the Car category",
+    "maintenance.odometerLabel":"Current Odometer (KM)", "maintenance.odometerPlaceholder":"e.g. 15000",
+    "maintenance.nextTitle":"⏭️ Next Maintenance", "maintenance.scheduleTitle":"📋 Maintenance Schedule",
+    "maintenance.scheduleHint":"Per the official dealer's site", "maintenance.addSched":"+ Add Maintenance Point",
+    "maintenance.logTitle":"🧾 Actual Maintenance Log",
+    "settings.moneyGroup":"💰 Money & Accounts", "settings.incomeTitle":"💵 Income & Emergency Fund",
+    "settings.salaryLabel":"Monthly Salary", "settings.emergBalLabel":"Current Emergency Cash Balance",
+    "settings.emergGoalLabel":"Emergency Cash Goal", "settings.sourcesTitle":"💳 Payment Sources",
+    "settings.newSourcePlaceholder":"New source (e.g. InstaPay)", "common.add":"+ Add",
+    "settings.movesTitle":"📜 Account Movements",
+    "settings.catsGroup":"🏷️ Categories & Limits", "settings.catsTitle":"🏷️ Expense Categories",
+    "settings.newCatPlaceholder":"New category (e.g. Gifts)", "settings.capsTitle":"🎯 Monthly Category Limits (optional)",
+    "settings.notifGroup":"🔔 Notifications & Automation", "settings.remindersTitle":"🔔 Reminders",
+    "settings.dailyReminder":"Daily reminder to log expenses",
+    "settings.weeklyReminder":"Weekly backup reminder (every Monday at 10am)",
+    "settings.capReminder":"Alert when I exceed a category limit", "settings.maintReminder":"Alert when car maintenance is due soon",
+    "settings.remindersNote":"Some devices delay scheduled reminders because of battery-saving settings — if a reminder isn't arriving, try excluding the app from battery optimization in Android settings.",
+    "settings.smsTitle":"🏦 Bank SMS Expense Detection (Experimental)", "settings.smsEnable":"Enable auto-detection",
+    "settings.smsSendersLabel":"Watched banks (comma-separated)", "common.save":"Save",
+    "settings.smsNote":`It only watches SMS messages coming from these banks and suggests an expense — nothing
+            gets logged automatically, you always review and confirm (or dismiss) from the card
+            that appears above any tab. Message parsing is a first attempt (no real QNB/CIB
+            messages were tested against it), so it may need adjusting if the format differs.`,
+    "settings.backupGroup":"☁️ Data & Backup", "settings.googleTitle":"☁️ Google Account (Cloud Backup)",
+    "settings.googleNote":`Uploads/restores the same backup file (JSON) from a private app-specific space inside
+            your Google Drive — you won't see it in regular Drive, and nothing but this app can
+            access it. Needs a one-time setup on Google Cloud Console first (details in the
+            README).`,
+    "settings.localBackupTitle":"💾 Backup (to move your data between browsers)",
+    "settings.localBackupNote":"Your data is only stored inside the browser you're using to open this file. If you open it from a different browser, export a copy here and import it there.",
+    "settings.exportBackupBtn":"⬆️ Export Backup", "settings.importBackupBtn":"⬇️ Import Backup",
+    "settings.excelTitle":"📊 Excel Report —",
+    "settings.excelNote":`Every detail for the month selected above (expenses, obligations, allocations,
+            maintenance, account movements) in one file, each list on its own sheet with a total
+            underneath. Account balances themselves stay running totals (since you started using
+            the app), not month-specific, since a balance is a snapshot, not a monthly transaction.`,
+    "settings.exportExcelBtn":"Export This Month's Report (expenses + obligations + allocations + accounts)",
+    "settings.generalGroup":"🔧 General", "settings.langTitle":"🌐 اللغة / Language",
+    "settings.lockTitle":"🔒 Security", "settings.lockToggle":"Lock with biometrics before every entry",
+    "settings.lockNote":"If enabled, you'll need your fingerprint or phone lock code every time you open the app or return to it from the background. Your device needs fingerprint/face/screen lock already set up.",
+    "settings.carTitle":"🚗 Car", "settings.carToggle":"Track car maintenance (Car tab)",
+    "settings.resetBtn":"Reset All Data",
+    "nav.home":"Home", "nav.expenses":"Expenses", "nav.allocations":"Allocations",
+    "nav.obligations":"Obligations", "nav.maintenance":"Car", "nav.settings":"Settings",
+    "modal.alloc.title":"Log an Actual Allocation", "modal.alloc.catLabel":"Category",
+    "common.amountCurrency":"Amount (EGP)", "common.noteOptional":"Note (optional)",
+    "modal.alloc.notePlaceholder":"e.g. Bought ADIB stock", "common.date":"Date", "common.cancel":"Cancel",
+    "modal.expense.amountLabel":"Amount (EGP) — you can type an operation like 50+30", "modal.expense.clear":"Clear",
+    "modal.expense.catLabel":"Category", "modal.sourceLabel":"Source (where it's deducted from)",
+    "modal.expense.notePlaceholder":"e.g. Lunch with friends", "modal.expense.save":"Save Expense",
+    "modal.flex.note":"You can enter any number, even the whole surplus — the other two items stay as they are until you edit them yourself.",
+    "modal.flex.autoBtn":"Back to Automatic Calculation",
+    "modal.maint.title":"Log Maintenance", "modal.maint.kmLabel":"Odometer at time of maintenance",
+    "modal.maint.costLabel":"Cost (EGP)", "modal.maint.itemsLabel":"What was done",
+    "modal.maint.notePlaceholder":"e.g. Nasr City dealership", "modal.maint.linkExpense":"Also log it as this month's expense (Car category)",
+    "modal.account.title":"Log an Account Movement", "modal.account.accountLabel":"Account",
+    "modal.account.typeLabel":"Movement Type", "modal.account.notePlaceholder":"e.g. Salary transfer",
+    "modal.item.nameLabel":"Name", "modal.item.namePlaceholder":"e.g. Car installment",
+    "modal.item.startLabel":"Which month does it start?", "modal.item.endLabel":"Which month does it end? (leave blank if no known end)",
+    "modal.item.payoutAmountLabel":"How much will you collect? (the full payout amount)",
+    "modal.item.payoutMonthLabel":"When's your turn to collect? (the month you'll get the payout)",
+    "modal.item.sourceLabel":"🔗 Auto-deduct from which source? (optional)",
+    "modal.item.sourceNote":`If you pick a source, the monthly amount will automatically be logged as a real
+        withdrawal on that account (you can see it in "📜 Account Movements"), starting from the
+        current month onward — not retroactive for past months.`,
+    "lock.title":"My Expenses is Locked", "lock.body":"Unlock it with your fingerprint or phone lock code to keep your financial data private.",
+    "lock.retry":"🔓 Unlock Now",
+    "onboard.title":"Welcome!",
+    "onboard.body":`Let's set up your basic info first. You can change anything later from the Settings tab,
+      and add your obligations (installments, gam3iya, fixed bills) from the Obligations tab.`,
+    "onboard.emergBalLabel":"Current emergency cash balance (optional)", "onboard.emergGoalLabel":"Emergency cash goal (optional)",
+    "onboard.hasCar":"🚗 Do you have a car? (shows the Car tab)", "onboard.start":"Let's start 🚀",
+    "onboard.skip":"I'll fill this in later",
+    "collapse.fold":"▲ Collapse list", "collapse.showAll":"▼ Show all ({0})",
+    "toast.saveShareTitle":"Save or share the file", "toast.saveFileFailed":"Couldn't save the file: {0}", "toast.unknownError":"Unknown error",
+    "notif.dailyBody":"Don't forget to log today's expenses 🧾", "notif.weeklyBody":"Don't forget to back up your data 💾",
+    "notif.maintTitle":"Car maintenance is coming up 🔧", "notif.maintBody":"About {0} km left to your {1} km service (expected price {2} EGP)",
+    "google.nativeOnly":"Only works inside the mobile app.", "google.backupNow":"☁️ Upload Now",
+    "google.restore":"⬇️ Restore from Drive", "google.signOut":"Sign Out",
+    "toast.uploading":"Uploading...", "toast.driveUploadOk":"Backup uploaded to Google Drive ✅", "toast.driveUploadFail":"Upload failed, try again",
+    "confirm.driveRestore":"This will replace all current data with the copy on Drive. Are you sure?",
+    "toast.driveRestoreOk":"Data restored from Google Drive ✅", "toast.driveRestoreFail":"No backup found on Drive, or an error occurred",
+    "toast.googleSignedOut":"Signed out of Google", "google.signIn":"Sign in with Google", "toast.googleSignedIn":"Signed in with Google ✅",
+    "google.pluginError":"Couldn't sign in with Google (plugin unavailable?) — make sure you're using an up-to-date APK build.",
+    "google.errDeveloper":"Google setup is incomplete (DEVELOPER_ERROR): you need to create an Android-type OAuth client on Google Cloud Console with the app's package name and SHA-1 fingerprint. Setup steps are in the README.",
+    "google.errNoInternet":"No internet connection — try again while connected.",
+    "google.errGoogleSide":"Sign-in failed on Google's side, try again shortly. If it keeps failing, check the Google Cloud Console setup (README).",
+    "google.errGeneric":"Couldn't sign in with Google (code {0}) — check the Google Cloud Console setup (README).", "google.unknownCode":"unknown",
+    "toast.signInCancelled":"Sign-in cancelled", "toast.googleSignInFailed":"Couldn't sign in with Google",
+    "toast.undoDone":"Undid the last step ↩️", "toast.redoDone":"Redid the step ↪️",
+    "autoDeduct.note":"Auto-deducted: {0}",
+    "notif.capExceededTitle":"You exceeded the {0} limit", "notif.capExceededBody":"You spent {0} EGP out of the {1} EGP limit set for {2} this month",
+    "phase.deficit":"⚠️ Budget Deficit", "phase.pressure":"🔴 Pressure Phase",
+    "phase.transition":"🟡 Transition Phase", "phase.launch":"🟢 Launch Phase",
+    "obl.salary":"Salary", "obl.extraIncome":"Extra Income (Gam3iya)", "obl.installments":"Installments",
+    "obl.fixed":"Fixed Bills", "obl.gam3iyas":"Gam3iyas", "obl.recurringSurplus":"Recurring Monthly Surplus",
+    "common.overriddenSuffix":" (adjusted)", "home.outOf":"out of", "common.perDay":"EGP/day",
+    "expenses.emptyMonth":"No expenses yet this month", "common.all":"All",
+    "expenses.emptyList":"No expenses match the search.<br>Tap the + button and log one.",
+    "common.noNote":"No note", "toast.expenseDeleted":"Expense deleted",
+    "allocations.cumulativeSuffix":"(cumulative)", "allocations.emptyMonthly":"No allocations logged yet.<br>Tap + and log the first one.",
+    "allocations.emptyFiltered":"No transactions match the filter.", "toast.allocDeleted":"Transaction deleted",
+    "confirm.sourceLinkedWarning":"{0} obligation item(s) are linked to it ({1}) — they'll stop auto-deducting from it after deletion.",
+    "confirm.deleteSource":`There are expenses or movements logged on "{0}", and they'll stay as they are (not deleted) but show up as a separate legacy source instead of being managed from here. Continue deleting?`,
+    "settings.baseTag":"built-in", "settings.noLimitPlaceholder":"No limit",
+    "obligations.amountOverrideNote":"{0}'s amount only", "obligations.resetTo":"Reset to default: {0}",
+    "obligations.activeOverrideNote":"{0} for {1} only", "obligations.active":"On", "obligations.paused":"Paused",
+    "obligations.fromMonth":"from", "obligations.toMonth":"to",
+    "obligations.payoutNote":"You'll collect {0} in {1}", "obligations.autoDeductFrom":"Auto-deducts from {0}",
+    "obligations.pause":"Pause", "obligations.resume":"Resume", "obligations.everyMonth":"this item every month",
+    "obligations.removeThisMonthOnly":"Remove from {0} only",
+    "obligations.editDetails":"Edit", "obligations.editDetailsGam3iya":" (type/months/payout)", "obligations.editDetailsPlain":" (type/months)",
+    "obligations.deleteForever":"Delete permanently",
+    "obligations.pausedItemsBtn":"Paused items for {0} ({1})", "obligations.foldPaused":"▲ Collapse paused items",
+    "toast.itemRemovedThisMonth":`Removed "{0}" from {1} only`, "toast.itemToggledAllMonths":`"{0}" is now {1} for every month`,
+    "confirm.deleteItemForever":`Are you sure you want to permanently delete "{0}" from every month? This can't be undone.`,
+    "toast.itemDeletedForever":`Permanently deleted "{0}"`,
+    "maintenance.noBudget":"No budget set", "maintenance.setBudgetPlaceholder":"Set a monthly budget",
+    "toast.carBudgetSaved":"Car budget saved ✅",
+    "maintenance.lastUpdated":"Last updated: {0}", "maintenance.noUpdateYet":"No update date recorded yet",
+    "maintenance.dueAt":"Next maintenance at", "common.km":"km", "maintenance.expectedPrice":"Expected price",
+    "maintenance.remainingKm":"About {0} km left to the next maintenance",
+    "maintenance.noPointYet":"No maintenance point recorded past {0} km", "maintenance.addMorePoints":"Add new maintenance points from the schedule below if you want to extend it further.",
+    "maintenance.done":"✅ Done", "maintenance.upcoming":"🔜 Upcoming", "maintenance.emptySchedule":"No maintenance points in the schedule yet.",
+    "toast.schedPointDeleted":"Maintenance point deleted",
+    "maintenance.emptyLog":"No maintenance logged yet.<br>Tap + and log the first one.", "maintenance.noDetails":"No details",
+    "toast.maintDeleted":"Maintenance record deleted",
+    "home.addSourceFirst":"Add a payment source first from Settings (like Visa or Cash).", "home.legacySource":"Deleted source — still has expenses",
+    "common.total":"Total", "settings.movesEmpty":"No movements logged on any account yet.",
+    "modal.account.deposit":"Deposit", "modal.account.withdraw":"Withdraw", "toast.moveDeleted":"Movement deleted",
+    "sms.bannerTitle":"Bank transactions detected ({0}) — review needed", "sms.unclearAmount":"Amount unclear",
+    "sms.addAsExpense":"Add as expense", "sms.openManual":"Open and log manually", "sms.dismiss":"Dismiss", "sms.fromSender":"From {0}",
+    "toast.nativeOnlyFeature":"This feature only works inside the mobile app", "toast.needBiometricSetup":"You need to set up a fingerprint or screen lock on your device first",
+    "biometric.confirmTitle":"Confirm enabling lock", "biometric.confirmSubtitle":"Verify your fingerprint to enable protection",
+    "toast.enableCancelled":"Enabling cancelled", "toast.enableLockFailed":"Couldn't enable protection",
+    "toast.lockEnabled":"Fingerprint protection enabled ✅", "toast.lockDisabled":"Fingerprint protection disabled",
+    "toast.needNotifPermission":"Notification permission is needed first", "toast.needSmsPermission":"SMS read permission is needed for this feature to work",
+    "toast.bankSendersSaved":"Watched banks saved ✅", "toast.categoryAdded":"Category {0} {1} added ✅",
+    "modal.item.gam3iyaAmountLabel":"Your monthly gam3iya share (EGP)", "modal.item.amountLabel":"Monthly amount (EGP)",
+    "modal.item.editTitle":"Edit Obligation Item", "modal.item.newTitle":"New Obligation Item", "modal.item.noAutoDeduct":"No auto-deduct",
+    "toast.enterItemName":"Enter the item's name", "toast.enterValidMonthlyAmount":"Enter a valid monthly amount",
+    "toast.endBeforeStart":"The end month must be after the start month",
+    "toast.itemEdited":"Changes saved ✅", "toast.itemAdded":"New item added ✅",
+    "backup.exportFilename":"masarifi_backup", "toast.backupExported":"Backup exported ✅",
+    "confirm.importBackup":"This will replace all current data with the imported copy. Are you sure?",
+    "toast.backupImported":"Backup imported ✅", "toast.badFile":"That file isn't valid, try again",
+    "confirm.resetAll":"Are you sure? Everything (expenses, obligations, maintenance, account balances, settings) will be reset and the app will go back to how it was the first time you opened it.",
+    "toast.dataReset":"Data reset", "toast.nothingToExport":"No expenses to export",
+    "modal.sourceLabelShort":"Source", "csv.amount":"Amount", "csv.filenamePrefix":"expenses",
+    "modal.flex.editTitle":"Edit {0}", "modal.flex.valueLabel":"{0} value for {1} (EGP)",
+    "toast.flexAutoRestored":"Back to automatic calculation", "toast.enterValidNumber":"Enter a valid number",
+    "toast.flexUpdated":"{0} updated ✅", "toast.categoryExists":"That category already exists",
+    "prompt.newCategoryName":"New category name:", "prompt.newCategoryIcon":"Category emoji (optional):",
+    "expenses.newCategory":"New category", "modal.expense.editTitle":"Edit Expense", "modal.expense.newTitle":"New Expense",
+    "toast.enterValidAmount":"Enter a valid amount", "toast.expenseUpdated":"Expense updated ✅", "toast.expenseSaved":"Expense logged ✅",
+    "toast.allocSaved":"Transaction logged ✅", "toast.enterValidKm":"Enter a valid odometer reading", "toast.enterValidCost":"Enter a valid cost",
+    "maintenance.expenseNotePrefix":"Maintenance", "toast.maintSaved":"Maintenance logged ✅",
+    "toast.addSourceFirstShort":"Add a payment source first from Settings", "toast.moveSaved":"Movement logged ✅",
+    "lock.unlockPromptTitle":"Unlock My Expenses", "lock.unlockPromptSubtitle":"Verify with your fingerprint or screen lock code",
+  },
+};
+function t(key){ const d = I18N[state.settings.lang] || I18N.ar; return (key in d) ? d[key] : (I18N.ar[key] !== undefined ? I18N.ar[key] : key); }
+// t() with {0},{1}... placeholders filled in — for the toast/confirm messages that interpolate a
+// name or number into an otherwise-fixed sentence.
+function tf(key, ...args){ return args.reduce((s,v,i)=> s.replaceAll("{"+i+"}", v), t(key)); }
+function isRTL(){ return state.settings.lang !== "en"; }
+// Re-applies every static [data-i18n]/[data-i18n-placeholder]/[data-i18n-title] element's text —
+// safe to call any number of times, including from inside render() after a sub-render has
+// overwritten one of these elements with a hardcoded-Arabic textContent assignment (e.g.
+// heroLabel), since this always runs last and wins.
+function applyStaticI18n(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{ el.placeholder = t(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll("[data-i18n-title]").forEach(el=>{ el.title = t(el.dataset.i18nTitle); });
+}
+function applyLanguage(){
+  document.documentElement.lang = state.settings.lang === "en" ? "en" : "ar";
+  document.documentElement.dir = isRTL() ? "rtl" : "ltr";
+  applyStaticI18n();
+  renderLangChips();
+}
+function renderLangChips(){
+  const el = document.getElementById("langChips");
+  if(!el) return;
+  el.innerHTML = `
+    <button class="chip ${state.settings.lang!=="en"?"sel":""}" data-lang="ar">🇪🇬 العربية</button>
+    <button class="chip ${state.settings.lang==="en"?"sel":""}" data-lang="en">🇬🇧 English</button>`;
+  el.querySelectorAll(".chip").forEach(ch=>{
+    ch.onclick = async ()=>{
+      if(state.settings.lang === ch.dataset.lang) return;
+      state.settings.lang = ch.dataset.lang;
+      await saveSettings();
+      applyLanguage();
+      render();
+    };
+  });
+}
 
 let state = { settings: defaultSettings(), items: [...DEFAULT_ITEMS], expenses: [], allocations: [],
   car: {odometer:0, odometerDate:null}, maintenanceSchedule: [...DEFAULT_MAINT_SCHEDULE], maintenanceLog: [], accountMoves: [] };
@@ -966,13 +1396,14 @@ let maintSortBy = "date_desc";
 let accountMoveSortBy = "date_desc";
 
 const SORT_OPTIONS_DATE_AMOUNT = [
-  {k:"date_desc", l:"🔽 الأحدث"}, {k:"date_asc", l:"🔼 الأقدم"},
-  {k:"amount_desc", l:"💰 الأعلى مبلغ"}, {k:"amount_asc", l:"💰 الأقل مبلغ"},
+  {k:"date_desc", l:"🔽 الأحدث", lEn:"🔽 Newest"}, {k:"date_asc", l:"🔼 الأقدم", lEn:"🔼 Oldest"},
+  {k:"amount_desc", l:"💰 الأعلى مبلغ", lEn:"💰 Highest"}, {k:"amount_asc", l:"💰 الأقل مبلغ", lEn:"💰 Lowest"},
 ];
 const SORT_OPTIONS_ITEMS = [
-  {k:"newest", l:"🔽 الأحدث إضافة"}, {k:"name_asc", l:"🔤 الاسم (أ-ي)"},
-  {k:"amount_desc", l:"💰 الأعلى مبلغ"}, {k:"amount_asc", l:"💰 الأقل مبلغ"},
+  {k:"newest", l:"🔽 الأحدث إضافة", lEn:"🔽 Newest added"}, {k:"name_asc", l:"🔤 الاسم (أ-ي)", lEn:"🔤 Name (A-Z)"},
+  {k:"amount_desc", l:"💰 الأعلى مبلغ", lEn:"💰 Highest"}, {k:"amount_asc", l:"💰 الأقل مبلغ", lEn:"💰 Lowest"},
 ];
+function sortOptLabel(o){ return (state.settings.lang==="en" && o.lEn) ? o.lEn : o.l; }
 
 // Every record's id is "<prefix><Date.now()>" (e.g. expense id "e1788361100119") — this pulls
 // out that embedded creation-time millisecond timestamp. date_desc/date_asc only have a plain
@@ -997,7 +1428,7 @@ function sortList(list, opt, dateField, amountField){
 function renderSortChips(containerId, options, current, onChange){
   const el = document.getElementById(containerId);
   if(!el) return;
-  el.innerHTML = options.map(o=>`<button class="fchip ${o.k===current?'sel':''}" data-k="${o.k}">${o.l}</button>`).join("");
+  el.innerHTML = options.map(o=>`<button class="fchip ${o.k===current?'sel':''}" data-k="${o.k}">${sortOptLabel(o)}</button>`).join("");
   el.querySelectorAll(".fchip").forEach(ch=>{
     ch.onclick = ()=>onChange(ch.dataset.k);
   });
@@ -1016,13 +1447,13 @@ function appendCollapseToggle(container, key, totalCount, onToggle){
   const btn = document.createElement("button");
   btn.className = "btn btn-ghost";
   btn.style.marginTop = "8px";
-  btn.textContent = listExpanded[key] ? "▲ اطوِ القايمة" : `▼ عرض الكل (${totalCount})`;
+  btn.textContent = listExpanded[key] ? t("collapse.fold") : tf("collapse.showAll", totalCount);
   btn.onclick = ()=>{ listExpanded[key] = !listExpanded[key]; onToggle(); };
   container.appendChild(btn);
 }
 
 function monthKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
-function monthLabelOf(key){ const [y,m] = key.split("-").map(Number); return MONTH_NAMES[m-1]+" "+y; }
+function monthLabelOf(key){ const [y,m] = key.split("-").map(Number); const names = state.settings.lang==="en" ? MONTH_NAMES_EN : MONTH_NAMES; return names[m-1]+" "+y; }
 function nextMonthKey(key){ const [y,m] = key.split("-").map(Number); return monthKey(new Date(y,m,1)); }
 // The real calendar month "right now" — fixed at load, unlike curMonthKey which the user can
 // browse away from (prev/next month buttons). Auto-deduction catch-up must always run up to
@@ -1047,9 +1478,9 @@ async function saveOrShareFile(filename, content, isBase64){
       const opts = { path: filename, directory: "CACHE", data: content };
       if(!isBase64) opts.encoding = "utf8";
       const res = await Filesystem.writeFile(opts);
-      await Share.share({ title: filename, url: res.uri, dialogTitle: "حفظ أو مشاركة الملف" });
+      await Share.share({ title: filename, url: res.uri, dialogTitle: t("toast.saveShareTitle") });
     }catch(err){
-      showToast("تعذّر حفظ الملف: " + (err && err.message ? err.message : "خطأ غير معروف"));
+      showToast(tf("toast.saveFileFailed", err && err.message ? err.message : t("toast.unknownError")));
     }
     return;
   }
@@ -1091,7 +1522,7 @@ async function scheduleDailyReminder(time){
     const { LocalNotifications } = window.Capacitor.Plugins;
     await LocalNotifications.cancel({ notifications:[{id:NOTIF_IDS.daily}] });
     await LocalNotifications.schedule({ notifications:[{
-      id: NOTIF_IDS.daily, title:"متابعة مصاريفي", body:"متنساش تسجّل مصاريف النهاردة 🧾",
+      id: NOTIF_IDS.daily, title:t("app.title"), body:t("notif.dailyBody"),
       schedule:{ on:{hour, minute}, repeats:true, allowWhileIdle:true }
     }]});
     return true;
@@ -1108,7 +1539,7 @@ async function scheduleWeeklyBackupReminder(){
     const { LocalNotifications } = window.Capacitor.Plugins;
     await LocalNotifications.cancel({ notifications:[{id:NOTIF_IDS.weeklyBackup}] });
     await LocalNotifications.schedule({ notifications:[{
-      id: NOTIF_IDS.weeklyBackup, title:"متابعة مصاريفي", body:"متنساش تاخد نسخة احتياطية من بياناتك 💾",
+      id: NOTIF_IDS.weeklyBackup, title:t("app.title"), body:t("notif.weeklyBody"),
       schedule:{ on:{weekday:2, hour:10, minute:0}, repeats:true, allowWhileIdle:true } // weekday 2 = Monday
     }]});
     return true;
@@ -1126,7 +1557,7 @@ function checkMaintDueNotify(){
   if(!next) return;
   const remaining = next.km - odometer;
   if(remaining <= 500){
-    notifyNow("صيانة العربية قربت 🔧", "باقيلك حوالي "+fmt(remaining)+" كم على صيانة "+fmt(next.km)+" كم (السعر المتوقع "+fmt(next.price)+" ج)");
+    notifyNow(t("notif.maintTitle"), tf("notif.maintBody", fmt(remaining), fmt(next.km), fmt(next.price)));
   }
 }
 
@@ -1239,7 +1670,7 @@ function renderGoogleAccountCard(){
   const el = document.getElementById("googleAccountArea");
   if(!el) return;
   if(!isNativeApp()){
-    el.innerHTML = `<p style="font-size:12px;color:var(--ink-soft);">شغالة بس جوه تطبيق الموبايل.</p>`;
+    el.innerHTML = `<p style="font-size:12px;color:var(--ink-soft);">${t("google.nativeOnly")}</p>`;
     return;
   }
   if(googleAccount){
@@ -1248,30 +1679,30 @@ function renderGoogleAccountCard(){
         ${googleAccount.photoUrl ? `<img src="${googleAccount.photoUrl}" style="width:36px;height:36px;border-radius:50%;">` : ""}
         <div><div style="font-size:13px;font-weight:700;color:var(--ink);">${googleAccount.name||""}</div><div style="font-size:11px;color:var(--ink-soft);">${googleAccount.email||""}</div></div>
       </div>
-      <button class="btn btn-primary" id="googleBackupNowBtn" style="margin-bottom:8px;">☁️ ارفع نسخة دلوقتي</button>
-      <button class="btn btn-ghost" id="googleRestoreBtn" style="margin-bottom:8px;">⬇️ استرجع من Drive</button>
-      <button class="btn btn-ghost" id="googleSignOutBtn">تسجيل خروج</button>`;
+      <button class="btn btn-primary" id="googleBackupNowBtn" style="margin-bottom:8px;">${t("google.backupNow")}</button>
+      <button class="btn btn-ghost" id="googleRestoreBtn" style="margin-bottom:8px;">${t("google.restore")}</button>
+      <button class="btn btn-ghost" id="googleSignOutBtn">${t("google.signOut")}</button>`;
     document.getElementById("googleBackupNowBtn").onclick = async ()=>{
-      showToast("بيترفع...");
-      try{ await driveUploadBackup(); showToast("اترفعت النسخة على Google Drive ✅"); }
-      catch(e){ showToast("تعذّر الرفع، جرب تاني"); }
+      showToast(t("toast.uploading"));
+      try{ await driveUploadBackup(); showToast(t("toast.driveUploadOk")); }
+      catch(e){ showToast(t("toast.driveUploadFail")); }
     };
     document.getElementById("googleRestoreBtn").onclick = async ()=>{
-      if(!confirm("هيتم استبدال كل البيانات الحالية بالنسخة اللي على Drive. متأكد؟")) return;
+      if(!confirm(t("confirm.driveRestore"))) return;
       try{
         const data = await driveRestoreBackup();
         await applyBackupData(data);
-        showToast("اترجعت البيانات من Google Drive ✅");
-      }catch(e){ showToast("مفيش نسخة محفوظة على Drive، أو حصل خطأ"); }
+        showToast(t("toast.driveRestoreOk"));
+      }catch(e){ showToast(t("toast.driveRestoreFail")); }
     };
     document.getElementById("googleSignOutBtn").onclick = async ()=>{
       try{ await window.Capacitor.Plugins.GoogleAuth.signOut(); }catch(e){}
       googleAccount = null;
       renderGoogleAccountCard();
-      showToast("اتسجل خروج من جوجل");
+      showToast(t("toast.googleSignedOut"));
     };
   } else {
-    el.innerHTML = `<button class="btn btn-primary" id="googleSignInBtn">تسجيل الدخول بجوجل</button>
+    el.innerHTML = `<button class="btn btn-primary" id="googleSignInBtn">${t("google.signIn")}</button>
       <p id="googleSignInError" style="font-size:11.5px; color:#c0392b; margin:8px 0 0; line-height:1.7; display:none;"></p>`;
     document.getElementById("googleSignInBtn").onclick = async ()=>{
       const errEl = document.getElementById("googleSignInError");
@@ -1282,7 +1713,7 @@ function renderGoogleAccountCard(){
         if(res.success){
           googleAccount = { email: res.email, name: res.name, photoUrl: res.photoUrl };
           renderGoogleAccountCard();
-          showToast("سجّلت دخول بجوجل ✅");
+          showToast(t("toast.googleSignedIn"));
         } else {
           // res.error is "code:<Google Sign-In status code>" from the native side — show what it
           // actually means instead of always claiming "cancelled", which was masking real failures
@@ -1292,26 +1723,26 @@ function renderGoogleAccountCard(){
         }
       }catch(e){
         console.error("GoogleAuth.signIn threw:", e);
-        showGoogleSignInError("تعذّر تسجيل الدخول بجوجل (البلجن مش متاح؟) — تأكد إنك بتستخدم نسخة APK حديثة.");
+        showGoogleSignInError(t("google.pluginError"));
       }
     };
   }
 }
-// Maps a native "code:<n>" Google Sign-In status into an Arabic message that actually helps
+// Maps a native "code:<n>" Google Sign-In status into a message that actually helps
 // diagnose it, instead of the old one-size-fits-all "cancelled" toast.
 function googleSignInErrorMessage(errorCode){
   const code = String(errorCode||"").replace("code:", "");
   if(code === "12501") return null; // user genuinely cancelled the account picker — not an error, no message needed
-  if(code === "10") return "إعداد جوجل ناقص (DEVELOPER_ERROR): لازم تعمل OAuth client من نوع Android على Google Cloud Console بنفس اسم الحزمة وبصمة SHA-1 بتاعة التطبيق. خطوات التفعيل في README.";
-  if(code === "7") return "مفيش إنترنت — جرب تاني وانت متصل.";
-  if(code === "12500" || code === "8") return "تسجيل الدخول فشل من جوجل نفسها، جرب تاني بعد شوية. لو فضل يفشل، راجع إعداد Google Cloud Console (README).";
-  return "تعذّر تسجيل الدخول بجوجل (كود "+(code||"غير معروف")+") — راجع إعداد Google Cloud Console (README).";
+  if(code === "10") return t("google.errDeveloper");
+  if(code === "7") return t("google.errNoInternet");
+  if(code === "12500" || code === "8") return t("google.errGoogleSide");
+  return tf("google.errGeneric", code || t("google.unknownCode"));
 }
 function showGoogleSignInError(msg){
-  if(!msg){ showToast("اتلغى تسجيل الدخول"); return; }
+  if(!msg){ showToast(t("toast.signInCancelled")); return; }
   const errEl = document.getElementById("googleSignInError");
   if(errEl){ errEl.textContent = msg; errEl.style.display = "block"; }
-  showToast("تعذّر تسجيل الدخول بجوجل");
+  showToast(t("toast.googleSignInFailed"));
 }
 
 async function loadState(){
@@ -1396,7 +1827,7 @@ async function performUndo(){
   render();
   undoRedoInProgress = false;
   updateUndoRedoButtons();
-  showToast("اتراجعت آخر خطوة ↩️");
+  showToast(t("toast.undoDone"));
 }
 async function performRedo(){
   if(redoStack.length===0) return;
@@ -1408,7 +1839,7 @@ async function performRedo(){
   render();
   undoRedoInProgress = false;
   updateUndoRedoButtons();
-  showToast("اتعمل Redo للخطوة ↪️");
+  showToast(t("toast.redoDone"));
 }
 document.getElementById("undoBtn").onclick = performUndo;
 document.getElementById("redoBtn").onclick = performRedo;
@@ -1505,7 +1936,7 @@ async function syncLinkedItemWithdrawals(){
       const moveId = "lw"+it.id+"_"+mk;
       state.accountMoves.push({
         id: moveId, source: it.source, type: "withdraw", amount: itemAmountForMonth(it, mk),
-        note: "خصم تلقائي: "+it.name, date: mk+"-01", linkedItemId: it.id, linkedMonth: mk
+        note: tf("autoDeduct.note", it.name), date: mk+"-01", linkedItemId: it.id, linkedMonth: mk
       });
       it.linkedSyncedMonths[mk] = moveId;
       changed = true;
@@ -1565,7 +1996,8 @@ function maybeNotifyCapExceeded(cat, mk, prevTotal){
   if(cap<=0 || !state.settings.notif.capAlert.enabled) return;
   const newTotal = categoryMonthTotal(cat, mk, null);
   if(prevTotal<=cap && newTotal>cap){
-    notifyNow("تجاوزت حد "+cat, "صرفت "+fmt(newTotal)+" ج من حد "+fmt(cap)+" ج المخصص لفئة "+cat+" الشهر ده");
+    const catL = catLabel(allCats().find(c=>c.k===cat) || {k:cat});
+    notifyNow(tf("notif.capExceededTitle", catL), tf("notif.capExceededBody", fmt(newTotal), fmt(cap), catL));
   }
 }
 
@@ -1579,29 +2011,26 @@ function render(){
   const monthAllocations = state.allocations.filter(a=>a.date.slice(0,7)===curMonthKey);
   const allocSpent = monthAllocations.reduce((s,a)=>s+Number(a.amount),0);
   const remaining = m.recurringSurplus - spent - allocSpent;
-  document.getElementById("heroAmount").innerHTML = fmt(remaining) + " <small>ج</small>";
+  document.getElementById("heroAmount").innerHTML = fmt(remaining) + " <small>"+t("common.currency")+"</small>";
   document.getElementById("heroAmount").style.color = remaining<0 ? "var(--brick)" : "";
-  document.getElementById("heroLabel").textContent = "معايا كام؟";
-  document.getElementById("phaseChip").textContent =
-    m.phase==="عجز" ? "⚠️ عجز في الميزانية" :
-    m.phase==="ضغط" ? "🔴 مرحلة الضغط" :
-    m.phase==="انتقال" ? "🟡 مرحلة الانتقال" : "🟢 مرحلة الانطلاق";
+  document.getElementById("heroLabel").textContent = t("hero.label");
+  document.getElementById("phaseChip").textContent = phaseLabel(m.phase);
 
   const rows = [];
-  rows.push(oblRow("المرتب", m.salary));
-  if(m.extraIncome>0) rows.push(oblRow("دخل إضافي (جمعية)", m.extraIncome));
-  rows.push(oblRow("أقساط", -m.byCat["قسط"]));
-  rows.push(oblRow("مصروفات ثابتة", -m.byCat["ثابت"]));
-  rows.push(oblRow("جمعيات", -m.byCat["جمعية"]));
+  rows.push(oblRow(t("obl.salary"), m.salary));
+  if(m.extraIncome>0) rows.push(oblRow(t("obl.extraIncome"), m.extraIncome));
+  rows.push(oblRow(t("obl.installments"), -m.byCat["قسط"]));
+  rows.push(oblRow(t("obl.fixed"), -m.byCat["ثابت"]));
+  rows.push(oblRow(t("obl.gam3iyas"), -m.byCat["جمعية"]));
   document.getElementById("oblList").innerHTML = rows.join("") +
-    `<div class="obl-row total"><span class="name">الفائض الشهري المتكرر</span>
-       <span class="val" style="color:${m.recurringSurplus<0?'var(--brick)':'var(--sage)'}">${fmt(m.recurringSurplus)} ج</span></div>`;
+    `<div class="obl-row total"><span class="name">${t("obl.recurringSurplus")}</span>
+       <span class="val" style="color:${m.recurringSurplus<0?'var(--brick)':'var(--sage)'}">${fmt(m.recurringSurplus)} ${t("common.currency")}</span></div>`;
 
   document.getElementById("allocSuggestionMonthLbl").textContent = "— " + monthLabelOf(curMonthKey);
   document.getElementById("allocGrid").innerHTML = `
-    <div class="alloc-card" data-key="emergency"><div class="dot" style="background:var(--sage)"></div><div class="amt">${fmt(m.emergency)}</div><div class="lbl">طوارئ ${m.pEPct}%${m.emergencyIsOverridden?' ✏️':''}</div></div>
-    <div class="alloc-card" data-key="invest"><div class="dot" style="background:var(--teal)"></div><div class="amt">${fmt(m.invest)}</div><div class="lbl">استثمار ${m.pIPct}%${m.investIsOverridden?' ✏️':''}</div></div>
-    <div class="alloc-card" data-key="flex"><div class="dot" style="background:var(--gold)"></div><div class="amt">${fmt(m.flex)}</div><div class="lbl">مرونة ${m.pFPct}%${m.flexIsOverridden?' ✏️':''}</div></div>
+    <div class="alloc-card" data-key="emergency"><div class="dot" style="background:var(--sage)"></div><div class="amt">${fmt(m.emergency)}</div><div class="lbl">${catLabel(ALLOC_CATS[0])} ${m.pEPct}%${m.emergencyIsOverridden?' ✏️':''}</div></div>
+    <div class="alloc-card" data-key="invest"><div class="dot" style="background:var(--teal)"></div><div class="amt">${fmt(m.invest)}</div><div class="lbl">${catLabel(ALLOC_CATS[1])} ${m.pIPct}%${m.investIsOverridden?' ✏️':''}</div></div>
+    <div class="alloc-card" data-key="flex"><div class="dot" style="background:var(--gold)"></div><div class="amt">${fmt(m.flex)}</div><div class="lbl">${catLabel(ALLOC_CATS[2])} ${m.pFPct}%${m.flexIsOverridden?' ✏️':''}</div></div>
   `;
   document.querySelectorAll("#allocGrid .alloc-card").forEach(card=>{
     card.style.cursor = "pointer";
@@ -1609,8 +2038,8 @@ function render(){
   });
 
   const pct = m.flex>0 ? Math.min(100,(spent/m.flex)*100) : (spent>0?100:0);
-  document.getElementById("flexSpent").textContent = fmt(spent) + " ج";
-  document.getElementById("flexBudget").textContent = "من " + fmt(m.flex) + " ج" + (m.flexIsOverridden ? " (معدّلة)" : "");
+  document.getElementById("flexSpent").textContent = fmt(spent) + " " + t("common.currency");
+  document.getElementById("flexBudget").textContent = t("home.outOf") + " " + fmt(m.flex) + " " + t("common.currency") + (m.flexIsOverridden ? t("common.overriddenSuffix") : "");
   document.getElementById("flexBar").style.width = pct+"%";
   document.getElementById("flexBar").style.background = spent > m.flex ? "var(--brick)" : "var(--gold-soft)";
 
@@ -1618,12 +2047,12 @@ function render(){
   const catTotals = {};
   monthExpenses.forEach(e=>{ catTotals[e.cat] = (catTotals[e.cat]||0) + Number(e.amount); });
   const topCatEntry = Object.entries(catTotals).sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById("topCat").textContent = topCatEntry ? topCatEntry[0]+" ("+fmt(topCatEntry[1])+" ج)" : "—";
+  document.getElementById("topCat").textContent = topCatEntry ? catLabel(allCats().find(c=>c.k===topCatEntry[0])||{k:topCatEntry[0]})+" ("+fmt(topCatEntry[1])+" "+t("common.currency")+")" : "—";
   const today = new Date();
   const [yy,mm] = curMonthKey.split("-").map(Number);
   const isCurrentRealMonth = (yy===today.getFullYear() && mm===today.getMonth()+1);
   const daysSoFar = isCurrentRealMonth ? today.getDate() : new Date(yy,mm,0).getDate();
-  document.getElementById("avgDaily").innerHTML = fmt(spent/Math.max(daysSoFar,1)) + " <span>ج/يوم</span>";
+  document.getElementById("avgDaily").innerHTML = fmt(spent/Math.max(daysSoFar,1)) + " <span>"+t("common.perDay")+"</span>";
 
   renderCategoryBars(monthExpenses);
   renderExpenses();
@@ -1635,12 +2064,22 @@ function render(){
   renderSettings();
   renderPendingSms();
   updateTabsVisibility();
+  applyStaticI18n();
+}
+
+// m.phase is an internal Arabic key (never persisted, but compared elsewhere e.g. the Excel
+// export) — never translate the key itself, only its displayed text, same principle as category
+// `cat` keys.
+function phaseLabel(phase){
+  return phase==="عجز" ? t("phase.deficit") :
+    phase==="ضغط" ? t("phase.pressure") :
+    phase==="انتقال" ? t("phase.transition") : t("phase.launch");
 }
 
 function oblRow(name, val){
   const positive = val >= 0;
   return `<div class="obl-row"><span class="name">${name}</span>
-    <span class="val" style="color:${positive?'var(--sage)':'var(--ink)'}">${positive?'+':''}${fmt(val)} ج</span></div>`;
+    <span class="val" style="color:${positive?'var(--sage)':'var(--ink)'}">${positive?'+':''}${fmt(val)} ${t("common.currency")}</span></div>`;
 }
 
 function renderCategoryBars(monthExpenses){
@@ -1650,15 +2089,16 @@ function renderCategoryBars(monthExpenses){
   monthExpenses.forEach(e=>{ totals[e.cat] = (totals[e.cat]||0) + Number(e.amount); });
   const entries = Object.entries(totals).filter(([k,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   const el = document.getElementById("catBars");
-  if(entries.length===0){ el.innerHTML = `<div style="text-align:center;color:var(--ink-soft);font-size:12.5px;padding:10px 0;">لسه مفيش مصاريف الشهر ده</div>`; return; }
+  if(entries.length===0){ el.innerHTML = `<div style="text-align:center;color:var(--ink-soft);font-size:12.5px;padding:10px 0;">${t("expenses.emptyMonth")}</div>`; return; }
   const max = Math.max(...entries.map(e=>e[1]));
   el.innerHTML = entries.map(([cat,val])=>{
     const cap = Number(state.settings.caps[cat]||0);
     const pct = Math.min(100, (val/max)*100);
     const over = cap>0 && val>cap;
-    const icon = (allCats().find(c=>c.k===cat)||{}).i || "📦";
+    const entry = allCats().find(c=>c.k===cat) || {};
+    const icon = entry.i || "📦";
     return `<div class="cat-bar-row">
-      <div class="cat-bar-top"><span class="cn">${icon} ${cat}</span><span class="cv">${fmt(val)}${cap>0?" / "+fmt(cap):""} ج</span></div>
+      <div class="cat-bar-top"><span class="cn">${icon} ${catLabel(entry.k?entry:{k:cat})}</span><span class="cv">${fmt(val)}${cap>0?" / "+fmt(cap):""} ${t("common.currency")}</span></div>
       <div class="cat-bar-track"><div class="cat-bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
     </div>`;
   }).join("");
@@ -1666,8 +2106,9 @@ function renderCategoryBars(monthExpenses){
 
 function renderExpenses(){
   const el = document.getElementById("expList");
-  document.getElementById("filterChips").innerHTML = ["الكل", ...allCats().map(c=>c.k)].map(c=>
-    `<button class="fchip ${c===filterCat?'sel':''}" data-cat="${c}">${c}</button>`).join("");
+  const filterEntries = [{k:"الكل"}, ...allCats()];
+  document.getElementById("filterChips").innerHTML = filterEntries.map(c=>
+    `<button class="fchip ${c.k===filterCat?'sel':''}" data-cat="${c.k}">${c.k==="الكل"?t("common.all"):catLabel(c)}</button>`).join("");
   document.querySelectorAll("#filterChips .fchip").forEach(ch=>{
     ch.onclick = ()=>{ filterCat = ch.dataset.cat; render(); };
   });
@@ -1680,18 +2121,19 @@ function renderExpenses(){
   list = sortList(list, expenseSortBy, "date", "amount");
 
   if(list.length===0){
-    el.innerHTML = `<div class="empty-state"><div class="big">🧾</div><p>لسه مفيش مصاريف تطابق البحث.<br>دوس على زرار + وسجّل مصروف.</p></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="big">🧾</div><p>${t("expenses.emptyList")}</p></div>`;
     return;
   }
   const fullCount = list.length;
   el.innerHTML = collapseSlice(list, "expenses").map(e=>{
     const cat = allCats().find(c=>c.k===e.cat) || {i:"📦"};
     const d = new Date(e.date);
-    const dateStr = d.getDate()+" "+MONTH_NAMES[d.getMonth()].slice(0,3);
+    const monthNames = state.settings.lang==="en" ? MONTH_NAMES_EN : MONTH_NAMES;
+    const dateStr = d.getDate()+" "+monthNames[d.getMonth()].slice(0,3);
     return `<div class="exp-row">
       <div class="exp-icon">${cat.i}</div>
-      <div class="exp-mid"><div class="cat">${e.cat}</div><div class="note">${e.note || "بدون ملاحظة"}${e.source ? " · 💳 "+e.source : ""}</div></div>
-      <div class="exp-right"><div class="amt">${fmt(e.amount)} ج</div><div class="date">${dateStr}</div></div>
+      <div class="exp-mid"><div class="cat">${catLabel(cat.k?cat:{k:e.cat})}</div><div class="note">${e.note || t("common.noNote")}${e.source ? " · 💳 "+e.source : ""}</div></div>
+      <div class="exp-right"><div class="amt">${fmt(e.amount)} ${t("common.currency")}</div><div class="date">${dateStr}</div></div>
       <button class="exp-edit" data-id="${e.id}">✏️</button>
       <button class="exp-del" data-id="${e.id}">🗑</button>
     </div>`;
@@ -1706,7 +2148,7 @@ function renderExpenses(){
   el.querySelectorAll(".exp-del").forEach(btn=>{
     btn.onclick = async ()=>{
       state.expenses = state.expenses.filter(e=>e.id!==btn.dataset.id);
-      await saveExpenses(); render(); showToast("اتمسح المصروف");
+      await saveExpenses(); render(); showToast(t("toast.expenseDeleted"));
     };
   });
 }
@@ -1716,7 +2158,7 @@ function renderAllocations(){
   const totals = {"طوارئ":0,"استثمار":0,"مرونة":0};
   state.allocations.forEach(a=>{ totals[a.cat] = (totals[a.cat]||0) + Number(a.amount); });
   document.getElementById("allocStatGrid").innerHTML = ALLOC_CATS.map(c=>`
-    <div class="stat-card"><div class="k">${c.i} ${c.k} (تراكمي)</div><div class="v">${fmt(totals[c.k]||0)} <span>ج</span></div></div>
+    <div class="stat-card"><div class="k">${c.i} ${catLabel(c)} ${t("allocations.cumulativeSuffix")}</div><div class="v">${fmt(totals[c.k]||0)} <span>${t("common.currency")}</span></div></div>
   `).join("");
 
   // monthly breakdown with running cumulative
@@ -1731,22 +2173,23 @@ function renderAllocations(){
     rowsHtml += `<div class="obl-row" style="flex-direction:column; align-items:stretch; gap:6px;">
       <div style="display:flex;justify-content:space-between;"><span class="name">${monthLabelOf(mk)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);">
-        <span>🛟 ${fmt(monthTotals["طوارئ"])} (تراكمي ${fmt(running["طوارئ"])})</span>
+        <span>🛟 ${fmt(monthTotals["طوارئ"])} (${t("allocations.cumulativeSuffix")} ${fmt(running["طوارئ"])})</span>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);">
-        <span>📈 ${fmt(monthTotals["استثمار"])} (تراكمي ${fmt(running["استثمار"])})</span>
+        <span>📈 ${fmt(monthTotals["استثمار"])} (${t("allocations.cumulativeSuffix")} ${fmt(running["استثمار"])})</span>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);">
-        <span>🎯 ${fmt(monthTotals["مرونة"])} (تراكمي ${fmt(running["مرونة"])})</span>
+        <span>🎯 ${fmt(monthTotals["مرونة"])} (${t("allocations.cumulativeSuffix")} ${fmt(running["مرونة"])})</span>
       </div>
     </div>`;
   });
   document.getElementById("allocMonthlyList").innerHTML = rowsHtml ||
-    `<div class="empty-state"><div class="big">📦</div><p>لسه مفيش توزيعات مسجلة.<br>دوس + وسجّل أول عملية.</p></div>`;
+    `<div class="empty-state"><div class="big">📦</div><p>${t("allocations.emptyMonthly")}</p></div>`;
 
   // flat list with filter
-  document.getElementById("allocFilterChips").innerHTML = ["الكل", ...ALLOC_CATS.map(c=>c.k)].map(c=>
-    `<button class="fchip ${c===allocFilterCat?'sel':''}" data-cat="${c}">${c}</button>`).join("");
+  const allocFilterEntries = [{k:"الكل"}, ...ALLOC_CATS];
+  document.getElementById("allocFilterChips").innerHTML = allocFilterEntries.map(c=>
+    `<button class="fchip ${c.k===allocFilterCat?'sel':''}" data-cat="${c.k}">${c.k==="الكل"?t("common.all"):catLabel(c)}</button>`).join("");
   document.querySelectorAll("#allocFilterChips .fchip").forEach(ch=>{
     ch.onclick = ()=>{ allocFilterCat = ch.dataset.cat; renderAllocations(); };
   });
@@ -1756,24 +2199,25 @@ function renderAllocations(){
   list = sortList(list, allocSortBy, "date", "amount");
   const el = document.getElementById("allocList");
   if(list.length===0){
-    el.innerHTML = `<div class="empty-state"><div class="big">🧾</div><p>مفيش عمليات تطابق الفلتر.</p></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="big">🧾</div><p>${t("allocations.emptyFiltered")}</p></div>`;
   } else {
     const fullCount = list.length;
     el.innerHTML = collapseSlice(list, "allocations").map(a=>{
       const c = ALLOC_CATS.find(x=>x.k===a.cat) || {i:"📦"};
       const d = new Date(a.date);
-      const dateStr = d.getDate()+" "+MONTH_NAMES[d.getMonth()].slice(0,3)+" "+d.getFullYear();
+      const monthNames = state.settings.lang==="en" ? MONTH_NAMES_EN : MONTH_NAMES;
+      const dateStr = d.getDate()+" "+monthNames[d.getMonth()].slice(0,3)+" "+d.getFullYear();
       return `<div class="exp-row">
         <div class="exp-icon">${c.i}</div>
-        <div class="exp-mid"><div class="cat">${a.cat}</div><div class="note">${a.note || "بدون ملاحظة"}</div></div>
-        <div class="exp-right"><div class="amt" style="color:var(--sage)">+${fmt(a.amount)} ج</div><div class="date">${dateStr}</div></div>
+        <div class="exp-mid"><div class="cat">${c.k?catLabel(c):a.cat}</div><div class="note">${a.note || t("common.noNote")}</div></div>
+        <div class="exp-right"><div class="amt" style="color:var(--sage)">+${fmt(a.amount)} ${t("common.currency")}</div><div class="date">${dateStr}</div></div>
         <button class="exp-del" data-id="${a.id}">🗑</button>
       </div>`;
     }).join("");
     el.querySelectorAll(".exp-del").forEach(btn=>{
       btn.onclick = async ()=>{
         state.allocations = state.allocations.filter(a=>a.id!==btn.dataset.id);
-        await saveAllocations(); render(); showToast("اتمسحت العملية");
+        await saveAllocations(); render(); showToast(t("toast.allocDeleted"));
       };
     });
     appendCollapseToggle(el, "allocations", fullCount, renderAllocations);
@@ -1800,7 +2244,7 @@ function renderSettings(){
   document.getElementById("smsAutoEnabled").checked = state.settings.smsAuto.enabled;
 
   document.getElementById("sourcesEdit").innerHTML = state.settings.sources.map((s,idx)=>`
-    <div class="cap-row"><span class="cl">💳 ${s} <span style="font-weight:600; color:var(--ink-soft);">— ${fmt(computeAccountBalance(s))} ج</span></span><button class="del-x" data-idx="${idx}">✕</button></div>
+    <div class="cap-row"><span class="cl">💳 ${s} <span style="font-weight:600; color:var(--ink-soft);">— ${fmt(computeAccountBalance(s))} ${t("common.currency")}</span></span><button class="del-x" data-idx="${idx}">✕</button></div>
   `).join("");
   document.querySelectorAll("#sourcesEdit .del-x").forEach(btn=>{
     btn.onclick = async ()=>{
@@ -1813,16 +2257,16 @@ function renderSettings(){
       const linkedItems = state.items.filter(it=>it.source===name);
       const stillUsed = state.expenses.some(e=>e.source===name) || state.accountMoves.some(m=>m.source===name) || linkedItems.length>0;
       const linkedWarning = linkedItems.length>0
-        ? ` وفيه ${linkedItems.length} بند التزام مرتبط بيه (${linkedItems.map(it=>it.name).join("، ")}) هيوقف يتخصم منه تلقائيًا بعد الحذف.`
+        ? " " + tf("confirm.sourceLinkedWarning", linkedItems.length, linkedItems.map(it=>it.name).join("، "))
         : "";
-      if(stillUsed && !confirm(`فيه مصاريف أو حركات مسجلة على "${name}"، وهتفضل زي ما هي (مش هتتمسح) لكن هتظهر كمصدر قديم منفصل بدل ما تتدار من هنا.${linkedWarning} تكمل الحذف؟`)) return;
+      if(stillUsed && !confirm(tf("confirm.deleteSource", name)+linkedWarning)) return;
       state.settings.sources.splice(Number(btn.dataset.idx),1);
       await saveSettings(); render();
     };
   });
 
   document.getElementById("catsEdit").innerHTML =
-    BASE_CATS.map(c=>`<div class="cap-row"><span class="cl">${c.i} ${c.k} <span style="font-size:10.5px; color:var(--ink-soft); font-weight:600;">(أساسية)</span></span></div>`).join("") +
+    BASE_CATS.map(c=>`<div class="cap-row"><span class="cl">${c.i} ${catLabel(c)} <span style="font-size:10.5px; color:var(--ink-soft); font-weight:600;">(${t("settings.baseTag")})</span></span></div>`).join("") +
     state.settings.customCats.map((c,idx)=>`<div class="cap-row"><span class="cl">${c.i} ${c.k}</span><button class="del-x" data-idx="${idx}">✕</button></div>`).join("");
   document.querySelectorAll("#catsEdit .del-x").forEach(btn=>{
     btn.onclick = async ()=>{
@@ -1833,8 +2277,8 @@ function renderSettings(){
 
   document.getElementById("capsEdit").innerHTML = allCats().map(c=>`
     <div class="cap-row">
-      <span class="cl">${c.i} ${c.k}</span>
-      <input type="number" class="capIn" data-cat="${c.k}" placeholder="بدون حد" value="${state.settings.caps[c.k]||''}">
+      <span class="cl">${c.i} ${catLabel(c)}</span>
+      <input type="number" class="capIn" data-cat="${c.k}" placeholder="${t('settings.noLimitPlaceholder')}" value="${state.settings.caps[c.k]||''}">
     </div>`).join("");
   document.querySelectorAll(".capIn").forEach(inp=>{
     inp.onchange = async ()=>{
@@ -1856,11 +2300,11 @@ function renderSettings(){
     const amtOverridden = it.amountOverrides && it.amountOverrides[curMonthKey]!==undefined;
     const activeOverridden = it.activeOverrides && it.activeOverrides[curMonthKey]!==undefined;
     const extraNotes = [];
-    if(amtOverridden) extraNotes.push(`✏️ مبلغ ${monthLabelOf(curMonthKey)} بس <span class="itmResetAmountOverride">(رجّع للافتراضي: ${fmt(it.amount)})</span>`);
-    if(activeOverridden) extraNotes.push(`✏️ ${itemActiveForMonth(it,curMonthKey)?"مفعّل":"موقوف"} لشهر ${monthLabelOf(curMonthKey)} بس <span class="itmResetActiveOverride">(رجّع للافتراضي: ${it.active?"مفعّل":"موقوف"})</span>`);
-    const rangeNote = (it.startMonth ? " · من "+monthLabelOf(it.startMonth) : "") + (it.endMonth ? " · لحد "+monthLabelOf(it.endMonth) : "");
-    const payoutNote = (it.cat==="جمعية" && it.payoutMonth) ? ` · هتقبض ${fmt(it.payoutAmount||0)} في ${monthLabelOf(it.payoutMonth)}` : "";
-    const sourceNote = it.source ? ` · 🔗 يتخصم من ${it.source}` : "";
+    if(amtOverridden) extraNotes.push(`✏️ ${tf("obligations.amountOverrideNote", monthLabelOf(curMonthKey))} <span class="itmResetAmountOverride">(${tf("obligations.resetTo", fmt(it.amount))})</span>`);
+    if(activeOverridden) extraNotes.push(`✏️ ${tf("obligations.activeOverrideNote", itemActiveForMonth(it,curMonthKey)?t("obligations.active"):t("obligations.paused"), monthLabelOf(curMonthKey))} <span class="itmResetActiveOverride">(${tf("obligations.resetTo", it.active?t("obligations.active"):t("obligations.paused"))})</span>`);
+    const rangeNote = (it.startMonth ? " · "+t("obligations.fromMonth")+" "+monthLabelOf(it.startMonth) : "") + (it.endMonth ? " · "+t("obligations.toMonth")+" "+monthLabelOf(it.endMonth) : "");
+    const payoutNote = (it.cat==="جمعية" && it.payoutMonth) ? ` · ${tf("obligations.payoutNote", fmt(it.payoutAmount||0), monthLabelOf(it.payoutMonth))}` : "";
+    const sourceNote = it.source ? ` · 🔗 ${tf("obligations.autoDeductFrom", it.source)}` : "";
     // Name gets its own full-width row (was squeezed next to the amount/toggle/delete buttons on
     // one line before, cutting long names off) — everything else that used to be crammed into one
     // long wrapping sentence (edit/reset/delete links) moved into a short action row instead, so a
@@ -1870,17 +2314,17 @@ function renderSettings(){
       <div class="oi-top">
         <label class="switch"><input type="checkbox" class="itmToggle" ${itemActiveForMonth(it,curMonthKey)?"checked":""}><span class="slider"></span></label>
         <input class="itmName oi-name" value="${it.name}">
-        <button class="del-x itmToggleGlobal" title="${it.active?"إيقاف":"تشغيل"} البند في كل الشهور" style="color:${it.active?"var(--sage)":"var(--ink-soft)"};">${it.active?"⏸️":"▶️"}</button>
-        <button class="del-x itmDeleteMonth" title="شيل من شهر ${monthLabelOf(curMonthKey)} بس">✕</button>
+        <button class="del-x itmToggleGlobal" title="${it.active?t('obligations.pause'):t('obligations.resume')} ${t('obligations.everyMonth')}" style="color:${it.active?"var(--sage)":"var(--ink-soft)"};">${it.active?"⏸️":"▶️"}</button>
+        <button class="del-x itmDeleteMonth" title="${tf('obligations.removeThisMonthOnly', monthLabelOf(curMonthKey))}">✕</button>
       </div>
       <div class="oi-sub">
         <input type="number" class="amt-in itmAmount" value="${itemAmountForMonth(it, curMonthKey)}">
-        <div class="oi-meta">${it.cat}${rangeNote}${payoutNote}${sourceNote}</div>
+        <div class="oi-meta">${catLabel(ITEM_CATS.find(c=>c.k===it.cat) || {k:it.cat})}${rangeNote}${payoutNote}${sourceNote}</div>
       </div>
       ${extraNotes.length ? `<div class="oi-notes">${extraNotes.join("<br>")}</div>` : ""}
       <div class="oi-actions">
-        <span class="itmEditDetails">✏️ تعديل${it.cat==="جمعية"?" (النوع/الشهور/القبض)":" (النوع/الشهور)"}</span>
-        <span class="itmDeleteForever">🗑️ حذف نهائي</span>
+        <span class="itmEditDetails">✏️ ${t("obligations.editDetails")}${it.cat==="جمعية"?t("obligations.editDetailsGam3iya"):t("obligations.editDetailsPlain")}</span>
+        <span class="itmDeleteForever">🗑️ ${t("obligations.deleteForever")}</span>
       </div>
     </div>`;
   }
@@ -1896,11 +2340,11 @@ function renderSettings(){
   if(pausedItems.length === 0){
     pausedWrap.innerHTML = "";
   } else if(!listExpanded["itemsPaused"]){
-    pausedWrap.innerHTML = `<button class="btn btn-ghost" id="showPausedItemsBtn">⏸️ بنود موقوفة لشهر ${monthLabelOf(curMonthKey)} (${pausedItems.length})</button>`;
+    pausedWrap.innerHTML = `<button class="btn btn-ghost" id="showPausedItemsBtn">⏸️ ${tf("obligations.pausedItemsBtn", monthLabelOf(curMonthKey), pausedItems.length)}</button>`;
     document.getElementById("showPausedItemsBtn").onclick = ()=>{ listExpanded["itemsPaused"] = true; render(); };
   } else {
     pausedWrap.innerHTML =
-      `<button class="btn btn-ghost" id="hidePausedItemsBtn" style="margin-bottom:8px;">▲ اطوِ البنود الموقوفة</button>` +
+      `<button class="btn btn-ghost" id="hidePausedItemsBtn" style="margin-bottom:8px;">${t("obligations.foldPaused")}</button>` +
       pausedItems.map(itemRowHtml).join("");
     document.getElementById("hidePausedItemsBtn").onclick = ()=>{ listExpanded["itemsPaused"] = false; render(); };
   }
@@ -1959,7 +2403,7 @@ function renderSettings(){
       item.activeOverrides = item.activeOverrides || {};
       item.activeOverrides[curMonthKey] = false;
       await saveItems(); render();
-      showToast("اتشال \""+item.name+"\" من شهر "+monthLabelOf(curMonthKey)+" بس");
+      showToast(tf("toast.itemRemovedThisMonth", item.name, monthLabelOf(curMonthKey)));
     };
     row.querySelector(".itmToggleGlobal").onclick = async ()=>{
       // The master switch: flips the item's base state AND clears every per-month exception
@@ -1971,15 +2415,15 @@ function renderSettings(){
       item.active = !item.active;
       item.activeOverrides = {};
       await saveItems(); render();
-      showToast("\""+item.name+"\" بقى "+(item.active?"مفعّل":"موقوف")+" في كل الشهور");
+      showToast(tf("toast.itemToggledAllMonths", item.name, item.active?t("obligations.active"):t("obligations.paused")));
     };
     row.querySelector(".itmDeleteForever").onclick = (ev)=>{
       ev.stopPropagation();
       const item = state.items.find(x=>x.id===id);
-      if(!confirm("متأكد إنك عايز تمسح \""+item.name+"\" نهائي من كل الشهور؟ الخطوة دي مينفعش ترجع فيها.")) return;
+      if(!confirm(tf("confirm.deleteItemForever", item.name))) return;
       state.items = state.items.filter(x=>x.id!==id);
       saveItems().then(render);
-      showToast("اتمسح \""+item.name+"\" نهائي");
+      showToast(tf("toast.itemDeletedForever", item.name));
     };
   });
 }
@@ -1997,21 +2441,21 @@ function renderCarBudget(){
   const over = budget>0 && spent>budget;
   el.innerHTML = `
     <div class="flex-top">
-      <div><div class="t1">اتصرف من أصل</div><div class="t2">${fmt(spent)} ج</div></div>
-      <div style="text-align:left;"><div class="t3">${budget>0 ? "من "+fmt(budget)+" ج" : "مفيش ميزانية محددة"}</div></div>
+      <div><div class="t1">${t("home.spentOf")}</div><div class="t2">${fmt(spent)} ${t("common.currency")}</div></div>
+      <div style="text-align:left;"><div class="t3">${budget>0 ? t("home.outOf")+" "+fmt(budget)+" "+t("common.currency") : t("maintenance.noBudget")}</div></div>
     </div>
     <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${over ? "var(--brick)" : "var(--gold-soft)"}"></div></div>
     <div style="margin-top:12px; display:flex; gap:8px;">
-      <input type="number" id="carBudgetInput" value="${budget||""}" placeholder="حدد ميزانية شهرية"
+      <input type="number" id="carBudgetInput" value="${budget||""}" placeholder="${t('maintenance.setBudgetPlaceholder')}"
         style="flex:1; border:1px solid rgba(255,255,255,.3); border-radius:8px; padding:9px 12px; background:rgba(255,255,255,.1); color:#fff; font-family:'Cairo'; font-size:13px;">
-      <button class="btn btn-ghost" id="saveCarBudgetBtn" style="width:auto; padding:9px 16px; flex-shrink:0;">حفظ</button>
+      <button class="btn btn-ghost" id="saveCarBudgetBtn" style="width:auto; padding:9px 16px; flex-shrink:0;">${t("common.save")}</button>
     </div>`;
   document.getElementById("saveCarBudgetBtn").onclick = async ()=>{
     const v = Number(document.getElementById("carBudgetInput").value)||0;
     if(v>0) state.settings.caps["عربية"] = v; else delete state.settings.caps["عربية"];
     await saveSettings();
     render();
-    showToast("اتحفظت ميزانية العربية ✅");
+    showToast(t("toast.carBudgetSaved"));
   };
 }
 
@@ -2020,8 +2464,8 @@ function renderMaintenance(){
   if(!odoEl) return;
   odoEl.value = state.car.odometer || "";
   document.getElementById("odometerDateLbl").textContent = state.car.odometerDate
-    ? "آخر تحديث: " + state.car.odometerDate
-    : "لسه متسجّلش تاريخ تحديث";
+    ? tf("maintenance.lastUpdated", state.car.odometerDate)
+    : t("maintenance.noUpdateYet");
 
   const odometer = Number(state.car.odometer||0);
   const schedule = [...state.maintenanceSchedule].sort((a,b)=>a.km-b.km);
@@ -2031,14 +2475,14 @@ function renderMaintenance(){
     const remaining = next.km - odometer;
     nextCard.innerHTML = `
       <div class="flex-top">
-        <div><div class="t1">الصيانة الجاية عند</div><div class="t2">${fmt(next.km)} كم</div></div>
-        <div style="text-align:left;"><div class="t3">السعر المتوقع</div><div class="t2" style="font-size:16px;">${fmt(next.price)} ج</div></div>
+        <div><div class="t1">${t("maintenance.dueAt")}</div><div class="t2">${fmt(next.km)} ${t("common.km")}</div></div>
+        <div style="text-align:left;"><div class="t3">${t("maintenance.expectedPrice")}</div><div class="t2" style="font-size:16px;">${fmt(next.price)} ${t("common.currency")}</div></div>
       </div>
-      <div style="margin-top:10px; font-size:12px; opacity:.8;">باقيلك حوالي ${fmt(remaining)} كم على الصيانة الجاية</div>`;
+      <div style="margin-top:10px; font-size:12px; opacity:.8;">${tf("maintenance.remainingKm", fmt(remaining))}</div>`;
   } else {
     nextCard.innerHTML = `
-      <div class="flex-top"><div><div class="t1">جدول الصيانة</div><div class="t2" style="font-size:15px;">مفيش نقطة صيانة متسجّلة بعد ${fmt(odometer)} كم</div></div></div>
-      <div style="margin-top:10px; font-size:12px; opacity:.8;">ضيف نقط صيانة جديدة من الجدول تحت لو عايز تكمّل أبعد من كده.</div>`;
+      <div class="flex-top"><div><div class="t1">${t("maintenance.scheduleTitle")}</div><div class="t2" style="font-size:15px;">${tf("maintenance.noPointYet", fmt(odometer))}</div></div></div>
+      <div style="margin-top:10px; font-size:12px; opacity:.8;">${t("maintenance.addMorePoints")}</div>`;
   }
 
   const schedEl = document.getElementById("maintSchedule");
@@ -2047,12 +2491,12 @@ function renderMaintenance(){
     return `<div class="item-row-edit" data-km="${s.km}">
       <div class="ii">
         <div class="n"><input type="number" class="schedKm" value="${s.km}" style="width:70px;"></div>
-        <div class="m">${done ? "✅ اتعملت" : "🔜 الجاية"}</div>
+        <div class="m">${done ? t("maintenance.done") : t("maintenance.upcoming")}</div>
       </div>
       <input type="number" class="amt-in schedPrice" value="${s.price}">
       <button class="del-x">✕</button>
     </div>`;
-  }).join("") : `<div class="empty-state"><div class="big">📋</div><p>لسه مفيش نقط صيانة في الجدول.</p></div>`;
+  }).join("") : `<div class="empty-state"><div class="big">📋</div><p>${t("maintenance.emptySchedule")}</p></div>`;
   schedEl.querySelectorAll(".item-row-edit").forEach(row=>{
     const origKm = Number(row.dataset.km);
     row.querySelector(".schedKm").onchange = async (e)=>{
@@ -2067,7 +2511,7 @@ function renderMaintenance(){
     };
     row.querySelector(".del-x").onclick = async ()=>{
       state.maintenanceSchedule = state.maintenanceSchedule.filter(x=>x.km!==origKm);
-      await saveMaintSchedule(); renderMaintenance(); showToast("اتمسحت نقطة الصيانة");
+      await saveMaintSchedule(); renderMaintenance(); showToast(t("toast.schedPointDeleted"));
     };
   });
 
@@ -2075,16 +2519,17 @@ function renderMaintenance(){
   const logEl = document.getElementById("maintLog");
   const log = sortList(state.maintenanceLog, maintSortBy, "date", "cost");
   if(log.length===0){
-    logEl.innerHTML = `<div class="empty-state"><div class="big">🔧</div><p>لسه مفيش صيانات مسجلة.<br>دوس + وسجّل أول صيانة.</p></div>`;
+    logEl.innerHTML = `<div class="empty-state"><div class="big">🔧</div><p>${t("maintenance.emptyLog")}</p></div>`;
   } else {
     logEl.innerHTML = collapseSlice(log, "maintenance").map(m=>{
       const d = new Date(m.date);
-      const dateStr = d.getDate()+" "+MONTH_NAMES[d.getMonth()].slice(0,3)+" "+d.getFullYear();
-      const detail = [...(m.items||[]), m.note].filter(Boolean).join(" · ") || "بدون تفاصيل";
+      const monthNames = state.settings.lang==="en" ? MONTH_NAMES_EN : MONTH_NAMES;
+      const dateStr = d.getDate()+" "+monthNames[d.getMonth()].slice(0,3)+" "+d.getFullYear();
+      const detail = [...(m.items||[]).map(maintItemLabel), m.note].filter(Boolean).join(" · ") || t("maintenance.noDetails");
       return `<div class="exp-row">
         <div class="exp-icon">🔧</div>
-        <div class="exp-mid"><div class="cat">${fmt(m.km)} كم</div><div class="note">${detail}</div></div>
-        <div class="exp-right"><div class="amt">${fmt(m.cost)} ج</div><div class="date">${dateStr}</div></div>
+        <div class="exp-mid"><div class="cat">${fmt(m.km)} ${t("common.km")}</div><div class="note">${detail}</div></div>
+        <div class="exp-right"><div class="amt">${fmt(m.cost)} ${t("common.currency")}</div><div class="date">${dateStr}</div></div>
         <button class="exp-del" data-id="${m.id}">🗑</button>
       </div>`;
     }).join("");
@@ -2096,7 +2541,7 @@ function renderMaintenance(){
           state.expenses = state.expenses.filter(e=>e.id!==rec.linkedExpenseId);
           await saveExpenses();
         }
-        await saveMaintLog(); render(); showToast("اتمسحت الصيانة");
+        await saveMaintLog(); render(); showToast(t("toast.maintDeleted"));
       };
     });
     appendCollapseToggle(logEl, "maintenance", log.length, renderMaintenance);
@@ -2108,13 +2553,13 @@ function renderAccounts(){
   if(!el) return;
   const balances = computeAllAccountBalances();
   if(balances.length===0){
-    el.innerHTML = `<div class="empty-state"><div class="big">💳</div><p>ضيف مصدر صرف الأول من الإعدادات (زي فيزا أو كاش).</p></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="big">💳</div><p>${t("home.addSourceFirst")}</p></div>`;
     return;
   }
   const total = balances.reduce((s,b)=>s+b.balance, 0);
   el.innerHTML = balances.map(b=>
-    `<div class="obl-row"><span class="name">${b.name}${b.legacy?' <span style="font-size:10px; color:var(--ink-soft); font-weight:600;">(مصدر محذوف — لسه له مصاريف)</span>':''}</span><span class="val" style="color:${b.balance<0?'var(--brick)':'var(--sage)'}">${fmt(b.balance)} ج</span></div>`
-  ).join("") + `<div class="obl-row total"><span class="name">الإجمالي</span><span class="val" style="color:${total<0?'var(--brick)':'var(--sage)'}">${fmt(total)} ج</span></div>`;
+    `<div class="obl-row"><span class="name">${b.name}${b.legacy?' <span style="font-size:10px; color:var(--ink-soft); font-weight:600;">('+t("home.legacySource")+')</span>':''}</span><span class="val" style="color:${b.balance<0?'var(--brick)':'var(--sage)'}">${fmt(b.balance)} ${t("common.currency")}</span></div>`
+  ).join("") + `<div class="obl-row total"><span class="name">${t("common.total")}</span><span class="val" style="color:${total<0?'var(--brick)':'var(--sage)'}">${fmt(total)} ${t("common.currency")}</span></div>`;
 }
 
 function renderAccountMoves(){
@@ -2123,24 +2568,25 @@ function renderAccountMoves(){
   renderSortChips("accountMoveSortChips", SORT_OPTIONS_DATE_AMOUNT, accountMoveSortBy, (k)=>{ accountMoveSortBy = k; renderAccountMoves(); });
   const list = sortList(state.accountMoves, accountMoveSortBy, "date", "amount");
   if(list.length===0){
-    el.innerHTML = `<div class="empty-state"><div class="big">📜</div><p>لسه مفيش حركات مسجلة على أي حساب.</p></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="big">📜</div><p>${t("settings.movesEmpty")}</p></div>`;
     return;
   }
   el.innerHTML = collapseSlice(list, "accountMoves").map(m=>{
     const d = new Date(m.date);
-    const dateStr = d.getDate()+" "+MONTH_NAMES[d.getMonth()].slice(0,3)+" "+d.getFullYear();
+    const monthNames = state.settings.lang==="en" ? MONTH_NAMES_EN : MONTH_NAMES;
+    const dateStr = d.getDate()+" "+monthNames[d.getMonth()].slice(0,3)+" "+d.getFullYear();
     const isDeposit = m.type!=="withdraw";
     return `<div class="exp-row">
       <div class="exp-icon">${isDeposit?"⬆️":"⬇️"}</div>
-      <div class="exp-mid"><div class="cat">${m.source}</div><div class="note">${m.note || (isDeposit?"إيداع":"سحب")}</div></div>
-      <div class="exp-right"><div class="amt" style="color:${isDeposit?'var(--sage)':'var(--brick)'}">${isDeposit?"+":"-"}${fmt(m.amount)} ج</div><div class="date">${dateStr}</div></div>
+      <div class="exp-mid"><div class="cat">${m.source}</div><div class="note">${m.note || (isDeposit?t("modal.account.deposit"):t("modal.account.withdraw"))}</div></div>
+      <div class="exp-right"><div class="amt" style="color:${isDeposit?'var(--sage)':'var(--brick)'}">${isDeposit?"+":"-"}${fmt(m.amount)} ${t("common.currency")}</div><div class="date">${dateStr}</div></div>
       <button class="exp-del" data-id="${m.id}">🗑</button>
     </div>`;
   }).join("");
   el.querySelectorAll(".exp-del").forEach(btn=>{
     btn.onclick = async ()=>{
       state.accountMoves = state.accountMoves.filter(m=>m.id!==btn.dataset.id);
-      await saveAccountMoves(); render(); showToast("اتمسحت الحركة");
+      await saveAccountMoves(); render(); showToast(t("toast.moveDeleted"));
     };
   });
   appendCollapseToggle(el, "accountMoves", list.length, renderAccountMoves);
@@ -2151,14 +2597,14 @@ function renderPendingSms(){
   if(!wrap) return;
   if(pendingSms.length===0){ wrap.innerHTML = ""; return; }
   wrap.innerHTML = `<div class="sms-banner">
-    <div class="sb-title">🏦 معاملات بنكية مكتشفة (${pendingSms.length}) — مراجعتك مطلوبة</div>
+    <div class="sb-title">🏦 ${tf("sms.bannerTitle", pendingSms.length)}</div>
     ${pendingSms.map(s=>`
       <div class="sms-item" data-id="${s.id}">
-        <div class="si-top"><span class="si-amt">${s.amount!=null ? fmt(s.amount)+" ج" : "المبلغ مش واضح"}</span><span class="si-src">${s.sender}${s.merchant ? " · "+s.merchant : ""}</span></div>
+        <div class="si-top"><span class="si-amt">${s.amount!=null ? fmt(s.amount)+" "+t("common.currency") : t("sms.unclearAmount")}</span><span class="si-src">${s.sender}${s.merchant ? " · "+s.merchant : ""}</span></div>
         <div class="si-body">${(s.rawBody||"").slice(0,140)}</div>
         <div class="si-actions">
-          <button class="si-add" data-id="${s.id}">✅ ${s.amount!=null ? "إضافة كمصروف" : "افتح وسجّل يدوي"}</button>
-          <button class="si-dismiss" data-id="${s.id}">✖️ تجاهل</button>
+          <button class="si-add" data-id="${s.id}">✅ ${s.amount!=null ? t("sms.addAsExpense") : t("sms.openManual")}</button>
+          <button class="si-dismiss" data-id="${s.id}">✖️ ${t("sms.dismiss")}</button>
         </div>
       </div>`).join("")}
   </div>`;
@@ -2173,7 +2619,7 @@ function renderPendingSms(){
       renderPendingSms();
       openModal(null);
       if(s.amount!=null) document.getElementById("mAmount").value = s.amount;
-      document.getElementById("mNote").value = s.merchant || ("من "+s.sender);
+      document.getElementById("mNote").value = s.merchant || tf("sms.fromSender", s.sender);
     };
   });
 }
@@ -2211,12 +2657,13 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
 });
 
 // ---------- swipe between tabs ----------
-// DOM order of .tabbtn matches this array. The tab bar is a plain (non-reversed) flex row
-// inside dir="rtl", so the browser mirrors it: the first tab (home) renders on the *right*,
-// the last (settings) on the *left*. A swipe carries content along with the finger — dragging
-// right-to-left (negative dx) pulls the *previous* tab (the one physically to the right) into
-// view, same as it would in any RTL paged UI (e.g. RTL view-pagers) — the opposite of an LTR
-// layout, where the next item sits to the right and a left swipe advances forward instead.
+// DOM order of .tabbtn matches this array. The tab bar is a plain (non-reversed) flex row, so the
+// browser mirrors it under dir="rtl" (Arabic): the first tab (home) renders on the *right*, the
+// last (settings) on the *left*, and dragging right-to-left (negative dx) pulls the *previous*
+// tab (physically to the right) into view — same as any RTL paged UI. Under dir="ltr" (English)
+// the bar isn't mirrored — the first tab sits on the physical left — so the same negative-dx drag
+// needs to advance *forward* instead; isRTL() below picks the branch to match whichever direction
+// is actually on screen right now.
 const SWIPE_TAB_ORDER = ["home","expenses","allocations","obligations","maintenance","settings"];
 (function setupSwipeNav(){
   const surface = document.getElementById("app");
@@ -2244,7 +2691,9 @@ const SWIPE_TAB_ORDER = ["home","expenses","allocations","obligations","maintena
     const visibleTabs = SWIPE_TAB_ORDER.filter(t => t !== "maintenance" || state.settings.hasCar);
     const idx = visibleTabs.indexOf(activeTab);
     if(idx === -1) return;
-    const nextIdx = Math.max(0, Math.min(visibleTabs.length - 1, dx < 0 ? idx - 1 : idx + 1));
+    // RTL: a right-to-left drag (dx<0) goes to idx-1 (see comment above); LTR mirrors that.
+    const goPrev = isRTL() ? dx < 0 : dx >= 0;
+    const nextIdx = Math.max(0, Math.min(visibleTabs.length - 1, goPrev ? idx - 1 : idx + 1));
     if(nextIdx === idx) return;
     document.querySelector(`.tabbtn[data-tab="${visibleTabs[nextIdx]}"]`).click();
   }, {passive:true});
@@ -2270,18 +2719,18 @@ document.getElementById("inHasCar").onchange = async (e)=>{ state.settings.hasCa
 
 document.getElementById("biometricLockEnabled").onchange = async (e)=>{
   if(e.target.checked){
-    if(!isNativeApp()){ e.target.checked = false; showToast("الميزة دي شغالة بس جوه تطبيق الموبايل"); return; }
+    if(!isNativeApp()){ e.target.checked = false; showToast(t("toast.nativeOnlyFeature")); return; }
     try{
       const { BiometricAuth } = window.Capacitor.Plugins;
       const avail = await BiometricAuth.isAvailable();
-      if(!avail.available){ e.target.checked = false; showToast("محتاج تفعّل بصمة أو قفل شاشة على جهازك الأول"); return; }
-      const res = await BiometricAuth.authenticate({ title:"تأكيد تفعيل القفل", subtitle:"تحقق ببصمتك عشان تفعّل الحماية" });
-      if(!res.success){ e.target.checked = false; showToast("اتلغى التفعيل"); return; }
-    }catch(err){ e.target.checked = false; showToast("تعذّر تفعيل الحماية"); return; }
+      if(!avail.available){ e.target.checked = false; showToast(t("toast.needBiometricSetup")); return; }
+      const res = await BiometricAuth.authenticate({ title:t("biometric.confirmTitle"), subtitle:t("biometric.confirmSubtitle") });
+      if(!res.success){ e.target.checked = false; showToast(t("toast.enableCancelled")); return; }
+    }catch(err){ e.target.checked = false; showToast(t("toast.enableLockFailed")); return; }
   }
   state.settings.biometricLock.enabled = e.target.checked;
   await saveSettings();
-  showToast(e.target.checked ? "اتفعلت الحماية بالبصمة ✅" : "اتقفلت الحماية بالبصمة");
+  showToast(e.target.checked ? t("toast.lockEnabled") : t("toast.lockDisabled"));
 };
 
 document.getElementById("notifDailyEnabled").onchange = async (e)=>{
@@ -2289,7 +2738,7 @@ document.getElementById("notifDailyEnabled").onchange = async (e)=>{
   await saveSettings();
   if(e.target.checked){
     const ok = await scheduleDailyReminder(state.settings.notif.daily.time);
-    if(!ok){ state.settings.notif.daily.enabled = false; await saveSettings(); showToast("محتاجين إذن الإشعارات الأول"); }
+    if(!ok){ state.settings.notif.daily.enabled = false; await saveSettings(); showToast(t("toast.needNotifPermission")); }
   } else { await cancelDailyReminder(); }
   render();
 };
@@ -2303,7 +2752,7 @@ document.getElementById("notifWeeklyEnabled").onchange = async (e)=>{
   await saveSettings();
   if(e.target.checked){
     const ok = await scheduleWeeklyBackupReminder();
-    if(!ok){ state.settings.notif.weeklyBackup.enabled = false; await saveSettings(); showToast("محتاجين إذن الإشعارات الأول"); }
+    if(!ok){ state.settings.notif.weeklyBackup.enabled = false; await saveSettings(); showToast(t("toast.needNotifPermission")); }
   } else { await cancelWeeklyBackupReminder(); }
   render();
 };
@@ -2313,8 +2762,8 @@ document.getElementById("notifMaintEnabled").onchange = async (e)=>{ state.setti
 document.getElementById("smsAutoEnabled").onchange = async (e)=>{
   if(e.target.checked){
     const granted = await ensureSmsPermission();
-    if(!granted){ e.target.checked = false; showToast("محتاجين إذن قراءة الرسائل عشان الميزة دي تشتغل"); return; }
-    await ensureNotifPermission(); // so the "معاملة بنكية جديدة" alert can actually show; SMS detection still works without it
+    if(!granted){ e.target.checked = false; showToast(t("toast.needSmsPermission")); return; }
+    await ensureNotifPermission(); // so the "new bank transaction" alert can actually show; SMS detection still works without it
   }
   state.settings.smsAuto.enabled = e.target.checked;
   await saveSettings();
@@ -2325,7 +2774,7 @@ document.getElementById("saveBankSendersBtn").onclick = async ()=>{
   if(isNativeApp()){
     try{ await window.Capacitor.Plugins.SmsReader.setBankSenders({ value }); }catch(e){}
   }
-  showToast("اتحفظت البنوك المتابَعة ✅");
+  showToast(t("toast.bankSendersSaved"));
 };
 
 document.getElementById("addSourceBtn").onclick = async ()=>{
@@ -2344,7 +2793,7 @@ document.getElementById("addCatBtn").onclick = async ()=>{
   if(!added) return;
   nameInp.value = ""; emojiInp.value = "";
   render();
-  showToast("اتضافت فئة "+added.i+" "+added.k+" ✅");
+  showToast(tf("toast.categoryAdded", added.i, added.k));
 };
 
 function addNewObligationItem(){ openItemModal(null); }
@@ -2357,17 +2806,17 @@ document.getElementById("addItemBtn").onclick = addNewObligationItem;
 // the payout amount + which month your turn to collect falls in — computeMonth() already reads
 // payoutAmount/payoutMonth as one-off extra income, this modal is just the first UI to set them.
 const itemModalBg = document.getElementById("itemModalBg");
-const ITEM_CATS = [{k:"قسط", i:"💳"}, {k:"ثابت", i:"🏠"}, {k:"جمعية", i:"🤝"}];
+const ITEM_CATS = [{k:"قسط", i:"💳", lEn:"Installment"}, {k:"ثابت", i:"🏠", lEn:"Fixed"}, {k:"جمعية", i:"🤝", lEn:"Gam3iya"}];
 let selectedItemCat = "قسط";
 let selectedItemSource = null;
 let editingItemId = null;
 function updateItemModalFieldsForCat(cat){
-  document.getElementById("itAmountLabel").textContent = cat==="جمعية" ? "قيمتك الشهرية في الجمعية (ج)" : "القيمة الشهرية (ج)";
+  document.getElementById("itAmountLabel").textContent = cat==="جمعية" ? t("modal.item.gam3iyaAmountLabel") : t("modal.item.amountLabel");
   document.getElementById("itGam3iyaFields").style.display = cat==="جمعية" ? "" : "none";
 }
 function openItemModal(existingItem){
   editingItemId = existingItem ? existingItem.id : null;
-  document.getElementById("itemModalTitle").textContent = existingItem ? "تعديل بند الالتزام" : "بند التزام جديد";
+  document.getElementById("itemModalTitle").textContent = existingItem ? t("modal.item.editTitle") : t("modal.item.newTitle");
   selectedItemCat = existingItem ? existingItem.cat : "قسط";
   document.getElementById("itName").value = existingItem ? existingItem.name : "";
   document.getElementById("itAmount").value = existingItem ? existingItem.amount : "";
@@ -2379,7 +2828,7 @@ function openItemModal(existingItem){
   document.getElementById("itPayoutAmount").value = existingItem ? (existingItem.payoutAmount || "") : "";
   document.getElementById("itPayoutMonth").value = existingItem ? (existingItem.payoutMonth || "") : "";
   document.getElementById("itemCatChips").innerHTML = ITEM_CATS.map(c=>
-    `<button class="chip ${c.k===selectedItemCat?'sel':''}" data-cat="${c.k}">${c.i} ${c.k}</button>`).join("");
+    `<button class="chip ${c.k===selectedItemCat?'sel':''}" data-cat="${c.k}">${c.i} ${catLabel(c)}</button>`).join("");
   document.querySelectorAll("#itemCatChips .chip").forEach(ch=>{
     ch.onclick = ()=>{
       selectedItemCat = ch.dataset.cat;
@@ -2390,7 +2839,7 @@ function openItemModal(existingItem){
   updateItemModalFieldsForCat(selectedItemCat);
 
   selectedItemSource = existingItem ? (existingItem.source || null) : null;
-  const noneChip = `<button class="chip ${!selectedItemSource?'sel':''}" data-src="">🚫 بدون خصم تلقائي</button>`;
+  const noneChip = `<button class="chip ${!selectedItemSource?'sel':''}" data-src="">🚫 ${t("modal.item.noAutoDeduct")}</button>`;
   const sourceChipsHtml = noneChip + state.settings.sources.map(s=>
     `<button class="chip ${s===selectedItemSource?'sel':''}" data-src="${s}">💳 ${s}</button>`).join("");
   document.getElementById("itSourceChips").innerHTML = sourceChipsHtml;
@@ -2407,12 +2856,12 @@ document.getElementById("closeItemModal").onclick = ()=>itemModalBg.classList.re
 document.getElementById("cancelItemAdd").onclick = ()=>itemModalBg.classList.remove("show");
 document.getElementById("saveItemAdd").onclick = async ()=>{
   const name = document.getElementById("itName").value.trim();
-  if(!name){ showToast("اكتب اسم البند"); return; }
+  if(!name){ showToast(t("toast.enterItemName")); return; }
   const amount = Number(document.getElementById("itAmount").value)||0;
-  if(amount<=0){ showToast("اكتب قيمة شهرية صحيحة"); return; }
+  if(amount<=0){ showToast(t("toast.enterValidMonthlyAmount")); return; }
   const startMonth = document.getElementById("itStartMonth").value || null;
   const endMonth = document.getElementById("itEndMonth").value || null;
-  if(startMonth && endMonth && endMonth < startMonth){ showToast("شهر النهاية لازم يكون بعد شهر البداية"); return; }
+  if(startMonth && endMonth && endMonth < startMonth){ showToast(t("toast.endBeforeStart")); return; }
   let payoutAmount = null, payoutMonth = null;
   if(selectedItemCat === "جمعية"){
     payoutAmount = Number(document.getElementById("itPayoutAmount").value)||0;
@@ -2443,7 +2892,7 @@ document.getElementById("saveItemAdd").onclick = async ()=>{
   await syncLinkedItemWithdrawals();
   itemModalBg.classList.remove("show");
   render();
-  showToast(editingItemId ? "اتحفظت التعديلات ✅" : "اتضاف بند جديد ✅");
+  showToast(editingItemId ? t("toast.itemEdited") : t("toast.itemAdded"));
 };
 
 document.getElementById("inOdometer").onchange = async (e)=>{
@@ -2490,8 +2939,8 @@ async function applyBackupData(data){
 }
 
 document.getElementById("exportBackup").onclick = async ()=>{
-  await saveOrShareFile("نسخة_احتياطية_مصاريفي.json", JSON.stringify(buildBackupPayload(),null,2), false);
-  showToast("اتصدرت النسخة الاحتياطية ✅");
+  await saveOrShareFile(t("backup.exportFilename")+".json", JSON.stringify(buildBackupPayload(),null,2), false);
+  showToast(t("toast.backupExported"));
 };
 document.getElementById("importBackup").onclick = ()=>{ document.getElementById("importFile").click(); };
 document.getElementById("importFile").onchange = async (e)=>{
@@ -2500,17 +2949,17 @@ document.getElementById("importFile").onchange = async (e)=>{
   try{
     const text = await file.text();
     const data = JSON.parse(text);
-    if(!confirm("هيتم استبدال كل البيانات الحالية بالنسخة المستوردة. متأكد؟")) return;
+    if(!confirm(t("confirm.importBackup"))) return;
     await applyBackupData(data);
-    showToast("اتستوردت النسخة الاحتياطية ✅");
+    showToast(t("toast.backupImported"));
   }catch(err){
-    showToast("الملف مش سليم، جرب تاني");
+    showToast(t("toast.badFile"));
   }
   e.target.value = "";
 };
 
 document.getElementById("resetBtn").onclick = async ()=>{
-  if(!confirm("متأكد؟ هيتصفر كل حاجة (المصاريف، الالتزامات، الصيانة، أرصدة الحسابات، الإعدادات) ويرجع التطبيق زي أول مرة تفتحه.")) return;
+  if(!confirm(t("confirm.resetAll"))) return;
   state = { settings:{...defaultSettings(), caps:{}}, items:[...DEFAULT_ITEMS], expenses:[], allocations:[],
     car:{odometer:0, odometerDate:null}, maintenanceSchedule:[...DEFAULT_MAINT_SCHEDULE], maintenanceLog:[], accountMoves:[] };
   await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
@@ -2518,8 +2967,9 @@ document.getElementById("resetBtn").onclick = async ()=>{
   await cancelDailyReminder(); await cancelWeeklyBackupReminder();
   pendingSms = [];
   localStorage.removeItem("onboarded");
+  applyLanguage();
   render();
-  showToast("اتصفرت البيانات");
+  showToast(t("toast.dataReset"));
   showOnboarding();
 };
 
@@ -2527,10 +2977,10 @@ document.getElementById("searchBox").oninput = (e)=>{ searchTerm = e.target.valu
 
 document.getElementById("exportCsv").onclick = async ()=>{
   const list = expensesForMonth(curMonthKey);
-  if(list.length===0){ showToast("مفيش مصاريف تتصدّر"); return; }
-  let csv = "التاريخ,الفئة,المصدر,المبلغ,ملاحظة\n";
-  list.forEach(e=>{ csv += `${e.date},${e.cat},${e.source||''},${e.amount},"${(e.note||'').replace(/"/g,'""')}"\n`; });
-  await saveOrShareFile("مصاريف_"+curMonthKey+".csv", csv, false);
+  if(list.length===0){ showToast(t("toast.nothingToExport")); return; }
+  let csv = [t("common.date"),t("modal.expense.catLabel"),t("modal.sourceLabelShort"),t("csv.amount"),t("common.noteOptional")].join(",")+"\n";
+  list.forEach(e=>{ csv += `${e.date},${catLabel(allCats().find(c=>c.k===e.cat)||{k:e.cat})},${e.source||''},${e.amount},"${(e.note||'').replace(/"/g,'""')}"\n`; });
+  await saveOrShareFile(t("csv.filenamePrefix")+"_"+curMonthKey+".csv", csv, false);
 };
 
 // allocation edit modal (works for emergency / invest / flex)
@@ -2540,8 +2990,9 @@ let editingAllocKey = "flex";
 function openAllocEditModal(key){
   editingAllocKey = key;
   const m = computeMonth(curMonthKey);
-  document.getElementById("flexModalTitle").textContent = "تعديل "+ALLOC_LABELS[key];
-  document.getElementById("flexModalLabel").textContent = "قيمة "+ALLOC_LABELS[key]+" لشهر "+monthLabelOf(curMonthKey)+" (ج)";
+  const label = catLabel(ALLOC_CATS.find(c=>c.k===ALLOC_LABELS[key]));
+  document.getElementById("flexModalTitle").textContent = tf("modal.flex.editTitle", label);
+  document.getElementById("flexModalLabel").textContent = tf("modal.flex.valueLabel", label, monthLabelOf(curMonthKey));
   document.getElementById("fAmount").value = m[key];
   flexModalBg.classList.add("show");
 }
@@ -2551,17 +3002,17 @@ document.getElementById("flexAutoBtn").onclick = async ()=>{
   await saveSettings();
   flexModalBg.classList.remove("show");
   render();
-  showToast("رجعنا للحساب التلقائي");
+  showToast(t("toast.flexAutoRestored"));
 };
 document.getElementById("saveFlexAdd").onclick = async ()=>{
   const val = Number(document.getElementById("fAmount").value);
-  if(val<0 || isNaN(val)){ showToast("اكتب رقم صحيح"); return; }
+  if(val<0 || isNaN(val)){ showToast(t("toast.enterValidNumber")); return; }
   if(!state.settings.allocOverrides[curMonthKey]) state.settings.allocOverrides[curMonthKey] = {};
   state.settings.allocOverrides[curMonthKey][editingAllocKey] = val;
   await saveSettings();
   flexModalBg.classList.remove("show");
   render();
-  showToast("اتحدّث "+ALLOC_LABELS[editingAllocKey]+" ✅");
+  showToast(tf("toast.flexUpdated", catLabel(ALLOC_CATS.find(c=>c.k===ALLOC_LABELS[editingAllocKey]))));
 };
 
 // ---------- custom expense categories ----------
@@ -2570,22 +3021,22 @@ document.getElementById("saveFlexAdd").onclick = async ()=>{
 async function addCustomCategory(name, icon){
   const k = (name||"").trim();
   if(!k) return null;
-  if(allCats().some(c=>c.k===k)){ showToast("الفئة دي موجودة أصلاً"); return null; }
+  if(allCats().some(c=>c.k===k)){ showToast(t("toast.categoryExists")); return null; }
   const entry = { k, i: (icon||"").trim() || "🏷️" };
   state.settings.customCats.push(entry);
   await saveSettings();
   return entry;
 }
-// Quick-add flow used from the expense modal's "+ فئة جديدة" chip — two short native prompts
+// Quick-add flow used from the expense modal's "+ new category" chip — two short native prompts
 // instead of a whole new modal, since this is a rare, one-off action.
 async function promptNewCategory(){
-  const name = window.prompt("اسم الفئة الجديدة:");
+  const name = window.prompt(t("prompt.newCategoryName"));
   if(name===null) return null;
-  const icon = window.prompt("إيموجي للفئة (اختياري):", "🏷️");
+  const icon = window.prompt(t("prompt.newCategoryIcon"), "🏷️");
   return await addCustomCategory(name, icon===null ? "" : icon);
 }
 function renderCatChips(){
-  document.getElementById("catChips").innerHTML = allCats().map(c=>`<button class="chip ${c.k===selectedCat?'sel':''}" data-cat="${c.k}">${c.i} ${c.k}</button>`).join("") + '<button class="chip" id="addCatChipBtn">+ فئة جديدة</button>';
+  document.getElementById("catChips").innerHTML = allCats().map(c=>`<button class="chip ${c.k===selectedCat?'sel':''}" data-cat="${c.k}">${c.i} ${catLabel(c)}</button>`).join("") + `<button class="chip" id="addCatChipBtn">+ ${t("expenses.newCategory")}</button>`;
   document.querySelectorAll("#catChips .chip[data-cat]").forEach(ch=>{
     ch.onclick = ()=>{ selectedCat = ch.dataset.cat; document.querySelectorAll("#catChips .chip[data-cat]").forEach(c=>c.classList.toggle("sel", c===ch)); };
   });
@@ -2604,7 +3055,7 @@ function renderCatChips(){
 const modalBg = document.getElementById("expenseModalBg");
 function openModal(existing){
   editingExpenseId = existing ? existing.id : null;
-  document.getElementById("expenseModalTitle").textContent = existing ? "تعديل المصروف" : "مصروف جديد";
+  document.getElementById("expenseModalTitle").textContent = existing ? t("modal.expense.editTitle") : t("modal.expense.newTitle");
   document.getElementById("mAmount").value = existing ? existing.amount : "";
   document.getElementById("mNote").value = existing ? (existing.note||"") : "";
   document.getElementById("mDate").value = existing ? existing.date : new Date().toISOString().slice(0,10);
@@ -2641,7 +3092,7 @@ document.getElementById("saveAdd").onclick = async ()=>{
     try{ raw = Function('"use strict";return ('+raw+')')(); }catch(e){}
   }
   const amt = Number(raw);
-  if(!amt || amt<=0){ showToast("اكتب مبلغ صحيح"); return; }
+  if(!amt || amt<=0){ showToast(t("toast.enterValidAmount")); return; }
   const date = document.getElementById("mDate").value || new Date().toISOString().slice(0,10);
   const note = document.getElementById("mNote").value.trim();
   const wasEditing = !!editingExpenseId;
@@ -2660,7 +3111,7 @@ document.getElementById("saveAdd").onclick = async ()=>{
   editingExpenseId = null;
   maybeNotifyCapExceeded(selectedCat, mk, prevTotal);
   render();
-  showToast(wasEditing ? "اتحدّث المصروف ✅" : "اتسجل المصروف ✅");
+  showToast(wasEditing ? t("toast.expenseUpdated") : t("toast.expenseSaved"));
 };
 
 // allocation modal
@@ -2671,7 +3122,7 @@ function openAllocModal(){
   document.getElementById("aDate").value = new Date().toISOString().slice(0,10);
   selectedAllocCat = ALLOC_CATS[0].k;
   document.getElementById("allocCatChips").innerHTML = ALLOC_CATS.map(c=>
-    `<button class="chip ${c.k===selectedAllocCat?'sel':''}" data-cat="${c.k}">${c.i} ${c.k}</button>`).join("");
+    `<button class="chip ${c.k===selectedAllocCat?'sel':''}" data-cat="${c.k}">${c.i} ${catLabel(c)}</button>`).join("");
   document.querySelectorAll("#allocCatChips .chip").forEach(ch=>{
     ch.onclick = ()=>{ selectedAllocCat = ch.dataset.cat; document.querySelectorAll("#allocCatChips .chip").forEach(c=>c.classList.toggle("sel", c===ch)); };
   });
@@ -2681,7 +3132,7 @@ document.getElementById("closeAllocModal").onclick = ()=>allocModalBg.classList.
 document.getElementById("cancelAllocAdd").onclick = ()=>allocModalBg.classList.remove("show");
 document.getElementById("saveAllocAdd").onclick = async ()=>{
   const amt = Number(document.getElementById("aAmount").value);
-  if(!amt || amt<=0){ showToast("اكتب مبلغ صحيح"); return; }
+  if(!amt || amt<=0){ showToast(t("toast.enterValidAmount")); return; }
   const date = document.getElementById("aDate").value || new Date().toISOString().slice(0,10);
   const note = document.getElementById("aNote").value.trim();
   state.allocations.push({ id:"al"+Date.now(), amount:amt, cat:selectedAllocCat, note, date });
@@ -2689,7 +3140,7 @@ document.getElementById("saveAllocAdd").onclick = async ()=>{
   allocModalBg.classList.remove("show");
   curMonthKey = date.slice(0,7);
   render();
-  showToast("اتسجلت العملية ✅");
+  showToast(t("toast.allocSaved"));
 };
 
 // maintenance modal (multi-select items — unlike the single-select chip rows elsewhere)
@@ -2710,7 +3161,7 @@ function openMaintModal(){
     ch.onclick = ()=>{ selectedMaintSource = ch.dataset.src; document.querySelectorAll("#maintSourceChips .chip").forEach(c=>c.classList.toggle("sel", c===ch)); };
   });
   document.getElementById("maintItemChips").innerHTML = MAINT_ITEMS.map(it=>
-    `<button type="button" class="chip" data-item="${it}">${it}</button>`).join("");
+    `<button type="button" class="chip" data-item="${it}">${maintItemLabel(it)}</button>`).join("");
   document.querySelectorAll("#maintItemChips .chip").forEach(ch=>{
     ch.onclick = ()=>{
       const it = ch.dataset.item;
@@ -2726,8 +3177,8 @@ document.getElementById("cancelMaintAdd").onclick = ()=>maintModalBg.classList.r
 document.getElementById("saveMaintAdd").onclick = async ()=>{
   const km = Number(document.getElementById("maKm").value);
   const cost = Number(document.getElementById("maCost").value);
-  if(isNaN(km) || km<0){ showToast("اكتب كيلومترات صحيحة"); return; }
-  if(!cost || cost<=0){ showToast("اكتب تكلفة صحيحة"); return; }
+  if(isNaN(km) || km<0){ showToast(t("toast.enterValidKm")); return; }
+  if(!cost || cost<=0){ showToast(t("toast.enterValidCost")); return; }
   const date = document.getElementById("maDate").value || new Date().toISOString().slice(0,10);
   const note = document.getElementById("maNote").value.trim();
   const linkExpense = document.getElementById("maLinkExpense").checked;
@@ -2737,7 +3188,8 @@ document.getElementById("saveMaintAdd").onclick = async ()=>{
     const mk = date.slice(0,7);
     const cap = Number(state.settings.caps["عربية"]||0);
     const prevTotal = cap>0 ? categoryMonthTotal("عربية", mk, null) : 0;
-    const expNote = "صيانة" + (selectedMaintItems.length ? ": "+selectedMaintItems.join("، ") : (note?": "+note:""));
+    const itemLabels = selectedMaintItems.map(maintItemLabel);
+    const expNote = t("maintenance.expenseNotePrefix") + (itemLabels.length ? ": "+itemLabels.join("، ") : (note?": "+note:""));
     const exp = { id:"e"+Date.now(), amount:cost, cat:"عربية", source: selectedMaintSource||state.settings.sources[0]||"", note:expNote, date };
     state.expenses.push(exp);
     rec.linkedExpenseId = exp.id;
@@ -2755,16 +3207,16 @@ document.getElementById("saveMaintAdd").onclick = async ()=>{
   curMonthKey = date.slice(0,7);
   render();
   checkMaintDueNotify();
-  showToast("اتسجلت الصيانة ✅");
+  showToast(t("toast.maintSaved"));
 };
 
 // account movement modal (deposit/withdraw against a payment source)
 const accountModalBg = document.getElementById("accountModalBg");
-const ACCOUNT_MOVE_TYPES = [{k:"deposit", l:"⬆️ إيداع"}, {k:"withdraw", l:"⬇️ سحب"}];
+const ACCOUNT_MOVE_TYPES = [{k:"deposit", l:"⬆️ إيداع", lEn:"⬆️ Deposit"}, {k:"withdraw", l:"⬇️ سحب", lEn:"⬇️ Withdraw"}];
 let selectedAccountSource = null;
 let selectedAccountType = "deposit";
 function openAccountModal(){
-  if(state.settings.sources.length===0){ showToast("ضيف مصدر صرف الأول من الإعدادات"); return; }
+  if(state.settings.sources.length===0){ showToast(t("toast.addSourceFirstShort")); return; }
   document.getElementById("acAmount").value = "";
   document.getElementById("acNote").value = "";
   document.getElementById("acDate").value = new Date().toISOString().slice(0,10);
@@ -2775,8 +3227,8 @@ function openAccountModal(){
   document.querySelectorAll("#accountChips .chip").forEach(ch=>{
     ch.onclick = ()=>{ selectedAccountSource = ch.dataset.src; document.querySelectorAll("#accountChips .chip").forEach(c=>c.classList.toggle("sel", c===ch)); };
   });
-  document.getElementById("accountTypeChips").innerHTML = ACCOUNT_MOVE_TYPES.map(t=>
-    `<button class="chip ${t.k===selectedAccountType?'sel':''}" data-type="${t.k}">${t.l}</button>`).join("");
+  document.getElementById("accountTypeChips").innerHTML = ACCOUNT_MOVE_TYPES.map(mt=>
+    `<button class="chip ${mt.k===selectedAccountType?'sel':''}" data-type="${mt.k}">${sortOptLabel(mt)}</button>`).join("");
   document.querySelectorAll("#accountTypeChips .chip").forEach(ch=>{
     ch.onclick = ()=>{ selectedAccountType = ch.dataset.type; document.querySelectorAll("#accountTypeChips .chip").forEach(c=>c.classList.toggle("sel", c===ch)); };
   });
@@ -2787,14 +3239,14 @@ document.getElementById("closeAccountModal").onclick = ()=>accountModalBg.classL
 document.getElementById("cancelAccountAdd").onclick = ()=>accountModalBg.classList.remove("show");
 document.getElementById("saveAccountAdd").onclick = async ()=>{
   const amt = Number(document.getElementById("acAmount").value);
-  if(!amt || amt<=0){ showToast("اكتب مبلغ صحيح"); return; }
+  if(!amt || amt<=0){ showToast(t("toast.enterValidAmount")); return; }
   const date = document.getElementById("acDate").value || new Date().toISOString().slice(0,10);
   const note = document.getElementById("acNote").value.trim();
   state.accountMoves.push({ id:"ac"+Date.now(), source:selectedAccountSource, type:selectedAccountType, amount:amt, note, date });
   await saveAccountMoves();
   accountModalBg.classList.remove("show");
   render();
-  showToast("اتسجلت الحركة ✅");
+  showToast(t("toast.moveSaved"));
 };
 
 // ---------- excel export styling (xlsx-js-style — see the CDN <script> comment in <head>) ----------
@@ -3052,9 +3504,9 @@ async function tryUnlock(){
     const { BiometricAuth } = window.Capacitor.Plugins;
     const avail = await BiometricAuth.isAvailable();
     if(!avail.available){ hideLockOverlay(); return; } // no fingerprint/PIN enrolled on this device — fail open rather than lock the user out with no recovery
-    const res = await BiometricAuth.authenticate({ title:"افتح متابعة مصاريفي", subtitle:"تحقق ببصمتك أو رمز قفل الشاشة" });
+    const res = await BiometricAuth.authenticate({ title:t("lock.unlockPromptTitle"), subtitle:t("lock.unlockPromptSubtitle") });
     if(res.success) hideLockOverlay();
-    // on failure/cancel the overlay just stays up — the "افتح دلوقتي" button retries
+    // on failure/cancel the overlay just stays up — the retry button tries again
   }catch(e){ hideLockOverlay(); }
   finally{ unlockInFlight = false; }
 }
@@ -3113,6 +3565,7 @@ function setupNativeApp(){
 
 (async ()=>{
   await loadState();
+  applyLanguage();
   await syncLinkedItemWithdrawals();
   render();
   setupNativeApp();
