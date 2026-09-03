@@ -232,6 +232,21 @@
   .del-x{background:none;border:none;color:var(--brick); font-size:15px; cursor:pointer; padding:4px; transition:transform .1s ease;}
   .del-x:active{transform:scale(.8);}
 
+  /* obligation item rows (الالتزامات) — stacked instead of one crammed flex line, so the name
+     gets the row's full width instead of being squeezed next to the amount/toggle/delete
+     controls (was getting visually cut off), and secondary details (edit/reset/delete links)
+     read as short lines instead of one long wrapping sentence. */
+  .item-row-edit.obl-row-edit{display:block; padding:12px 0; contain-intrinsic-size:0 92px;}
+  .oi-top{display:flex; align-items:center; gap:8px;}
+  .oi-top .oi-name{flex:1; min-width:0; border:none; background:none; font-family:'Cairo'; font-size:13px; font-weight:700; color:var(--ink); padding:2px 0;}
+  .oi-sub{display:flex; align-items:center; gap:8px; margin-top:6px;}
+  .oi-meta{flex:1; min-width:0; font-size:10.5px; color:var(--ink-soft); font-weight:500; line-height:1.5;}
+  .oi-notes{margin-top:5px; font-size:10.5px; color:var(--ink-soft); line-height:1.6;}
+  .oi-notes .itmResetAmountOverride, .oi-notes .itmResetActiveOverride{text-decoration:underline; cursor:pointer;}
+  .oi-actions{display:flex; gap:14px; margin-top:6px;}
+  .oi-actions span{font-size:10.5px; text-decoration:underline; cursor:pointer; color:var(--ink-soft);}
+  .oi-actions .itmDeleteForever{color:var(--brick);}
+
   .btn{display:block; width:100%; text-align:center; padding:12px; border-radius:12px; border:none; font-family:'Cairo'; font-weight:700; font-size:13.5px; cursor:pointer; transition:transform .12s ease, opacity .12s ease;}
   .btn-primary{background:var(--teal); color:#fff;}
   .btn-ghost{background:var(--paper-dim); color:var(--ink);}
@@ -425,14 +440,19 @@
   <div class="content" id="tab-obligations" style="display:none;">
     <div class="set-card">
       <h3>📋 التزامات ثابتة / أقساط / جمعيات</h3>
-      <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;">
-        المبالغ وحالة التفعيل تحت خاصة بالشهر المختار فوق (<span id="itemsMonthHint"></span>) بس —
-        تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
-        فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
-        اللي انت فيه بس. زرار ✕ بيشيل البند من الشهر ده بس (زي ما توقفه بالظبط). زرار ⏸️/▶️ بيشغّل
-        أو يوقف البند في <b>كل الشهور</b> مرة واحدة (وبيشيل أي استثناءات شهرية كانت متسجلة له). لو
-        عايز تمسحه نهائي، استخدم رابط "🗑️ حذف نهائي من كل الشهور" جنب البند.
+      <p style="font-size:11px; color:var(--ink-soft); margin:0 0 8px; line-height:1.6;">
+        المبالغ تحت خاصة بشهر <span id="itemsMonthHint"></span> بس.
+        <span class="acc-header" data-acc="oblHelp" style="display:inline; padding:0; border:none; background:none; font-size:11px; font-weight:700; color:var(--teal); text-decoration:underline; cursor:pointer;">اعرف أكتر ↓</span>
       </p>
+      <div class="acc-body" id="acc-oblHelp" hidden>
+        <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;">
+          تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
+          فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
+          اللي انت فيه بس. زرار ✕ بيشيل البند من الشهر ده بس (زي ما توقفه بالظبط). زرار ⏸️/▶️ بيشغّل
+          أو يوقف البند في <b>كل الشهور</b> مرة واحدة (وبيشيل أي استثناءات شهرية كانت متسجلة له). لو
+          عايز تمسحه نهائي، استخدم رابط "🗑️ حذف نهائي" جنب البند.
+        </p>
+      </div>
       <div class="filter-scroll" id="itemsSortChips"></div>
       <div id="itemsEdit"></div>
       <div id="itemsPausedWrap" style="margin-top:10px;"></div>
@@ -1783,21 +1803,32 @@ function renderSettings(){
   function itemRowHtml(it){
     const amtOverridden = it.amountOverrides && it.amountOverrides[curMonthKey]!==undefined;
     const activeOverridden = it.activeOverrides && it.activeOverrides[curMonthKey]!==undefined;
-    const notes = [];
-    notes.push(`<span class="itmEditDetails" style="text-decoration:underline; cursor:pointer;">✏️ تعديل التفاصيل (النوع/الشهور${it.cat==="جمعية"?"/القبض":""})</span>`);
-    if(amtOverridden) notes.push(`✏️ مبلغ ${monthLabelOf(curMonthKey)} بس <span class="itmResetAmountOverride" style="text-decoration:underline; cursor:pointer;">(رجّع للافتراضي: ${fmt(it.amount)})</span>`);
-    if(activeOverridden) notes.push(`✏️ ${itemActiveForMonth(it,curMonthKey)?"مفعّل":"موقوف"} لشهر ${monthLabelOf(curMonthKey)} بس <span class="itmResetActiveOverride" style="text-decoration:underline; cursor:pointer;">(رجّع للافتراضي: ${it.active?"مفعّل":"موقوف"})</span>`);
-    notes.push(`<span class="itmDeleteForever" style="text-decoration:underline; cursor:pointer; color:var(--brick);">🗑️ حذف نهائي من كل الشهور</span>`);
+    const extraNotes = [];
+    if(amtOverridden) extraNotes.push(`✏️ مبلغ ${monthLabelOf(curMonthKey)} بس <span class="itmResetAmountOverride">(رجّع للافتراضي: ${fmt(it.amount)})</span>`);
+    if(activeOverridden) extraNotes.push(`✏️ ${itemActiveForMonth(it,curMonthKey)?"مفعّل":"موقوف"} لشهر ${monthLabelOf(curMonthKey)} بس <span class="itmResetActiveOverride">(رجّع للافتراضي: ${it.active?"مفعّل":"موقوف"})</span>`);
     const rangeNote = (it.startMonth ? " · من "+monthLabelOf(it.startMonth) : "") + (it.endMonth ? " · لحد "+monthLabelOf(it.endMonth) : "");
     const payoutNote = (it.cat==="جمعية" && it.payoutMonth) ? ` · هتقبض ${fmt(it.payoutAmount||0)} في ${monthLabelOf(it.payoutMonth)}` : "";
+    // Name gets its own full-width row (was squeezed next to the amount/toggle/delete buttons on
+    // one line before, cutting long names off) — everything else that used to be crammed into one
+    // long wrapping sentence (edit/reset/delete links) moved into a short action row instead, so a
+    // row with no overrides stays just 3 short lines instead of one very tall wrapped paragraph.
     return `
-    <div class="item-row-edit" data-id="${it.id}">
-      <label class="switch"><input type="checkbox" class="itmToggle" ${itemActiveForMonth(it,curMonthKey)?"checked":""}><span class="slider"></span></label>
-      <div class="ii"><div class="n"><input class="itmName" value="${it.name}"></div>
-        <div class="m">${it.cat}${rangeNote}${payoutNote}${notes.map(n=>" · "+n).join("")}</div></div>
-      <input type="number" class="amt-in itmAmount" value="${itemAmountForMonth(it, curMonthKey)}">
-      <button class="del-x itmToggleGlobal" title="${it.active?"إيقاف":"تشغيل"} البند في كل الشهور" style="color:${it.active?"var(--sage)":"var(--ink-soft)"};">${it.active?"⏸️":"▶️"}</button>
-      <button class="del-x itmDeleteMonth" title="شيل من شهر ${monthLabelOf(curMonthKey)} بس">✕</button>
+    <div class="item-row-edit obl-row-edit" data-id="${it.id}">
+      <div class="oi-top">
+        <label class="switch"><input type="checkbox" class="itmToggle" ${itemActiveForMonth(it,curMonthKey)?"checked":""}><span class="slider"></span></label>
+        <input class="itmName oi-name" value="${it.name}">
+        <button class="del-x itmToggleGlobal" title="${it.active?"إيقاف":"تشغيل"} البند في كل الشهور" style="color:${it.active?"var(--sage)":"var(--ink-soft)"};">${it.active?"⏸️":"▶️"}</button>
+        <button class="del-x itmDeleteMonth" title="شيل من شهر ${monthLabelOf(curMonthKey)} بس">✕</button>
+      </div>
+      <div class="oi-sub">
+        <input type="number" class="amt-in itmAmount" value="${itemAmountForMonth(it, curMonthKey)}">
+        <div class="oi-meta">${it.cat}${rangeNote}${payoutNote}</div>
+      </div>
+      ${extraNotes.length ? `<div class="oi-notes">${extraNotes.join("<br>")}</div>` : ""}
+      <div class="oi-actions">
+        <span class="itmEditDetails">✏️ تعديل${it.cat==="جمعية"?" (النوع/الشهور/القبض)":" (النوع/الشهور)"}</span>
+        <span class="itmDeleteForever">🗑️ حذف نهائي</span>
+      </div>
     </div>`;
   }
   // Split by *this month's* active state — an item paused for the month being viewed (via the
