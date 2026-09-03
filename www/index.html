@@ -224,11 +224,16 @@
   .switch{position:relative; width:44px; height:26px; flex-shrink:0;}
   .switch input{opacity:0; width:0; height:0;}
   .slider{position:absolute; inset:0; background:#D9D0AE; border-radius:999px; cursor:pointer; transition:.2s;}
-  .slider:before{content:""; position:absolute; width:20px; height:20px; border-radius:50%; background:#fff; top:3px; right:3px; transition:.2s;}
+  /* Resting ("off") position uses a logical inset so it auto-flips with dir: the knob sits at the
+     "start" side (right in RTL, left in LTR) — inset-inline-start:3px means right:3px under RTL
+     (matching the original design) and left:3px under LTR, instead of a hardcoded physical right
+     that stayed put regardless of direction. */
+  .slider:before{content:""; position:absolute; width:20px; height:20px; border-radius:50%; background:#fff; top:3px; inset-inline-start:3px; transition:.2s;}
   input:checked + .slider{background:var(--teal);}
-  input:checked + .slider:before{transform:translateX(-18px);}
-  /* under LTR (English), "on" should slide toward the end (right) instead of the start (left) —
-     translateX has no logical-property equivalent, so this is a plain dir-scoped override */
+  /* translateX has no logical-property equivalent, so "checked" (slides to the "end" side) needs
+     an explicit value per direction rather than one default + one override — that split was the
+     source of a bug where the LTR rule silently lost to this one. */
+  [dir="rtl"] input:checked + .slider:before{transform:translateX(-18px);}
   [dir="ltr"] input:checked + .slider:before{transform:translateX(18px);}
 
   .item-row-edit{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); content-visibility:auto; contain-intrinsic-size:0 54px;}
@@ -262,24 +267,29 @@
   .btn:active{transform:scale(.97); opacity:.85;}
 
   .fab{
-    position:fixed; bottom:calc(96px + env(safe-area-inset-bottom)); left:calc(50% - 220px + 20px);
+    /* inset-inline-end (not a physical left) so this sits on the right in LTR/English and the
+       left in RTL/Arabic — matches the standard convention for each direction instead of staying
+       pinned to the same physical side regardless of language. */
+    position:fixed; bottom:calc(96px + env(safe-area-inset-bottom)); inset-inline-end:calc(50% - 220px + 20px);
     width:56px; height:56px; border-radius:50%; background:var(--gold); color:var(--ink);
     display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; border:none; cursor:pointer;
     box-shadow:0 8px 20px rgba(184,134,59,.45); z-index:20;
     transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
   }
   .fab:active{transform:scale(.88); box-shadow:0 4px 10px rgba(184,134,59,.5);}
-  @media (max-width:500px){ .fab{ left:20px; } }
+  @media (max-width:500px){ .fab{ inset-inline-end:20px; } }
 
   .fab-voice{
-    position:fixed; bottom:calc(164px + env(safe-area-inset-bottom)); left:calc(50% - 220px + 20px);
+    /* +5px vs. .fab's inset: .fab is 56px wide and .fab-voice 46px, so equal insets would leave
+       their centers 5px apart — this keeps the mic button centered directly above "+". */
+    position:fixed; bottom:calc(164px + env(safe-area-inset-bottom)); inset-inline-end:calc(50% - 220px + 25px);
     width:46px; height:46px; border-radius:50%; background:var(--teal); color:#fff;
     display:flex; align-items:center; justify-content:center; font-size:19px; border:none; cursor:pointer;
     box-shadow:0 8px 18px rgba(22,48,46,.4); z-index:20;
     transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
   }
   .fab-voice:active{transform:scale(.88);}
-  @media (max-width:500px){ .fab-voice{ left:20px; } }
+  @media (max-width:500px){ .fab-voice{ inset-inline-end:25px; } }
 
   .tabbar{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
@@ -1139,6 +1149,7 @@ const I18N = {
     "voice.recognized":"✅ اتسجل من الصوت — راجع البيانات واحفظ", "voice.recognizedNoAmount":"🎤 مسمعتش مبلغ واضح، اكتبه يدوي",
     "voice.permissionDenied":"🎤 محتاج إذن الميكروفون عشان يسمعك", "voice.failed":"⚠️ حصل خطأ في التعرف على الصوت",
     "voice.notSupportedWeb":"🎤 الإدخال الصوتي مش متاح على المتصفح ده، جرب الكتابة",
+    "voice.autoSavedTitle":"✅ اتسجل مصروف بالصوت", "voice.autoSavedBody":"{1} {0} ج — دوس تراجع لو غلط",
     "toast.nativeOnlyFeature":"الميزة دي شغالة بس جوه تطبيق الموبايل", "toast.needBiometricSetup":"محتاج تفعّل بصمة أو قفل شاشة على جهازك الأول",
     "biometric.confirmTitle":"تأكيد تفعيل القفل", "biometric.confirmSubtitle":"تحقق ببصمتك عشان تفعّل الحماية",
     "toast.enableCancelled":"اتلغى التفعيل", "toast.enableLockFailed":"تعذّر تفعيل الحماية",
@@ -1327,6 +1338,7 @@ const I18N = {
     "voice.recognized":"✅ Captured from voice — review and save", "voice.recognizedNoAmount":"🎤 Couldn't catch a clear amount, enter it manually",
     "voice.permissionDenied":"🎤 Needs microphone permission to listen", "voice.failed":"⚠️ Voice recognition failed",
     "voice.notSupportedWeb":"🎤 Voice input isn't supported in this browser, try typing instead",
+    "voice.autoSavedTitle":"✅ Expense logged by voice", "voice.autoSavedBody":"{1} {0} EGP — tap Undo if that's wrong",
     "toast.nativeOnlyFeature":"This feature only works inside the mobile app", "toast.needBiometricSetup":"You need to set up a fingerprint or screen lock on your device first",
     "biometric.confirmTitle":"Confirm enabling lock", "biometric.confirmSubtitle":"Verify your fingerprint to enable protection",
     "toast.enableCancelled":"Enabling cancelled", "toast.enableLockFailed":"Couldn't enable protection",
@@ -1643,16 +1655,20 @@ async function checkPendingSmsTransactions(){
 // (same two call sites as checkPendingSmsTransactions: app boot + resume-from-background)
 // instead of native code injecting JS directly, since openModal/startVoiceExpenseInput depend
 // on state that's only ready once loadState() has finished.
+// Returns true when a pending action was found and acted on (voice auto-save, or the "type"
+// button's plain modal) — callers use this to skip the biometric-lock prompt for this launch,
+// since the whole point of the widget is not making the user step into the app first.
 async function checkPendingQuickAdd(){
-  if(!isNativeApp()) return;
+  if(!isNativeApp()) return false;
   try{
     const { QuickAdd } = window.Capacitor.Plugins;
     const res = await QuickAdd.getPendingAction();
-    if(!res.mode) return;
+    if(!res.mode) return false;
     await QuickAdd.clearPendingAction();
-    if(res.mode==="voice") startVoiceExpenseInput();
-    else openModal(null);
-  }catch(e){}
+    if(res.mode==="voice") return await runQuickAddVoice();
+    openModal(null);
+    return true;
+  }catch(e){ return false; }
 }
 
 // ---------- voice-add expenses (Android: native SpeechToText plugin; web/PWA: Web Speech API best-effort) ----------
@@ -1731,32 +1747,82 @@ function applyVoiceTranscript(rawText){
   }
   showToast(parsed.amount!=null ? t("voice.recognized") : t("voice.recognizedNoAmount"));
 }
-async function startVoiceExpenseInput(){
+// Just the recognition step, shared by the in-app mic FAB (opens the reviewable modal) and the
+// widget/PWA-shortcut quick-add path (may auto-save instead — see runQuickAddVoice below).
+async function recognizeSpeech(){
   const locale = state.settings.lang==="en" ? "en-US" : "ar-EG";
   if(isNativeApp()){
     try{
       const { SpeechToText } = window.Capacitor.Plugins;
-      showToast(t("voice.listening"));
       const res = await SpeechToText.start({ locale });
-      if(!res.success){
-        showToast(res.error==="permission_denied" ? t("voice.permissionDenied") : t("voice.failed"));
-        return;
-      }
-      applyVoiceTranscript(res.text);
-    }catch(e){ showToast(t("voice.failed")); }
-  } else {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR){ showToast(t("voice.notSupportedWeb")); return; }
+      if(!res.success) return { success:false, error: res.error==="permission_denied" ? "permission_denied" : "failed" };
+      return { success:true, text: res.text };
+    }catch(e){ return { success:false, error:"failed" }; }
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return { success:false, error:"not_supported" };
+  return new Promise(resolve=>{
     try{
       const rec = new SR();
       rec.lang = locale;
       rec.maxAlternatives = 1;
-      rec.onresult = (ev)=>{ applyVoiceTranscript(ev.results[0][0].transcript); };
-      rec.onerror = ()=>{ showToast(t("voice.failed")); };
-      showToast(t("voice.listening"));
+      rec.onresult = (ev)=> resolve({ success:true, text: ev.results[0][0].transcript });
+      rec.onerror = ()=> resolve({ success:false, error:"failed" });
       rec.start();
-    }catch(e){ showToast(t("voice.notSupportedWeb")); }
+    }catch(e){ resolve({ success:false, error:"not_supported" }); }
+  });
+}
+async function startVoiceExpenseInput(){
+  showToast(t("voice.listening"));
+  const res = await recognizeSpeech();
+  if(!res.success){
+    showToast(res.error==="permission_denied" ? t("voice.permissionDenied")
+      : res.error==="not_supported" ? t("voice.notSupportedWeb") : t("voice.failed"));
+    return;
   }
+  applyVoiceTranscript(res.text);
+}
+// Quick-add from the widget/PWA shortcut: unlike the in-app mic FAB above, this never opens (or
+// waits on) the full review modal when a confident amount was heard — it saves immediately and
+// confirms via a native notification + toast instead, since the whole point of the widget is
+// logging an expense without stepping into the app's own screens. A misheard amount is fixed the
+// normal way afterward: the app's existing Undo button, or editing/deleting the expense later —
+// never silently discarded, never blocked on a confirmation tap.
+// Returns true once *something* visible/audible happened (auto-saved, or the modal opened as a
+// fallback when no amount was understood) — callers use this to decide it's safe to skip the
+// biometric lock for this launch; a bare recognition failure returns false, since nothing was
+// produced worth bypassing the lock for.
+async function runQuickAddVoice(){
+  const res = await recognizeSpeech();
+  if(!res.success){
+    showToast(res.error==="permission_denied" ? t("voice.permissionDenied")
+      : res.error==="not_supported" ? t("voice.notSupportedWeb") : t("voice.failed"));
+    return false;
+  }
+  const parsed = parseVoiceExpense(res.text);
+  if(parsed.amount==null){
+    applyVoiceTranscript(res.text); // couldn't tell the amount — fall back to the reviewable modal
+    return true;
+  }
+  const cat = parsed.cat || allCats()[0].k;
+  const source = parsed.source || state.settings.sources[0];
+  const date = new Date().toISOString().slice(0,10);
+  const mk = date.slice(0,7);
+  const cap = Number(state.settings.caps[cat]||0);
+  const prevTotal = cap>0 ? categoryMonthTotal(cat, mk, null) : 0;
+  // This save isn't triggered by a real click/change DOM event, so the document-level listeners
+  // that normally arm the undo system never fire for it — capture the "before" snapshot ourselves
+  // so the app's existing Undo button still works to revert it.
+  pendingUndoSnapshot = snapshotState();
+  state.expenses.push({ id:"e"+Date.now(), amount:parsed.amount, cat, source, note:res.text, date });
+  await saveExpenses();
+  curMonthKey = mk;
+  maybeNotifyCapExceeded(cat, mk, prevTotal);
+  render();
+  const summary = tf("voice.autoSavedBody", fmt(parsed.amount), catLabel(allCats().find(c=>c.k===cat) || {k:cat}));
+  notifyNow(t("voice.autoSavedTitle"), summary);
+  showToast(summary);
+  return true;
 }
 
 // ---------- Google Sign-In + Drive backup (appDataFolder — a hidden per-app space, not the user's regular Drive) ----------
@@ -3638,7 +3704,14 @@ function showLockOverlay(){ document.getElementById("lockOverlay").classList.add
 // prompt right after the user just passed the first one. Reported as the lock "hanging"/showing
 // repeatedly, needing an extra tap to get past.
 let unlockInFlight = false;
+// Set for the duration of a quick-add (widget/PWA-shortcut) launch that's deliberately skipping
+// the lock prompt — see the boot IIFE and the appStateChange resume listener below. Cleared the
+// moment a real tryUnlock() call runs (so a stray leftover flag can never suppress a later,
+// legitimate unlock), and also cleared once the quick-add modal itself closes (see the listeners
+// right after this function) so the rest of the app doesn't stay unlocked past that interaction.
+let quickAddLockBypassActive = false;
 async function tryUnlock(){
+  quickAddLockBypassActive = false;
   if(!state.settings.biometricLock.enabled){ hideLockOverlay(); return; }
   if(!isNativeApp()){ hideLockOverlay(); return; } // no way to verify outside the native shell — don't lock browser testing/preview out
   if(!isLocked()) return; // already unlocked — nothing to re-prompt for
@@ -3655,6 +3728,20 @@ async function tryUnlock(){
   finally{ unlockInFlight = false; }
 }
 document.getElementById("lockRetryBtn").onclick = tryUnlock;
+// When a quick-add launch skipped the lock so the modal could open directly (see the boot IIFE
+// and the appStateChange resume listener), the bypass should only cover that one interaction —
+// the moment the user closes this modal (saved, cancelled, or the ✕), re-arm the lock overlay for
+// the rest of the app. showLockOverlay() (not tryUnlock()) is the right call here: tryUnlock()
+// verifies-then-hides, it doesn't re-show. Added as extra listeners (not replacing the existing
+// onclick handlers above) so this doesn't need to touch their own logic.
+["closeModal","cancelAdd","saveAdd"].forEach(id=>{
+  document.getElementById(id).addEventListener("click", ()=>{
+    if(quickAddLockBypassActive){
+      quickAddLockBypassActive = false;
+      if(state.settings.biometricLock.enabled) showLockOverlay();
+    }
+  });
+});
 
 function setupNativeApp(){
   if(!isNativeApp()) return;
@@ -3674,7 +3761,7 @@ function setupNativeApp(){
     App.exitApp();
   });
   let relockTimer = null;
-  App.addListener("appStateChange", (s)=>{
+  App.addListener("appStateChange", async (s)=>{
     if(s.isActive){
       // Cancels a pending re-lock from the branch below — if this "resumed" arrives quickly
       // after a "backgrounded", that pairing was very likely the biometric prompt's own system
@@ -3683,9 +3770,19 @@ function setupNativeApp(){
       // right after the user had just passed it, which is the "lock keeps reappearing" bug.
       if(relockTimer){ clearTimeout(relockTimer); relockTimer = null; }
       checkPendingSmsTransactions();
-      checkPendingQuickAdd();
+      await checkPendingQuickAdd();
       syncLinkedItemWithdrawals().then(changed=>{ if(changed) render(); }); // catches a month rollover while the app sat backgrounded
-      if(state.settings.biometricLock.enabled) tryUnlock();
+      if(modalBg.classList.contains("show")){
+        // Quick-add opened the review modal (typed entry, or voice that couldn't tell the amount)
+        // — let the user see/finish it without unlocking first; the modal's own backdrop still
+        // dims the dashboard behind it. A confident voice auto-save never reaches this branch (no
+        // modal opens for it), so it never needs to touch the lock at all. The lock re-engages the
+        // moment this modal closes — see the closeModal/cancelAdd/saveAdd listeners near tryUnlock().
+        quickAddLockBypassActive = true;
+        hideLockOverlay();
+      } else if(state.settings.biometricLock.enabled){
+        tryUnlock();
+      }
     } else if(state.settings.biometricLock.enabled){
       // Real backgrounding still re-locks effectively instantly (300ms is well under human
       // perception) — this delay exists only to give a same-cause "resumed" above a chance to
@@ -3710,14 +3807,18 @@ function setupNativeApp(){
 
 // PWA/web "shortcut" equivalent of the Android widget — a ?add=text|voice on the URL (from
 // manifest.json's "shortcuts", or a bookmarked link) triggers the same quick-add flow once the
-// app has finished booting, then the param is stripped so a refresh doesn't repeat it.
+// app has finished booting, then the param is stripped so a refresh doesn't repeat it. Returns
+// true when a quick-add was triggered (there's no biometric lock on the PWA path to skip, but the
+// return value is kept symmetrical with checkPendingQuickAdd for a uniform boot-sequence check).
 function checkQuickAddUrlParam(){
   const params = new URLSearchParams(location.search);
   const add = params.get("add");
-  if(!add) return;
+  if(!add) return false;
   history.replaceState(null, "", location.pathname);
-  if(add==="voice") startVoiceExpenseInput();
+  if(add==="voice") runQuickAddVoice(); // fire-and-forget — nothing downstream awaits this
   else if(add==="text") openModal(null);
+  else return false;
+  return true;
 }
 
 (async ()=>{
@@ -3727,9 +3828,18 @@ function checkQuickAddUrlParam(){
   render();
   setupNativeApp();
   checkPendingSmsTransactions();
-  checkPendingQuickAdd();
+  await checkPendingQuickAdd();
   checkQuickAddUrlParam();
-  await tryUnlock();
+  if(modalBg.classList.contains("show")){
+    // Same reasoning as the appStateChange resume listener: a quick-add modal is open (typed
+    // entry, or voice that couldn't tell the amount) — skip the lock prompt just for this launch
+    // so it's usable right away, and re-arm the lock the moment it closes. A confident voice
+    // auto-save never opens this modal, so it never reaches this branch at all.
+    quickAddLockBypassActive = true;
+    hideLockOverlay();
+  } else {
+    await tryUnlock();
+  }
   if(needsOnboarding()) showOnboarding();
 })();
 
