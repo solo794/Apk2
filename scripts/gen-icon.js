@@ -123,18 +123,25 @@ function drawBackground(x, y, w, h) {
   return [...INK, 255];
 }
 
-const outDir = process.argv[2] || "build/icons";
-fs.mkdirSync(outDir, { recursive: true });
+// Exported so other generator scripts (e.g. gen-web-icons.js, for the PWA/iOS home-screen
+// icons) can reuse the exact same drawing logic instead of duplicating the wallet motif —
+// running this file directly still regenerates the Capacitor/Android icon set as before.
+module.exports = { makePng, drawIcon, drawForeground, drawBackground, drawWallet, INK, GOLD, GOLD_SOFT };
 
-const sizes = [
-  ["icon-1024.png", 1024, drawIcon],
-  ["foreground-1024.png", 1024, drawForeground],
-  ["background-1024.png", 1024, drawBackground],
-  ["splash-2732.png", 2732, drawBackground],
-];
+if (require.main === module) {
+  const outDir = process.argv[2] || "build/icons";
+  fs.mkdirSync(outDir, { recursive: true });
 
-for (const [name, size, fn] of sizes) {
-  const png = makePng(size, fn);
-  fs.writeFileSync(path.join(outDir, name), png);
-  console.log("wrote", name, size + "x" + size, png.length + " bytes");
+  const sizes = [
+    ["icon-1024.png", 1024, drawIcon],
+    ["foreground-1024.png", 1024, drawForeground],
+    ["background-1024.png", 1024, drawBackground],
+    ["splash-2732.png", 2732, drawBackground],
+  ];
+
+  for (const [name, size, fn] of sizes) {
+    const png = makePng(size, fn);
+    fs.writeFileSync(path.join(outDir, name), png);
+    console.log("wrote", name, size + "x" + size, png.length + " bytes");
+  }
 }

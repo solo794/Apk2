@@ -10,8 +10,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="مصاريفي">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316302E'/%3E%3Ctext x='50' y='64' font-size='52' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316302E'/%3E%3Ctext x='50' y='64' font-size='52' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
-<link rel="manifest" href='data:application/manifest+json,{"name":"متابعة مصاريفي","short_name":"مصاريفي","start_url":".","display":"standalone","background_color":"%23F3EEDD","theme_color":"%2316302E"}'>
+<!-- iOS Safari doesn't support SVG apple-touch-icons (silently falls back to a screenshot
+     thumbnail on the home screen) — this has to be a real opaque PNG. -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
 <!-- xlsx-js-style: a drop-in SheetJS community fork that also supports cell styling (fills,
      fonts, borders, number formats) — the plain "xlsx" package's free tier silently ignores all
      of that, which is why the exported report used to come out as bare, unstyled Excel data. -->
@@ -3041,6 +3043,13 @@ function setupNativeApp(){
   await tryUnlock();
   if(needsOnboarding()) showOnboarding();
 })();
+
+// PWA offline app-shell — only relevant to the browser/"Add to Home Screen" path (an installed
+// iPhone PWA has no native shell to fall back on if the network drops), not the Capacitor/Android
+// build which already has its assets bundled locally.
+if(!isNativeApp() && "serviceWorker" in navigator && location.protocol.startsWith("http")){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
 </script>
 </body>
 </html>
