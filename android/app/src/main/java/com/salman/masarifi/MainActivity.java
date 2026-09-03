@@ -14,6 +14,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(SmsReaderPlugin.class);
         registerPlugin(BiometricAuthPlugin.class);
         registerPlugin(GoogleAuthPlugin.class);
+        registerPlugin(SpeechToTextPlugin.class);
         super.onCreate(savedInstanceState);
         requestHighestRefreshRate();
     }

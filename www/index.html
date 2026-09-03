@@ -271,6 +271,16 @@
   .fab:active{transform:scale(.88); box-shadow:0 4px 10px rgba(184,134,59,.5);}
   @media (max-width:500px){ .fab{ left:20px; } }
 
+  .fab-voice{
+    position:fixed; bottom:calc(164px + env(safe-area-inset-bottom)); left:calc(50% - 220px + 20px);
+    width:46px; height:46px; border-radius:50%; background:var(--teal); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:19px; border:none; cursor:pointer;
+    box-shadow:0 8px 18px rgba(22,48,46,.4); z-index:20;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
+  }
+  .fab-voice:active{transform:scale(.88);}
+  @media (max-width:500px){ .fab-voice{ left:20px; } }
+
   .tabbar{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
     background:#fff; border-top:1px solid var(--line); display:flex;
@@ -656,6 +666,7 @@
   </div>
 
   <button class="fab" id="fabAdd">+</button>
+  <button class="fab-voice" id="fabVoiceAdd" data-i18n-title="voice.fabTitle" title="أضف مصروف بالصوت">🎤</button>
 
   <div class="tabbar">
     <button class="tabbtn active" data-tab="home"><span class="ic">🏠</span><span class="lb" data-i18n="nav.home">الرئيسية</span></button>
@@ -1124,6 +1135,10 @@ const I18N = {
     "modal.account.deposit":"إيداع", "modal.account.withdraw":"سحب", "toast.moveDeleted":"اتمسحت الحركة",
     "sms.bannerTitle":"معاملات بنكية مكتشفة ({0}) — مراجعتك مطلوبة", "sms.unclearAmount":"المبلغ مش واضح",
     "sms.addAsExpense":"إضافة كمصروف", "sms.openManual":"افتح وسجّل يدوي", "sms.dismiss":"تجاهل", "sms.fromSender":"من {0}",
+    "voice.fabTitle":"أضف مصروف بالصوت", "voice.listening":"🎤 بتسمعك... اتكلم دلوقتي",
+    "voice.recognized":"✅ اتسجل من الصوت — راجع البيانات واحفظ", "voice.recognizedNoAmount":"🎤 مسمعتش مبلغ واضح، اكتبه يدوي",
+    "voice.permissionDenied":"🎤 محتاج إذن الميكروفون عشان يسمعك", "voice.failed":"⚠️ حصل خطأ في التعرف على الصوت",
+    "voice.notSupportedWeb":"🎤 الإدخال الصوتي مش متاح على المتصفح ده، جرب الكتابة",
     "toast.nativeOnlyFeature":"الميزة دي شغالة بس جوه تطبيق الموبايل", "toast.needBiometricSetup":"محتاج تفعّل بصمة أو قفل شاشة على جهازك الأول",
     "biometric.confirmTitle":"تأكيد تفعيل القفل", "biometric.confirmSubtitle":"تحقق ببصمتك عشان تفعّل الحماية",
     "toast.enableCancelled":"اتلغى التفعيل", "toast.enableLockFailed":"تعذّر تفعيل الحماية",
@@ -1308,6 +1323,10 @@ const I18N = {
     "modal.account.deposit":"Deposit", "modal.account.withdraw":"Withdraw", "toast.moveDeleted":"Movement deleted",
     "sms.bannerTitle":"Bank transactions detected ({0}) — review needed", "sms.unclearAmount":"Amount unclear",
     "sms.addAsExpense":"Add as expense", "sms.openManual":"Open and log manually", "sms.dismiss":"Dismiss", "sms.fromSender":"From {0}",
+    "voice.fabTitle":"Add an expense by voice", "voice.listening":"🎤 Listening... speak now",
+    "voice.recognized":"✅ Captured from voice — review and save", "voice.recognizedNoAmount":"🎤 Couldn't catch a clear amount, enter it manually",
+    "voice.permissionDenied":"🎤 Needs microphone permission to listen", "voice.failed":"⚠️ Voice recognition failed",
+    "voice.notSupportedWeb":"🎤 Voice input isn't supported in this browser, try typing instead",
     "toast.nativeOnlyFeature":"This feature only works inside the mobile app", "toast.needBiometricSetup":"You need to set up a fingerprint or screen lock on your device first",
     "biometric.confirmTitle":"Confirm enabling lock", "biometric.confirmSubtitle":"Verify your fingerprint to enable protection",
     "toast.enableCancelled":"Enabling cancelled", "toast.enableLockFailed":"Couldn't enable protection",
@@ -1617,6 +1636,110 @@ async function checkPendingSmsTransactions(){
     });
     render();
   }catch(e){}
+}
+
+// ---------- voice-add expenses (Android: native SpeechToText plugin; web/PWA: Web Speech API best-effort) ----------
+// Small keyword table for guessing a category from free-spoken text. Matched against whichever
+// language the recognizer was listening in (state.settings.lang), separately from the direct
+// "the category name itself was said" check in guessVoiceCategory (which also covers custom
+// categories the user added, since those have no keyword-table entry at all).
+const VOICE_CAT_KEYWORDS_AR = {
+  "أكل": ["أكل","مطعم","غدا","غداء","عشا","عشاء","فطار","فطور","كافيه","قهوة","توصيل أكل"],
+  "مواصلات": ["مواصلات","تاكسي","أوبر","اوبر","كريم","بنزين","أتوبيس","اوتوبيس","مترو","مشوار","تكسي"],
+  "عربية": ["عربية","سيارة","كاوتش","صيانة عربية","ورشة"],
+  "تسوق": ["تسوق","شوبينج","ملابس","هدوم"],
+  "صحة": ["دكتور","دوا","دواء","صيدلية","علاج","كشف","تحليل"],
+  "ترفيه": ["سينما","ترفيه","جيم","نادي"],
+  "أولاد": ["أولاد","مدرسة","حضانة","العيال"],
+  "بيت": ["بيت","إيجار","ايجار","فاتورة","كهربا","كهرباء","مياه","غاز","نت","انترنت"]
+};
+const VOICE_CAT_KEYWORDS_EN = {
+  "أكل": ["food","lunch","dinner","breakfast","restaurant","cafe","coffee"],
+  "مواصلات": ["transport","taxi","uber","careem","gas","fuel","bus","metro","ride"],
+  "عربية": ["car","tires","car service"],
+  "تسوق": ["shopping","clothes"],
+  "صحة": ["doctor","medicine","pharmacy","health"],
+  "ترفيه": ["cinema","movie","fun","gym"],
+  "أولاد": ["kids","school","nursery"],
+  "بيت": ["home","rent","bill","electricity","water bill","internet"]
+};
+// Arabic-Indic digits (٠-٩) → Western (0-9) — the ar-EG recognizer can emit either style
+// depending on device/keyboard settings, and our regexes only match Western digits.
+function normalizeArabicDigits(text){
+  return text.replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660));
+}
+// Same amount-extraction idiom as parseBankSms (currency markers + a plain-number fallback,
+// needed here since spoken amounts often come with no currency word at all, e.g. "دفعت خمسين").
+function parseVoiceAmount(rawText){
+  const text = normalizeArabicDigits(rawText);
+  const amountMatch = text.match(/(?:EGP|LE|ج\.م|جنيه|جم)\s*[\d,]+(?:\.\d+)?|[\d,]+(?:\.\d+)?\s*(?:EGP|LE|ج\.م|جنيه|جم|pounds?)/i);
+  const plainMatch = !amountMatch && text.match(/[\d,]+(?:\.\d+)?/);
+  const amount = amountMatch ? Number(amountMatch[0].replace(/[^\d.]/g, ""))
+    : plainMatch ? Number(plainMatch[0].replace(/[^\d.]/g, ""))
+    : null;
+  return (amount && amount>0) ? amount : null;
+}
+function guessVoiceCategory(text){
+  // Direct mention of a category's own name — catches custom categories too (no keyword table
+  // needed for those, since the user picked the name themselves).
+  const direct = allCats().find(c=> text.includes(c.k) || (c.lEn && text.toLowerCase().includes(c.lEn.toLowerCase())));
+  if(direct) return direct.k;
+  const table = state.settings.lang==="en" ? VOICE_CAT_KEYWORDS_EN : VOICE_CAT_KEYWORDS_AR;
+  for(const [cat, words] of Object.entries(table)){
+    if(words.some(w=> text.toLowerCase().includes(w.toLowerCase()))) return cat;
+  }
+  return null;
+}
+function guessVoiceSource(text){
+  return state.settings.sources.find(s=> text.includes(s)) || null;
+}
+function parseVoiceExpense(rawText){
+  const text = (rawText||"").trim();
+  return { amount: parseVoiceAmount(text), cat: guessVoiceCategory(text), source: guessVoiceSource(text) };
+}
+// Opens the normal expense modal and prefills whatever was recognized — the user always reviews
+// and taps "save" themselves, same confirmation-required philosophy as the SMS candidates above.
+function applyVoiceTranscript(rawText){
+  const parsed = parseVoiceExpense(rawText);
+  openModal(null);
+  if(parsed.amount!=null) document.getElementById("mAmount").value = parsed.amount;
+  document.getElementById("mNote").value = rawText;
+  if(parsed.cat){
+    selectedCat = parsed.cat;
+    renderCatChips();
+  }
+  if(parsed.source){
+    selectedSource = parsed.source;
+    document.querySelectorAll("#sourceChips .chip").forEach(c=> c.classList.toggle("sel", c.dataset.src===parsed.source));
+  }
+  showToast(parsed.amount!=null ? t("voice.recognized") : t("voice.recognizedNoAmount"));
+}
+async function startVoiceExpenseInput(){
+  const locale = state.settings.lang==="en" ? "en-US" : "ar-EG";
+  if(isNativeApp()){
+    try{
+      const { SpeechToText } = window.Capacitor.Plugins;
+      showToast(t("voice.listening"));
+      const res = await SpeechToText.start({ locale });
+      if(!res.success){
+        showToast(res.error==="permission_denied" ? t("voice.permissionDenied") : t("voice.failed"));
+        return;
+      }
+      applyVoiceTranscript(res.text);
+    }catch(e){ showToast(t("voice.failed")); }
+  } else {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ showToast(t("voice.notSupportedWeb")); return; }
+    try{
+      const rec = new SR();
+      rec.lang = locale;
+      rec.maxAlternatives = 1;
+      rec.onresult = (ev)=>{ applyVoiceTranscript(ev.results[0][0].transcript); };
+      rec.onerror = ()=>{ showToast(t("voice.failed")); };
+      showToast(t("voice.listening"));
+      rec.start();
+    }catch(e){ showToast(t("voice.notSupportedWeb")); }
+  }
 }
 
 // ---------- Google Sign-In + Drive backup (appDataFolder — a hidden per-app space, not the user's regular Drive) ----------
@@ -2650,6 +2773,7 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
     document.getElementById("tab-maintenance").style.display = activeTab==="maintenance" ? "block":"none";
     document.getElementById("tab-settings").style.display = activeTab==="settings" ? "block":"none";
     document.getElementById("fabAdd").style.display = activeTab==="settings" ? "none":"flex";
+    document.getElementById("fabVoiceAdd").style.display = activeTab==="settings" ? "none":"flex";
     if(activeTab==="allocations") renderAllocations();
     if(activeTab==="maintenance"){ renderMaintenance(); renderCarBudget(); }
     window.scrollTo(0, 0); // always start each tab from the top, never keep the previous tab's scroll position
@@ -3074,6 +3198,9 @@ document.getElementById("fabAdd").onclick = ()=>{
   else if(activeTab==="obligations") addNewObligationItem();
   else openModal(null);
 };
+// Always adds an expense specifically (regardless of the active tab) — voice input is scoped to
+// expenses only for now, unlike fabAdd which is tab-aware.
+document.getElementById("fabVoiceAdd").onclick = ()=>{ startVoiceExpenseInput(); };
 document.getElementById("closeModal").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
 document.getElementById("cancelAdd").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
 document.querySelectorAll(".calcBtn").forEach(b=>{
