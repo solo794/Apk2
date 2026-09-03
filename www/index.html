@@ -565,8 +565,14 @@
     </div>
 
     <div class="set-card">
-      <h3>📊 تقرير إكسيل شامل</h3>
-      <button class="btn btn-primary" id="exportExcel">تصدير كل حاجة (مصاريف + التزامات + توزيعات + حسابات)</button>
+      <h3>📊 تقرير إكسيل — <span id="exportExcelMonthLbl">الشهر الحالي</span></h3>
+      <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;">
+        كل التفاصيل الخاصة بالشهر المختار فوق (مصاريف، التزامات، توزيعات، صيانة،
+        حركات حسابات) في ملف واحد، كل قايمة في شيت لوحدها ومجموع تحتها. أرصدة
+        الحسابات نفسها بتفضل إجمالية (من أول ما بدأت التطبيق)، مش خاصة بشهر واحد،
+        لإنها رصيد لحظي مش حركة شهر.
+      </p>
+      <button class="btn btn-primary" id="exportExcel">تصدير تقرير الشهر (مصاريف + التزامات + توزيعات + حسابات)</button>
     </div>
 
     <div class="set-card">
@@ -1674,6 +1680,7 @@ function renderSettings(){
   });
 
   document.getElementById("itemsMonthHint").textContent = monthLabelOf(curMonthKey);
+  document.getElementById("exportExcelMonthLbl").textContent = monthLabelOf(curMonthKey);
   renderSortChips("itemsSortChips", SORT_OPTIONS_ITEMS, itemsSortBy, (k)=>{ itemsSortBy = k; render(); });
   const el = document.getElementById("itemsEdit");
   // sort by each item's *effective amount for the month being viewed*, not its static base
@@ -2502,22 +2509,6 @@ document.getElementById("saveAccountAdd").onclick = async ()=>{
   showToast("اتسجلت الحركة ✅");
 };
 
-// Every month that has any recorded activity anywhere in the app (plus the month currently
-// being viewed, and any month an obligation item was specifically corrected for), used to break
-// the obligations export out month-by-month instead of a single flat "current config" listing.
-function allExportMonths(){
-  const set = new Set([curMonthKey]);
-  state.expenses.forEach(e=>set.add(e.date.slice(0,7)));
-  state.allocations.forEach(a=>set.add(a.date.slice(0,7)));
-  state.accountMoves.forEach(m=>set.add(m.date.slice(0,7)));
-  state.maintenanceLog.forEach(m=>set.add(m.date.slice(0,7)));
-  state.items.forEach(it=>{
-    if(it.amountOverrides) Object.keys(it.amountOverrides).forEach(mk=>set.add(mk));
-    if(it.activeOverrides) Object.keys(it.activeOverrides).forEach(mk=>set.add(mk));
-  });
-  return [...set].sort();
-}
-
 // ---------- excel export styling (xlsx-js-style — see the CDN <script> comment in <head>) ----------
 // Brand palette, same hex values as the app's own CSS custom properties, so the exported report
 // reads as an extension of the app rather than a generic spreadsheet dump.
@@ -2585,16 +2576,32 @@ function numberFormatColumns(ws, rowCount, colCount, headerTest){
     }
   }
 }
-const XL_AMOUNT_HEADER = (h)=> /مبلغ|قيمة|التكلفة|الرصيد|كيلومتر/.test(h);
+const XL_AMOUNT_HEADER = (h)=> /مبلغ|قيمة|التكلفة|الرصيد|كيلومتر|صافي|حركة/.test(h);
 
-// Builds one sheet the standard way: json_to_sheet -> number formatting -> optional per-row
-// highlight -> the shared teal/zebra/borders styling -> append to the workbook. Cuts the same
-// five-step boilerplate that would otherwise repeat for every one of the report's sheets.
-function addStyledSheet(wb, rows, placeholderRow, sheetName, highlightRowIf){
+// Builds one sheet the standard way: json_to_sheet -> optional totals row -> number formatting ->
+// optional per-row highlight -> the shared teal/zebra/borders styling -> append to the workbook.
+// Cuts the same boilerplate that would otherwise repeat for every one of the report's sheets.
+// `sumCols`, when given, appends one more "الإجمالي" row summing those column(s) — real data only,
+// never the placeholder row for an empty sheet (there's nothing to total).
+function addStyledSheet(wb, rows, placeholderRow, sheetName, highlightRowIf, sumCols){
   const data = rows.length ? rows : [placeholderRow];
   const ws = XLSX.utils.json_to_sheet(data);
-  const colCount = Object.keys(data[0]).length;
-  const rowCount = data.length;
+  const headerKeys = Object.keys(data[0]);
+  const colCount = headerKeys.length;
+  let rowCount = data.length;
+
+  if(rows.length && sumCols && sumCols.length){
+    const totalR = rowCount + 1; // first free row, right after the last data row
+    headerKeys.forEach((k,c)=>{
+      const addr = XLSX.utils.encode_cell({r:totalR, c});
+      if(c===0) ws[addr] = {t:"s", v:"الإجمالي"};
+      else if(sumCols.includes(k)) ws[addr] = {t:"n", v: Math.round(rows.reduce((s,row)=>s+(Number(row[k])||0),0)*100)/100};
+      else ws[addr] = {t:"s", v:""};
+    });
+    ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:totalR, c:colCount-1}});
+    rowCount = totalR;
+  }
+
   numberFormatColumns(ws, rowCount, colCount, XL_AMOUNT_HEADER);
   if(rows.length && highlightRowIf){
     rows.forEach((row,i)=>{
@@ -2603,6 +2610,7 @@ function addStyledSheet(wb, rows, placeholderRow, sheetName, highlightRowIf){
     });
   }
   styleExportSheet(ws, rowCount, colCount);
+  if(rows.length && sumCols && sumCols.length) highlightRow(ws, rowCount, colCount, "DCEAE8", XL_COLOR.teal); // bold teal total row, applied last so styleExportSheet's zebra fill doesn't cover it
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
 }
 
@@ -2626,53 +2634,95 @@ function highlightRow(ws, r, colCount, fillRgb, fontRgb){
 document.getElementById("exportExcel").onclick = async ()=>{
   if(typeof XLSX === "undefined"){ showToast("محتاج إنترنت لتحميل مكتبة الإكسيل أول مرة"); return; }
   const wb = XLSX.utils.book_new();
-  wb.Props = { Title:"تقرير مصاريفي الشامل", Author:"متابعة مصاريفي", CreatedDate:new Date() };
+  const mk = curMonthKey; // the whole report is scoped to the month currently selected at the top
+  wb.Props = { Title:"تقرير مصاريفي — "+monthLabelOf(mk), Author:"متابعة مصاريفي", CreatedDate:new Date() };
 
-  const expRows = state.expenses.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>({
+  // ---- ملخص الشهر: the same figures the Home tab computes (hero amount, phase, allocations
+  // breakdown), which had no representation anywhere in the export before — first sheet so the
+  // report opens on an actual overview instead of a raw transaction list.
+  const m = computeMonth(mk);
+  const monthExpensesForSummary = expensesForMonth(mk);
+  const spentForSummary = monthExpensesForSummary.reduce((s,e)=>s+Number(e.amount),0);
+  const monthAllocationsForSummary = state.allocations.filter(a=>a.date.slice(0,7)===mk);
+  const allocSpentForSummary = monthAllocationsForSummary.reduce((s,a)=>s+Number(a.amount),0);
+  const remainingForSummary = m.recurringSurplus - spentForSummary - allocSpentForSummary;
+  const phaseLabel =
+    m.phase==="عجز" ? "⚠️ عجز في الميزانية" :
+    m.phase==="ضغط" ? "🔴 مرحلة الضغط" :
+    m.phase==="انتقال" ? "🟡 مرحلة الانتقال" : "🟢 مرحلة الانطلاق";
+  const monthSummaryRows = [
+    {البند:"الشهر", القيمة: monthLabelOf(mk)},
+    {البند:"المرتب", القيمة: m.salary},
+    {البند:"دخل إضافي (جمعية)", القيمة: m.extraIncome},
+    {البند:"إجمالي الأقساط", القيمة: m.byCat["قسط"]},
+    {البند:"إجمالي المصروفات الثابتة", القيمة: m.byCat["ثابت"]},
+    {البند:"إجمالي الجمعيات", القيمة: m.byCat["جمعية"]},
+    {البند:"إجمالي الالتزامات (كل الأنواع)", القيمة: m.obligations},
+    {البند:"الفائض الشهري المتكرر", القيمة: m.recurringSurplus},
+    {البند:"إجمالي المصاريف الفعلية هذا الشهر", القيمة: spentForSummary},
+    {البند:"إجمالي التوزيعات الفعلية هذا الشهر", القيمة: allocSpentForSummary},
+    {البند:"معايا كام؟", القيمة: remainingForSummary},
+    {البند:"المرحلة", القيمة: phaseLabel},
+    {البند:"طوارئ", القيمة: m.emergency},
+    {البند:"استثمار", القيمة: m.invest},
+    {البند:"مرونة", القيمة: m.flex},
+  ];
+  addStyledSheet(wb, monthSummaryRows, {البند:"",القيمة:""}, "ملخص الشهر");
+
+  const expRows = state.expenses.filter(e=>e.date.slice(0,7)===mk).sort((a,b)=>a.date.localeCompare(b.date)).map(e=>({
     التاريخ:e.date, الفئة:e.cat, المصدر:e.source||"", "المبلغ (ج)":e.amount, ملاحظة:e.note||""
   }));
-  addStyledSheet(wb, expRows, {التاريخ:"",الفئة:"",'المبلغ (ج)':"",ملاحظة:""}, "المصاريف");
+  addStyledSheet(wb, expRows, {التاريخ:"",الفئة:"",'المبلغ (ج)':"",ملاحظة:""}, "المصاريف", null, ["المبلغ (ج)"]);
 
-  // One row per item per month (its actual effective amount that month — the base value, or a
-  // manual per-month correction if it has one) instead of a single flat "current config" row per
-  // item, so each month's obligations total can be checked/reconciled independently in the sheet.
+  // Obligations for this month only — each item's actual effective amount this month (base
+  // value, or a manual correction if it has one).
   const itemRows = [];
-  allExportMonths().forEach(mk=>{
-    state.items.forEach(it=>{
-      if(it.endMonth && mk > it.endMonth) return;
-      const amtOverridden = it.amountOverrides && it.amountOverrides[mk]!==undefined;
-      const activeOverridden = it.activeOverrides && it.activeOverrides[mk]!==undefined;
-      itemRows.push({
-        الشهر:monthLabelOf(mk), البند:it.name, "المبلغ (ج)":itemAmountForMonth(it, mk), النوع:it.cat,
-        "معدَّل لهذا الشهر؟": (amtOverridden || activeOverridden) ? "نعم" : "لا",
-        الحالة: itemActiveForMonth(it, mk) ? "مفعّل" : "موقوف"
-      });
+  state.items.forEach(it=>{
+    if(it.endMonth && mk > it.endMonth) return;
+    const amtOverridden = it.amountOverrides && it.amountOverrides[mk]!==undefined;
+    const activeOverridden = it.activeOverrides && it.activeOverrides[mk]!==undefined;
+    itemRows.push({
+      البند:it.name, "المبلغ (ج)":itemAmountForMonth(it, mk), النوع:it.cat,
+      "معدَّل لهذا الشهر؟": (amtOverridden || activeOverridden) ? "نعم" : "لا",
+      الحالة: itemActiveForMonth(it, mk) ? "مفعّل" : "موقوف"
     });
   });
-  addStyledSheet(wb, itemRows, {الشهر:"",البند:"","المبلغ (ج)":"",النوع:"","معدَّل لهذا الشهر؟":"",الحالة:""}, "الالتزامات والأقساط",
-    row => row["معدَّل لهذا الشهر؟"]==="نعم" ? {fill:"F7ECD9", font:XL_COLOR.gold} : null);
+  addStyledSheet(wb, itemRows, {البند:"","المبلغ (ج)":"",النوع:"","معدَّل لهذا الشهر؟":"",الحالة:""}, "الالتزامات والأقساط",
+    row => row["معدَّل لهذا الشهر؟"]==="نعم" ? {fill:"F7ECD9", font:XL_COLOR.gold} : null, ["المبلغ (ج)"]);
 
-  const allocRows = state.allocations.sort((a,b)=>a.date.localeCompare(b.date)).map(a=>({
+  const allocRows = state.allocations.filter(a=>a.date.slice(0,7)===mk).sort((a,b)=>a.date.localeCompare(b.date)).map(a=>({
     التاريخ:a.date, البند:a.cat, "المبلغ (ج)":a.amount, ملاحظة:a.note||""
   }));
-  addStyledSheet(wb, allocRows, {التاريخ:"",البند:"",'المبلغ (ج)':"",ملاحظة:""}, "التوزيعات الفعلية");
+  addStyledSheet(wb, allocRows, {التاريخ:"",البند:"",'المبلغ (ج)':"",ملاحظة:""}, "التوزيعات الفعلية", null, ["المبلغ (ج)"]);
 
-  const maintRows = state.maintenanceLog.sort((a,b)=>a.date.localeCompare(b.date)).map(m=>({
-    التاريخ:m.date, الكيلومترات:m.km, "التكلفة (ج)":m.cost, "اللي اتعمل":(m.items||[]).join("، "), ملاحظة:m.note||""
+  const maintRows = state.maintenanceLog.filter(x=>x.date.slice(0,7)===mk).sort((a,b)=>a.date.localeCompare(b.date)).map(x=>({
+    التاريخ:x.date, الكيلومترات:x.km, "التكلفة (ج)":x.cost, "اللي اتعمل":(x.items||[]).join("، "), ملاحظة:x.note||""
   }));
-  addStyledSheet(wb, maintRows, {التاريخ:"",الكيلومترات:"",'التكلفة (ج)':"",'اللي اتعمل':"",ملاحظة:""}, "الصيانة");
+  addStyledSheet(wb, maintRows, {التاريخ:"",الكيلومترات:"",'التكلفة (ج)':"",'اللي اتعمل':"",ملاحظة:""}, "الصيانة", null, ["التكلفة (ج)"]);
 
-  const moveRows = state.accountMoves.sort((a,b)=>a.date.localeCompare(b.date)).map(m=>({
-    التاريخ:m.date, الحساب:m.source, النوع:m.type==="withdraw"?"سحب":"إيداع", "المبلغ (ج)":m.amount, ملاحظة:m.note||""
+  const moveRows = state.accountMoves.filter(x=>x.date.slice(0,7)===mk).sort((a,b)=>a.date.localeCompare(b.date)).map(x=>({
+    التاريخ:x.date, الحساب:x.source, النوع:x.type==="withdraw"?"سحب":"إيداع", "المبلغ (ج)":x.amount, ملاحظة:x.note||""
   }));
   addStyledSheet(wb, moveRows, {التاريخ:"",الحساب:"",النوع:"",'المبلغ (ج)':"",ملاحظة:""}, "حركات الحسابات",
     row => row["النوع"]==="سحب" ? {fill:"F5E3DE", font:XL_COLOR.brick}
-         : row["النوع"]==="إيداع" ? {fill:"E6EEE2", font:XL_COLOR.sage} : null);
+         : row["النوع"]==="إيداع" ? {fill:"E6EEE2", font:XL_COLOR.sage} : null, ["المبلغ (ج)"]);
 
+  // Balances are a running total (since the very first entry), not "this month's balance" — a
+  // balance is a snapshot, not a monthly transaction — but "صافي الحركة هذا الشهر" ties this
+  // sheet into the month the rest of the report is scoped to.
+  function accountNetForMonth(name){
+    const netMoves = state.accountMoves.filter(x=>x.source===name && x.date.slice(0,7)===mk)
+      .reduce((s,x)=> s + (x.type==="withdraw" ? -Number(x.amount) : Number(x.amount)), 0);
+    const spent = state.expenses.filter(x=>x.source===name && x.date.slice(0,7)===mk)
+      .reduce((s,x)=>s+Number(x.amount), 0);
+    return netMoves - spent;
+  }
   const accountBalanceRows = computeAllAccountBalances().map(b=>({
-    الحساب:b.name, "الرصيد الحالي (ج)":b.balance, الحالة: b.legacy ? "مصدر محذوف من الإعدادات" : "نشط"
+    الحساب:b.name, "الرصيد الحالي (ج)":b.balance, "صافي الحركة هذا الشهر (ج)": accountNetForMonth(b.name),
+    الحالة: b.legacy ? "مصدر محذوف من الإعدادات" : "نشط"
   }));
-  addStyledSheet(wb, accountBalanceRows, {الحساب:"", "الرصيد الحالي (ج)":"", الحالة:""}, "أرصدة الحسابات");
+  addStyledSheet(wb, accountBalanceRows, {الحساب:"", "الرصيد الحالي (ج)":"", "صافي الحركة هذا الشهر (ج)":"", الحالة:""}, "أرصدة الحسابات",
+    null, ["الرصيد الحالي (ج)", "صافي الحركة هذا الشهر (ج)"]);
 
   const summaryRows = [
     {البند:"المرتب", القيمة:state.settings.salary},
@@ -2681,13 +2731,14 @@ document.getElementById("exportExcel").onclick = async ()=>{
   ];
   addStyledSheet(wb, summaryRows, {البند:"",القيمة:""}, "ملخص الإعدادات");
 
+  const fileName = "تقرير_مصاريفي_"+monthLabelOf(mk).replace(" ", "_")+".xlsx";
   if(isNativeApp()){
     const b64 = XLSX.write(wb, {type:"base64", bookType:"xlsx"});
-    await saveOrShareFile("تقرير_مصاريفي_شامل.xlsx", b64, true);
+    await saveOrShareFile(fileName, b64, true);
   } else {
-    XLSX.writeFile(wb, "تقرير_مصاريفي_شامل.xlsx");
+    XLSX.writeFile(wb, fileName);
   }
-  showToast("اتصدّر ملف الإكسيل ✅");
+  showToast("اتصدّر تقرير "+monthLabelOf(mk)+" ✅");
 };
 
 // ---------- native app niceties (status bar + hardware back button) ----------
