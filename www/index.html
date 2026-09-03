@@ -184,6 +184,19 @@
   .empty-state .big{font-size:32px; margin-bottom:8px;}
   .empty-state p{font-size:13px; margin:0; line-height:1.7;}
 
+  /* collapsible section group — groups related cards under one tappable header, so a long tab
+     (settings especially) can start mostly collapsed instead of one long scroll */
+  .acc-group{margin-bottom:14px;}
+  .acc-header{
+    display:flex; align-items:center; gap:8px; width:100%; padding:13px 14px;
+    background:#fff; border:1px solid var(--line); border-radius:12px; cursor:pointer;
+    font-family:'Cairo'; font-weight:700; font-size:13.5px; color:var(--ink);
+  }
+  .acc-header .chev{margin-inline-start:auto; transition:transform .2s; color:var(--ink-soft);}
+  .acc-header.open .chev{transform:rotate(180deg);}
+  .acc-body{margin-top:10px;}
+  .acc-body[hidden]{display:none;}
+
   /* settings */
   .set-card{background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin-bottom:12px;}
   .set-card h3{font-size:13px; margin:0 0 12px; color:var(--ink); font-weight:700;}
@@ -396,8 +409,12 @@
     <div class="section-title" style="margin-top:20px;">📦 التوزيعات التراكمية (فعليًا)</div>
     <div class="stat-grid" id="allocStatGrid" style="margin-bottom:14px;"></div>
 
-    <div class="section-title">📅 تراكمي شهري</div>
-    <div class="obl-list" id="allocMonthlyList" style="margin-bottom:16px;"></div>
+    <div class="acc-group">
+      <button class="acc-header" data-acc="allocMonthly">📅 تراكمي شهري <span class="chev">▾</span></button>
+      <div class="acc-body" id="acc-allocMonthly" hidden>
+        <div class="obl-list" id="allocMonthlyList" style="margin-bottom:16px;"></div>
+      </div>
+    </div>
 
     <div class="section-title">🧾 كل العمليات</div>
     <div class="filter-scroll" id="allocFilterChips"></div>
@@ -424,17 +441,17 @@
   </div>
 
   <div class="content" id="tab-maintenance" style="display:none;">
-    <div class="section-title">⛽ مصاريف العربية الشهر ده <span class="hint">بنزين، جراج، صيانة... كل حاجة فئة عربية</span></div>
-    <div class="flex-card" id="carBudgetCard"></div>
-
     <div class="set-card">
-      <h3>🚗 كيلومترات العربية الحالية</h3>
-      <div class="field"><label>الكيلومترات الحالية (KM)</label><input type="number" id="inOdometer" placeholder="مثال: 15000"></div>
-      <div class="field" style="margin-bottom:0;"><label id="odometerDateLbl" style="font-weight:500;"></label></div>
-    </div>
+      <h3>🚗 حالة العربية</h3>
+      <div class="section-title" style="margin:0 4px 8px;">⛽ مصاريف العربية الشهر ده <span class="hint">بنزين، جراج، صيانة... كل حاجة فئة عربية</span></div>
+      <div class="flex-card" id="carBudgetCard" style="margin-bottom:14px;"></div>
 
-    <div class="section-title">⏭️ الصيانة الجاية</div>
-    <div class="flex-card" id="nextMaintCard"></div>
+      <div class="field"><label>الكيلومترات الحالية (KM)</label><input type="number" id="inOdometer" placeholder="مثال: 15000"></div>
+      <div class="field" style="margin-bottom:14px;"><label id="odometerDateLbl" style="font-weight:500;"></label></div>
+
+      <div class="section-title" style="margin:0 4px 8px;">⏭️ الصيانة الجاية</div>
+      <div class="flex-card" id="nextMaintCard"></div>
+    </div>
 
     <div class="section-title" style="margin-top:20px;">📋 جدول الصيانة الدورية <span class="hint">حسب موقع الوكيل الرسمي</span></div>
     <div id="maintSchedule"></div>
@@ -446,133 +463,158 @@
   </div>
 
   <div class="content" id="tab-settings" style="display:none;">
-    <div class="set-card">
-      <h3>🔒 الحماية</h3>
-      <div class="toggle-row" style="border-bottom:none;">
-        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">قفل بالبصمة قبل كل دخول</span>
-        <label class="switch"><input type="checkbox" id="biometricLockEnabled"><span class="slider"></span></label>
-      </div>
-      <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;">لو مفعّلة، هتحتاج بصمتك أو رمز قفل شاشة موبايلك كل ما تفتح التطبيق أو ترجعله من الخلفية. محتاج جهازك يكون فيه بصمة/وجه/قفل شاشة متفعّل الأول.</p>
-    </div>
+    <div class="acc-group">
+      <button class="acc-header" data-acc="money">💰 المال والحسابات <span class="chev">▾</span></button>
+      <div class="acc-body" id="acc-money">
+        <div class="set-card">
+          <h3>💵 الدخل والطوارئ</h3>
+          <div class="field"><label>المرتب الشهري</label><input type="number" id="inSalary"></div>
+          <div class="field"><label>رصيد كاش الطوارئ الحالي</label><input type="number" id="inEmergBal"></div>
+          <div class="field"><label>هدف كاش الطوارئ</label><input type="number" id="inEmergGoal"></div>
+        </div>
 
-    <div class="set-card">
-      <h3>💵 الدخل والطوارئ</h3>
-      <div class="field"><label>المرتب الشهري</label><input type="number" id="inSalary"></div>
-      <div class="field"><label>رصيد كاش الطوارئ الحالي</label><input type="number" id="inEmergBal"></div>
-      <div class="field"><label>هدف كاش الطوارئ</label><input type="number" id="inEmergGoal"></div>
-    </div>
+        <div class="set-card">
+          <h3>💳 مصادر الصرف</h3>
+          <div id="sourcesEdit"></div>
+          <div class="field" style="display:flex; gap:8px; margin-top:10px;">
+            <input type="text" id="newSourceInput" placeholder="مصدر جديد (مثال: انستاباي)" style="flex:1;">
+            <button class="btn btn-ghost" id="addSourceBtn" style="width:auto; padding:10px 16px;">+ إضافة</button>
+          </div>
+        </div>
 
-    <div class="set-card">
-      <h3>💳 مصادر الصرف</h3>
-      <div id="sourcesEdit"></div>
-      <div class="field" style="display:flex; gap:8px; margin-top:10px;">
-        <input type="text" id="newSourceInput" placeholder="مصدر جديد (مثال: انستاباي)" style="flex:1;">
-        <button class="btn btn-ghost" id="addSourceBtn" style="width:auto; padding:10px 16px;">+ إضافة</button>
-      </div>
-    </div>
-
-    <div class="set-card">
-      <h3>📜 حركات الحسابات</h3>
-      <div class="filter-scroll" id="accountMoveSortChips"></div>
-      <div id="accountMovesList"></div>
-    </div>
-
-    <div class="set-card">
-      <h3>🏷️ فئات المصاريف</h3>
-      <div id="catsEdit"></div>
-      <div class="field" style="display:flex; gap:8px; margin-top:10px;">
-        <input type="text" id="newCatEmojiInput" placeholder="🏷️" maxlength="4" style="width:56px; text-align:center; flex:none;">
-        <input type="text" id="newCatNameInput" placeholder="فئة جديدة (مثال: هدايا)" style="flex:1;">
-        <button class="btn btn-ghost" id="addCatBtn" style="width:auto; padding:10px 16px;">+ إضافة</button>
-      </div>
-    </div>
-
-    <div class="set-card">
-      <h3>🎯 حدود شهرية للفئات (اختياري)</h3>
-      <div id="capsEdit"></div>
-    </div>
-
-    <div class="set-card">
-      <h3>🚗 العربية</h3>
-      <div class="toggle-row">
-        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تتبع صيانة العربية (تبويب السيارة)</span>
-        <label class="switch"><input type="checkbox" id="inHasCar"><span class="slider"></span></label>
-      </div>
-    </div>
-
-    <div class="set-card">
-      <h3>🔔 التذكيرات</h3>
-      <div class="toggle-row">
-        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تذكير يومي بتسجيل المصاريف</span>
-        <label class="switch"><input type="checkbox" id="notifDailyEnabled"><span class="slider"></span></label>
-      </div>
-      <div class="field" id="notifDailyTimeField" style="margin-top:2px;">
-        <input type="time" id="notifDailyTime">
-      </div>
-      <div class="toggle-row">
-        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تذكير أسبوعي بعمل نسخة احتياطية (كل اتنين الساعة 10ص)</span>
-        <label class="switch"><input type="checkbox" id="notifWeeklyEnabled"><span class="slider"></span></label>
-      </div>
-      <div class="toggle-row">
-        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تنبيه لما أتجاوز حد فئة مصروف</span>
-        <label class="switch"><input type="checkbox" id="notifCapEnabled"><span class="slider"></span></label>
-      </div>
-      <div class="toggle-row" id="notifMaintRow">
-        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تنبيه قرب موعد صيانة العربية</span>
-        <label class="switch"><input type="checkbox" id="notifMaintEnabled"><span class="slider"></span></label>
-      </div>
-      <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;">بعض الأجهزة بتأخر التذكيرات المجدولة بسبب إعدادات توفير البطارية — لو التذكير مش بيوصل، جرّب تستثني التطبيق من توفير البطارية من إعدادات الأندرويد.</p>
-    </div>
-
-    <div class="set-card">
-      <h3>🏦 كشف مصاريف من رسائل البنك (تجريبي)</h3>
-      <div class="toggle-row">
-        <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تفعيل الكشف التلقائي</span>
-        <label class="switch"><input type="checkbox" id="smsAutoEnabled"><span class="slider"></span></label>
-      </div>
-      <div class="field" style="margin-top:10px;">
-        <label>البنوك المتابَعة (افصل بفاصلة)</label>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="bankSendersInput" placeholder="QNB,CIB" style="flex:1;">
-          <button class="btn btn-ghost" id="saveBankSendersBtn" style="width:auto; padding:10px 16px;">حفظ</button>
+        <div class="set-card">
+          <h3>📜 حركات الحسابات</h3>
+          <div class="filter-scroll" id="accountMoveSortChips"></div>
+          <div id="accountMovesList"></div>
         </div>
       </div>
-      <p style="font-size:11px; color:var(--ink-soft); margin:10px 0 0; line-height:1.7;">
-        بيراقب رسائل SMS اللي جايه من البنوك دي بس، وبيقترح مصروف — مفيش حاجة بتتسجل تلقائيًا،
-        دايمًا بتراجع وتأكد (أو تتجاهل) من الكارت اللي بيظهر فوق أي تبويب. تحليل نص الرسالة أول
-        محاولة (مفيش عينات رسائل حقيقية من QNB/CIB اتجربت عليها)، فممكن يحتاج ضبط لو الصيغة مختلفة.
-      </p>
     </div>
 
-    <div class="set-card">
-      <h3>☁️ حساب جوجل (نسخة احتياطية سحابية)</h3>
-      <div id="googleAccountArea"></div>
-      <p style="font-size:11px; color:var(--ink-soft); margin-top:10px; line-height:1.7;">
-        بيرفع/يرجّع نفس ملف النسخة الاحتياطية (JSON) من مساحة خاصة بالتطبيق جوه Google Drive بتاعك —
-        مش هتشوفها في Drive العادي، ومحدش غير التطبيق نفسه يقدر يوصلها. محتاجة إعداد لمرة واحدة على
-        Google Cloud Console الأول (التفاصيل في README).
-      </p>
-    </div>
+    <div class="acc-group">
+      <button class="acc-header" data-acc="cats">🏷️ الفئات والحدود <span class="chev">▾</span></button>
+      <div class="acc-body" id="acc-cats" hidden>
+        <div class="set-card">
+          <h3>🏷️ فئات المصاريف</h3>
+          <div id="catsEdit"></div>
+          <div class="field" style="display:flex; gap:8px; margin-top:10px;">
+            <input type="text" id="newCatEmojiInput" placeholder="🏷️" maxlength="4" style="width:56px; text-align:center; flex:none;">
+            <input type="text" id="newCatNameInput" placeholder="فئة جديدة (مثال: هدايا)" style="flex:1;">
+            <button class="btn btn-ghost" id="addCatBtn" style="width:auto; padding:10px 16px;">+ إضافة</button>
+          </div>
+        </div>
 
-    <div class="set-card">
-      <h3>💾 نسخة احتياطية (لنقل بياناتك بين المتصفحات)</h3>
-      <div class="field" style="margin-bottom:8px;">
-        <label style="margin-bottom:8px;">البيانات محفوظة داخل المتصفح اللي بتفتح بيه الملف بس. لو فتحته من متصفح تاني، صدّر نسخة من هنا واستوردها هناك.</label>
+        <div class="set-card">
+          <h3>🎯 حدود شهرية للفئات (اختياري)</h3>
+          <div id="capsEdit"></div>
+        </div>
       </div>
-      <button class="btn btn-primary" id="exportBackup" style="margin-bottom:8px;">⬆️ تصدير نسخة احتياطية</button>
-      <input type="file" id="importFile" accept=".json" style="display:none;">
-      <button class="btn btn-ghost" id="importBackup">⬇️ استيراد نسخة احتياطية</button>
     </div>
 
-    <div class="set-card">
-      <h3>📊 تقرير إكسيل — <span id="exportExcelMonthLbl">الشهر الحالي</span></h3>
-      <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;">
-        كل التفاصيل الخاصة بالشهر المختار فوق (مصاريف، التزامات، توزيعات، صيانة،
-        حركات حسابات) في ملف واحد، كل قايمة في شيت لوحدها ومجموع تحتها. أرصدة
-        الحسابات نفسها بتفضل إجمالية (من أول ما بدأت التطبيق)، مش خاصة بشهر واحد،
-        لإنها رصيد لحظي مش حركة شهر.
-      </p>
-      <button class="btn btn-primary" id="exportExcel">تصدير تقرير الشهر (مصاريف + التزامات + توزيعات + حسابات)</button>
+    <div class="acc-group">
+      <button class="acc-header" data-acc="notif">🔔 الإشعارات والأتمتة <span class="chev">▾</span></button>
+      <div class="acc-body" id="acc-notif" hidden>
+        <div class="set-card">
+          <h3>🔔 التذكيرات</h3>
+          <div class="toggle-row">
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تذكير يومي بتسجيل المصاريف</span>
+            <label class="switch"><input type="checkbox" id="notifDailyEnabled"><span class="slider"></span></label>
+          </div>
+          <div class="field" id="notifDailyTimeField" style="margin-top:2px;">
+            <input type="time" id="notifDailyTime">
+          </div>
+          <div class="toggle-row">
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تذكير أسبوعي بعمل نسخة احتياطية (كل اتنين الساعة 10ص)</span>
+            <label class="switch"><input type="checkbox" id="notifWeeklyEnabled"><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تنبيه لما أتجاوز حد فئة مصروف</span>
+            <label class="switch"><input type="checkbox" id="notifCapEnabled"><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row" id="notifMaintRow">
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تنبيه قرب موعد صيانة العربية</span>
+            <label class="switch"><input type="checkbox" id="notifMaintEnabled"><span class="slider"></span></label>
+          </div>
+          <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;">بعض الأجهزة بتأخر التذكيرات المجدولة بسبب إعدادات توفير البطارية — لو التذكير مش بيوصل، جرّب تستثني التطبيق من توفير البطارية من إعدادات الأندرويد.</p>
+        </div>
+
+        <div class="set-card">
+          <h3>🏦 كشف مصاريف من رسائل البنك (تجريبي)</h3>
+          <div class="toggle-row">
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تفعيل الكشف التلقائي</span>
+            <label class="switch"><input type="checkbox" id="smsAutoEnabled"><span class="slider"></span></label>
+          </div>
+          <div class="field" style="margin-top:10px;">
+            <label>البنوك المتابَعة (افصل بفاصلة)</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="bankSendersInput" placeholder="QNB,CIB" style="flex:1;">
+              <button class="btn btn-ghost" id="saveBankSendersBtn" style="width:auto; padding:10px 16px;">حفظ</button>
+            </div>
+          </div>
+          <p style="font-size:11px; color:var(--ink-soft); margin:10px 0 0; line-height:1.7;">
+            بيراقب رسائل SMS اللي جايه من البنوك دي بس، وبيقترح مصروف — مفيش حاجة بتتسجل تلقائيًا،
+            دايمًا بتراجع وتأكد (أو تتجاهل) من الكارت اللي بيظهر فوق أي تبويب. تحليل نص الرسالة أول
+            محاولة (مفيش عينات رسائل حقيقية من QNB/CIB اتجربت عليها)، فممكن يحتاج ضبط لو الصيغة مختلفة.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="acc-group">
+      <button class="acc-header" data-acc="backup">☁️ البيانات والنسخ الاحتياطي <span class="chev">▾</span></button>
+      <div class="acc-body" id="acc-backup" hidden>
+        <div class="set-card">
+          <h3>☁️ حساب جوجل (نسخة احتياطية سحابية)</h3>
+          <div id="googleAccountArea"></div>
+          <p style="font-size:11px; color:var(--ink-soft); margin-top:10px; line-height:1.7;">
+            بيرفع/يرجّع نفس ملف النسخة الاحتياطية (JSON) من مساحة خاصة بالتطبيق جوه Google Drive بتاعك —
+            مش هتشوفها في Drive العادي، ومحدش غير التطبيق نفسه يقدر يوصلها. محتاجة إعداد لمرة واحدة على
+            Google Cloud Console الأول (التفاصيل في README).
+          </p>
+        </div>
+
+        <div class="set-card">
+          <h3>💾 نسخة احتياطية (لنقل بياناتك بين المتصفحات)</h3>
+          <div class="field" style="margin-bottom:8px;">
+            <label style="margin-bottom:8px;">البيانات محفوظة داخل المتصفح اللي بتفتح بيه الملف بس. لو فتحته من متصفح تاني، صدّر نسخة من هنا واستوردها هناك.</label>
+          </div>
+          <button class="btn btn-primary" id="exportBackup" style="margin-bottom:8px;">⬆️ تصدير نسخة احتياطية</button>
+          <input type="file" id="importFile" accept=".json" style="display:none;">
+          <button class="btn btn-ghost" id="importBackup">⬇️ استيراد نسخة احتياطية</button>
+        </div>
+
+        <div class="set-card">
+          <h3>📊 تقرير إكسيل — <span id="exportExcelMonthLbl">الشهر الحالي</span></h3>
+          <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;">
+            كل التفاصيل الخاصة بالشهر المختار فوق (مصاريف، التزامات، توزيعات، صيانة،
+            حركات حسابات) في ملف واحد، كل قايمة في شيت لوحدها ومجموع تحتها. أرصدة
+            الحسابات نفسها بتفضل إجمالية (من أول ما بدأت التطبيق)، مش خاصة بشهر واحد،
+            لإنها رصيد لحظي مش حركة شهر.
+          </p>
+          <button class="btn btn-primary" id="exportExcel">تصدير تقرير الشهر (مصاريف + التزامات + توزيعات + حسابات)</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="acc-group">
+      <button class="acc-header" data-acc="general">🔧 عام <span class="chev">▾</span></button>
+      <div class="acc-body" id="acc-general" hidden>
+        <div class="set-card">
+          <h3>🔒 الحماية</h3>
+          <div class="toggle-row" style="border-bottom:none;">
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">قفل بالبصمة قبل كل دخول</span>
+            <label class="switch"><input type="checkbox" id="biometricLockEnabled"><span class="slider"></span></label>
+          </div>
+          <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;">لو مفعّلة، هتحتاج بصمتك أو رمز قفل شاشة موبايلك كل ما تفتح التطبيق أو ترجعله من الخلفية. محتاج جهازك يكون فيه بصمة/وجه/قفل شاشة متفعّل الأول.</p>
+        </div>
+
+        <div class="set-card">
+          <h3>🚗 العربية</h3>
+          <div class="toggle-row">
+            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);">تتبع صيانة العربية (تبويب السيارة)</span>
+            <label class="switch"><input type="checkbox" id="inHasCar"><span class="slider"></span></label>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="set-card">
@@ -2123,6 +2165,18 @@ const SWIPE_TAB_ORDER = ["home","expenses","allocations","obligations","maintena
     document.querySelector(`.tabbtn[data-tab="${visibleTabs[nextIdx]}"]`).click();
   }, {passive:true});
 })();
+
+// ---------- collapsible section groups (settings/allocations reorg) ----------
+// Pure UI chrome, independent of app state/render() on purpose: the headers and bodies are
+// static HTML that never gets rebuilt, so wiring them up once here (instead of re-binding on
+// every render() like the rest of the app does) is both simpler and avoids any risk of a toggle
+// getting silently reset by an unrelated state change elsewhere.
+document.querySelectorAll(".acc-header").forEach(h=>{
+  const body = document.getElementById("acc-"+h.dataset.acc);
+  if(!body) return;
+  h.classList.toggle("open", !body.hidden);
+  h.onclick = ()=>{ body.hidden = !body.hidden; h.classList.toggle("open", !body.hidden); };
+});
 
 document.getElementById("inSalary").onchange = async (e)=>{ state.settings.salary = Number(e.target.value)||0; await saveSettings(); render(); };
 document.getElementById("inEmergBal").onchange = async (e)=>{ state.settings.emergBal = Number(e.target.value)||0; await saveSettings(); render(); };
