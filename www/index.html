@@ -408,6 +408,7 @@
       </p>
       <div class="filter-scroll" id="itemsSortChips"></div>
       <div id="itemsEdit"></div>
+      <div id="itemsPausedWrap" style="margin-top:10px;"></div>
       <button class="btn btn-ghost" id="addItemBtn" style="margin-top:10px;">+ إضافة بند جديد</button>
     </div>
   </div>
@@ -874,7 +875,7 @@ function renderSortChips(containerId, options, current, onChange){
 
 // ---------- collapsible long lists (expenses / allocations / obligations / maintenance / account moves) ----------
 const LIST_COLLAPSE_THRESHOLD = 8;
-let listExpanded = { expenses:false, allocations:false, items:false, maintenance:false, accountMoves:false };
+let listExpanded = { expenses:false, allocations:false, items:false, itemsPaused:false, maintenance:false, accountMoves:false };
 // returns the slice to actually render; call appendCollapseToggle() after inserting that HTML
 function collapseSlice(list, key){
   if(listExpanded[key] || list.length <= LIST_COLLAPSE_THRESHOLD) return list;
@@ -1568,7 +1569,7 @@ function renderSettings(){
   // value, so "highest/lowest amount" matches what's actually shown below
   const itemsWithEffAmount = state.items.map(it=>({...it, _effAmount: itemAmountForMonth(it, curMonthKey)}));
   const sortedItems = sortList(itemsWithEffAmount, itemsSortBy, null, "_effAmount");
-  el.innerHTML = collapseSlice(sortedItems, "items").map(it=>{
+  function itemRowHtml(it){
     const amtOverridden = it.amountOverrides && it.amountOverrides[curMonthKey]!==undefined;
     const activeOverridden = it.activeOverrides && it.activeOverrides[curMonthKey]!==undefined;
     const notes = [];
@@ -1584,8 +1585,29 @@ function renderSettings(){
       <button class="del-x itmToggleGlobal" title="${it.active?"إيقاف":"تشغيل"} البند في كل الشهور" style="color:${it.active?"var(--sage)":"var(--ink-soft)"};">${it.active?"⏸️":"▶️"}</button>
       <button class="del-x itmDeleteMonth" title="شيل من شهر ${monthLabelOf(curMonthKey)} بس">✕</button>
     </div>`;
-  }).join("");
-  el.querySelectorAll(".item-row-edit").forEach(row=>{
+  }
+  // Split by *this month's* active state — an item paused for the month being viewed (via the
+  // switch, or ✕) now actually leaves the main list instead of just sitting there with a toggle
+  // flipped, which read as "nothing happened" (reported: "بيجيبلي رسالة إنه اتشال بس لسه ظاهر").
+  const visibleItems = sortedItems.filter(it=>itemActiveForMonth(it, curMonthKey));
+  const pausedItems = sortedItems.filter(it=>!itemActiveForMonth(it, curMonthKey));
+  el.innerHTML = collapseSlice(visibleItems, "items").map(itemRowHtml).join("");
+  appendCollapseToggle(el, "items", visibleItems.length, render);
+
+  const pausedWrap = document.getElementById("itemsPausedWrap");
+  if(pausedItems.length === 0){
+    pausedWrap.innerHTML = "";
+  } else if(!listExpanded["itemsPaused"]){
+    pausedWrap.innerHTML = `<button class="btn btn-ghost" id="showPausedItemsBtn">⏸️ بنود موقوفة لشهر ${monthLabelOf(curMonthKey)} (${pausedItems.length})</button>`;
+    document.getElementById("showPausedItemsBtn").onclick = ()=>{ listExpanded["itemsPaused"] = true; render(); };
+  } else {
+    pausedWrap.innerHTML =
+      `<button class="btn btn-ghost" id="hidePausedItemsBtn" style="margin-bottom:8px;">▲ اطوِ البنود الموقوفة</button>` +
+      pausedItems.map(itemRowHtml).join("");
+    document.getElementById("hidePausedItemsBtn").onclick = ()=>{ listExpanded["itemsPaused"] = false; render(); };
+  }
+
+  document.querySelectorAll("#itemsEdit .item-row-edit, #itemsPausedWrap .item-row-edit").forEach(row=>{
     const id = row.dataset.id;
     row.querySelector(".itmToggle").onchange = async (e)=>{
       const item = state.items.find(x=>x.id===id);
@@ -1658,7 +1680,6 @@ function renderSettings(){
       showToast("اتمسح \""+item.name+"\" نهائي");
     };
   });
-  appendCollapseToggle(el, "items", sortedItems.length, render);
 }
 
 // "عربية" category cap is the SAME field used in Settings > حدود شهرية للفئات and the cap-alert
