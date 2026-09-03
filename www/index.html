@@ -742,6 +742,47 @@
   </div>
 </div>
 
+<div class="modal-bg" id="itemModalBg">
+  <div class="modal">
+    <button class="close-x" id="closeItemModal">✕</button>
+    <h2 id="itemModalTitle">بند التزام جديد</h2>
+    <div class="field">
+      <label>النوع</label>
+      <div class="chip-row" id="itemCatChips"></div>
+    </div>
+    <div class="field">
+      <label>الاسم</label>
+      <input type="text" id="itName" placeholder="مثال: قسط العربية">
+    </div>
+    <div class="field">
+      <label id="itAmountLabel">القيمة الشهرية (ج)</label>
+      <input type="number" id="itAmount" placeholder="مثال: 1500">
+    </div>
+    <div class="field">
+      <label>هيبدأ شهر إيه؟</label>
+      <input type="month" id="itStartMonth">
+    </div>
+    <div class="field">
+      <label>هينتهي شهر إيه؟ (سيبه فاضي لو مالوش نهاية معروفة)</label>
+      <input type="month" id="itEndMonth">
+    </div>
+    <div id="itGam3iyaFields">
+      <div class="field">
+        <label>هتتقبض كام؟ (إجمالي مبلغ القبضة كاملة)</label>
+        <input type="number" id="itPayoutAmount" placeholder="مثال: 18000">
+      </div>
+      <div class="field">
+        <label>دورك في القبض إمتى؟ (الشهر اللي هتاخد فيه القبضة)</label>
+        <input type="month" id="itPayoutMonth">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelItemAdd">إلغاء</button>
+      <button class="btn btn-primary" id="saveItemAdd">حفظ</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div class="lock-overlay" id="lockOverlay">
@@ -1345,18 +1386,28 @@ function itemAmountForMonth(it, monthKeyStr){
   if(it.amountOverrides && it.amountOverrides[monthKeyStr]!==undefined) return Number(it.amountOverrides[monthKeyStr]);
   return Number(it.amount||0);
 }
+// An item with a start/end month only exists inside that window (e.g. a 24-month car
+// installment, or a gam3iya you joined mid-year) — outside it, it's as if the item isn't there
+// yet / anymore, same as it having no start/end at all.
+function itemInRangeForMonth(it, monthKeyStr){
+  if(it.startMonth && monthKeyStr < it.startMonth) return false;
+  if(it.endMonth && monthKeyStr > it.endMonth) return false;
+  return true;
+}
 // Same idea as itemAmountForMonth, for the on/off switch: toggling an item while viewing a given
 // month only ever flips that month's override, so pausing it for one month (e.g. an installment
 // that was skipped, or a gam3iya share that wasn't due) doesn't turn it off everywhere else too.
+// A per-month override always wins — even one that forces an item on outside its normal
+// start/end window, for the rare case an installment gets extended by a month ad hoc.
 function itemActiveForMonth(it, monthKeyStr){
   if(it.activeOverrides && it.activeOverrides[monthKeyStr]!==undefined) return it.activeOverrides[monthKeyStr];
+  if(!itemInRangeForMonth(it, monthKeyStr)) return false;
   return !!it.active;
 }
 function computeMonth(monthKeyStr){
   const active = state.items.filter(it=>itemActiveForMonth(it, monthKeyStr));
   const byCat = {"قسط":0,"ثابت":0,"جمعية":0};
   active.forEach(it=>{
-    if(it.endMonth && monthKeyStr > it.endMonth) return;
     byCat[it.cat] = (byCat[it.cat]||0) + itemAmountForMonth(it, monthKeyStr);
   });
   const obligations = byCat["قسط"]+byCat["ثابت"]+byCat["جمعية"];
@@ -1691,14 +1742,17 @@ function renderSettings(){
     const amtOverridden = it.amountOverrides && it.amountOverrides[curMonthKey]!==undefined;
     const activeOverridden = it.activeOverrides && it.activeOverrides[curMonthKey]!==undefined;
     const notes = [];
+    notes.push(`<span class="itmEditDetails" style="text-decoration:underline; cursor:pointer;">✏️ تعديل التفاصيل (النوع/الشهور${it.cat==="جمعية"?"/القبض":""})</span>`);
     if(amtOverridden) notes.push(`✏️ مبلغ ${monthLabelOf(curMonthKey)} بس <span class="itmResetAmountOverride" style="text-decoration:underline; cursor:pointer;">(رجّع للافتراضي: ${fmt(it.amount)})</span>`);
     if(activeOverridden) notes.push(`✏️ ${itemActiveForMonth(it,curMonthKey)?"مفعّل":"موقوف"} لشهر ${monthLabelOf(curMonthKey)} بس <span class="itmResetActiveOverride" style="text-decoration:underline; cursor:pointer;">(رجّع للافتراضي: ${it.active?"مفعّل":"موقوف"})</span>`);
     notes.push(`<span class="itmDeleteForever" style="text-decoration:underline; cursor:pointer; color:var(--brick);">🗑️ حذف نهائي من كل الشهور</span>`);
+    const rangeNote = (it.startMonth ? " · من "+monthLabelOf(it.startMonth) : "") + (it.endMonth ? " · لحد "+monthLabelOf(it.endMonth) : "");
+    const payoutNote = (it.cat==="جمعية" && it.payoutMonth) ? ` · هتقبض ${fmt(it.payoutAmount||0)} في ${monthLabelOf(it.payoutMonth)}` : "";
     return `
     <div class="item-row-edit" data-id="${it.id}">
       <label class="switch"><input type="checkbox" class="itmToggle" ${itemActiveForMonth(it,curMonthKey)?"checked":""}><span class="slider"></span></label>
       <div class="ii"><div class="n"><input class="itmName" value="${it.name}"></div>
-        <div class="m">${it.cat}${it.endMonth ? " · لحد "+monthLabelOf(it.endMonth) : ""}${notes.map(n=>" · "+n).join("")}</div></div>
+        <div class="m">${it.cat}${rangeNote}${payoutNote}${notes.map(n=>" · "+n).join("")}</div></div>
       <input type="number" class="amt-in itmAmount" value="${itemAmountForMonth(it, curMonthKey)}">
       <button class="del-x itmToggleGlobal" title="${it.active?"إيقاف":"تشغيل"} البند في كل الشهور" style="color:${it.active?"var(--sage)":"var(--ink-soft)"};">${it.active?"⏸️":"▶️"}</button>
       <button class="del-x itmDeleteMonth" title="شيل من شهر ${monthLabelOf(curMonthKey)} بس">✕</button>
@@ -1751,6 +1805,10 @@ function renderSettings(){
         item.amountOverrides[curMonthKey] = val;
       }
       await saveItems(); render();
+    };
+    row.querySelector(".itmEditDetails").onclick = (ev)=>{
+      ev.stopPropagation();
+      openItemModal(state.items.find(x=>x.id===id));
     };
     const resetAmountLink = row.querySelector(".itmResetAmountOverride");
     if(resetAmountLink) resetAmountLink.onclick = async (ev)=>{
@@ -2151,12 +2209,80 @@ document.getElementById("addCatBtn").onclick = async ()=>{
   showToast("اتضافت فئة "+added.i+" "+added.k+" ✅");
 };
 
-async function addNewObligationItem(){
-  state.items.push({id:"c"+Date.now(), name:"بند جديد", amount:0, cat:"ثابت", endMonth:null, active:true, amountOverrides:{}, activeOverrides:{}});
-  await saveItems(); render();
-  showToast("اتضاف بند جديد — عدّل اسمه وقيمته تحت");
-}
+function addNewObligationItem(){ openItemModal(null); }
 document.getElementById("addItemBtn").onclick = addNewObligationItem;
+
+// ---------- add/edit obligation item modal (قسط/ثابت/جمعية) ----------
+// One modal covers both "new item" and "edit item": قسط/ثابت just need a name, monthly amount,
+// and an optional start/end month (so a 24-month car installment or a bill that ended stops
+// counting on its own instead of needing a manual pause every month). جمعية additionally needs
+// the payout amount + which month your turn to collect falls in — computeMonth() already reads
+// payoutAmount/payoutMonth as one-off extra income, this modal is just the first UI to set them.
+const itemModalBg = document.getElementById("itemModalBg");
+const ITEM_CATS = [{k:"قسط", i:"💳"}, {k:"ثابت", i:"🏠"}, {k:"جمعية", i:"🤝"}];
+let selectedItemCat = "قسط";
+let editingItemId = null;
+function updateItemModalFieldsForCat(cat){
+  document.getElementById("itAmountLabel").textContent = cat==="جمعية" ? "قيمتك الشهرية في الجمعية (ج)" : "القيمة الشهرية (ج)";
+  document.getElementById("itGam3iyaFields").style.display = cat==="جمعية" ? "" : "none";
+}
+function openItemModal(existingItem){
+  editingItemId = existingItem ? existingItem.id : null;
+  document.getElementById("itemModalTitle").textContent = existingItem ? "تعديل بند الالتزام" : "بند التزام جديد";
+  selectedItemCat = existingItem ? existingItem.cat : "قسط";
+  document.getElementById("itName").value = existingItem ? existingItem.name : "";
+  document.getElementById("itAmount").value = existingItem ? existingItem.amount : "";
+  // New items default to starting this month — so they don't retroactively show up in past
+  // months you're not viewing; existing items keep whatever they already have (or blank, meaning
+  // "always existed"/"no known end", same as before this feature).
+  document.getElementById("itStartMonth").value = existingItem ? (existingItem.startMonth || "") : curMonthKey;
+  document.getElementById("itEndMonth").value = existingItem ? (existingItem.endMonth || "") : "";
+  document.getElementById("itPayoutAmount").value = existingItem ? (existingItem.payoutAmount || "") : "";
+  document.getElementById("itPayoutMonth").value = existingItem ? (existingItem.payoutMonth || "") : "";
+  document.getElementById("itemCatChips").innerHTML = ITEM_CATS.map(c=>
+    `<button class="chip ${c.k===selectedItemCat?'sel':''}" data-cat="${c.k}">${c.i} ${c.k}</button>`).join("");
+  document.querySelectorAll("#itemCatChips .chip").forEach(ch=>{
+    ch.onclick = ()=>{
+      selectedItemCat = ch.dataset.cat;
+      document.querySelectorAll("#itemCatChips .chip").forEach(c=>c.classList.toggle("sel", c===ch));
+      updateItemModalFieldsForCat(selectedItemCat);
+    };
+  });
+  updateItemModalFieldsForCat(selectedItemCat);
+  itemModalBg.classList.add("show");
+}
+document.getElementById("closeItemModal").onclick = ()=>itemModalBg.classList.remove("show");
+document.getElementById("cancelItemAdd").onclick = ()=>itemModalBg.classList.remove("show");
+document.getElementById("saveItemAdd").onclick = async ()=>{
+  const name = document.getElementById("itName").value.trim();
+  if(!name){ showToast("اكتب اسم البند"); return; }
+  const amount = Number(document.getElementById("itAmount").value)||0;
+  if(amount<=0){ showToast("اكتب قيمة شهرية صحيحة"); return; }
+  const startMonth = document.getElementById("itStartMonth").value || null;
+  const endMonth = document.getElementById("itEndMonth").value || null;
+  if(startMonth && endMonth && endMonth < startMonth){ showToast("شهر النهاية لازم يكون بعد شهر البداية"); return; }
+  let payoutAmount = null, payoutMonth = null;
+  if(selectedItemCat === "جمعية"){
+    payoutAmount = Number(document.getElementById("itPayoutAmount").value)||0;
+    payoutMonth = document.getElementById("itPayoutMonth").value || null;
+  }
+  if(editingItemId){
+    const item = state.items.find(x=>x.id===editingItemId);
+    item.name = name; item.amount = amount; item.cat = selectedItemCat;
+    item.startMonth = startMonth; item.endMonth = endMonth;
+    item.payoutAmount = payoutAmount; item.payoutMonth = payoutMonth;
+  } else {
+    state.items.push({
+      id:"c"+Date.now(), name, amount, cat:selectedItemCat,
+      startMonth, endMonth, payoutAmount, payoutMonth,
+      active:true, amountOverrides:{}, activeOverrides:{}
+    });
+  }
+  await saveItems();
+  itemModalBg.classList.remove("show");
+  render();
+  showToast(editingItemId ? "اتحفظت التعديلات ✅" : "اتضاف بند جديد ✅");
+};
 
 document.getElementById("inOdometer").onchange = async (e)=>{
   state.car.odometer = Number(e.target.value)||0;
@@ -2679,6 +2805,7 @@ document.getElementById("exportExcel").onclick = async ()=>{
   const itemRows = [];
   state.items.forEach(it=>{
     if(it.endMonth && mk > it.endMonth) return;
+    if(it.startMonth && mk < it.startMonth) return;
     const amtOverridden = it.amountOverrides && it.amountOverrides[mk]!==undefined;
     const activeOverridden = it.activeOverrides && it.activeOverrides[mk]!==undefined;
     itemRows.push({
@@ -2783,7 +2910,7 @@ function setupNativeApp(){
   App.addListener("backButton", ()=>{
     if(isLocked()){ App.exitApp(); return; }
     if(document.getElementById("onboardOverlay").classList.contains("show")){ document.getElementById("obSkip").click(); return; }
-    const openModal = [modalBg, allocModalBg, flexModalBg, maintModalBg, accountModalBg].find(m=>m.classList.contains("show"));
+    const openModal = [modalBg, allocModalBg, flexModalBg, maintModalBg, accountModalBg, itemModalBg].find(m=>m.classList.contains("show"));
     if(openModal){ openModal.classList.remove("show"); return; }
     if(activeTab !== "home"){ document.querySelector('.tabbtn[data-tab="home"]').click(); return; }
     App.exitApp();
