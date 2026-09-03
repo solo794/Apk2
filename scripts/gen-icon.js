@@ -1,12 +1,18 @@
 // Pure-Node PNG generator for the app icon — no native deps (sharp/canvas) required.
-// Draws a rounded dark-teal square with a centered gold wallet (matches the app's brand colors).
+// Draws a rounded dark-teal square with a centered gold money bag (matches the app's brand
+// colors, and the 💰 money-bag emoji already used for the favicon/app tagline elsewhere).
 const fs = require("fs");
 const path = require("path");
 const zlib = require("zlib");
 
-const INK = [0x16, 0x30, 0x2e];   // #16302E
-const GOLD = [0xb8, 0x86, 0x3b];  // #B8863B
+const INK = [0x16, 0x30, 0x2e];      // #16302E — app background/brand ink
+const GOLD = [0xb8, 0x86, 0x3b];     // #B8863B — kept for anything else that imports it
 const GOLD_SOFT = [0xe4, 0xc8, 0x88]; // #E4C888
+// Money-bag palette — closer to the classic 💰 emoji look (bright yellow pouch, brown tie/$)
+// than the app's own muted brand gold, since that's specifically the reference being matched.
+const BAG_YELLOW = [0xf2, 0xb3, 0x42];      // #F2B342 — main pouch fill
+const BAG_YELLOW_SHADE = [0xd6, 0x93, 0x2c]; // #D6932C — shaded side of the pouch
+const BAG_BROWN = [0x5a, 0x38, 0x1e];        // #5A381E — tie, bow, and $ mark
 
 function crc32(buf) {
   let c, crc = 0xffffffff;
@@ -51,6 +57,12 @@ function makePng(size, draw) {
 
 function dist(x, y, cx, cy) { return Math.hypot(x - cx, y - cy); }
 
+// Point-in-ellipse test.
+function inEllipse(x, y, cx, cy, rx, ry) {
+  const dx = (x - cx) / rx, dy = (y - cy) / ry;
+  return dx * dx + dy * dy <= 1;
+}
+
 // Point-in-rounded-rect test (rect given by top-left + size, uniform corner radius).
 function inRoundedRect(x, y, left, top, w, h, radius) {
   if (x < left || x > left + w || y < top || y > top + h) return false;
@@ -62,42 +74,55 @@ function inRoundedRect(x, y, left, top, w, h, radius) {
   return true;
 }
 
-// Wallet pictogram: a billfold body with a card peeking out above it and a round clasp/button
-// on its side — the standard flat-icon "wallet" silhouette (distinct from a plain card, which
-// is just a rectangle). `scale` shrinks the whole motif around the canvas center — used to keep
-// it inside the adaptive-icon safe zone for the foreground layer.
-function drawWallet(x, y, w, h, scale) {
+// Money-bag pictogram matching the classic "💰" emoji look directly: a round yellow pouch, a
+// small brown bow tied at the top, and a brown "$" on the front — rather than the app's own
+// muted brand gold, since that emoji reference is specifically what's being matched here.
+// `scale` shrinks the whole motif around the canvas center — used to keep it inside the
+// adaptive-icon safe zone for the foreground layer.
+function drawMoneyBag(x, y, w, h, scale) {
   const cx = w / 2, cy = h / 2;
 
-  // main billfold body
-  const bw = w * 0.60 * scale, bh = h * 0.38 * scale;
-  const bLeft = cx - bw / 2, bTop = cy - bh / 2 + h * 0.05 * scale;
-  const bRadius = bh * 0.20;
+  // main pouch — a near-circle sitting slightly below center
+  const bagCx = cx, bagCy = cy + h * 0.05 * scale;
+  const bagR = w * 0.335 * scale;
 
-  // a card peeking out the top, offset toward the right, mostly hidden behind the body
-  const cw = w * 0.30 * scale, ch = h * 0.24 * scale;
-  const cLeft = cx - cw * 0.10, cTop = bTop - ch * 0.55;
-  const cRadius = ch * 0.16;
-
-  // clasp/button on the body's right side
-  const claspR = bh * 0.18;
-  const claspCx = bLeft + bw * 0.84, claspCy = bTop + bh * 0.55;
-
-  if (inRoundedRect(x, y, bLeft, bTop, bw, bh, bRadius)) {
-    const d = dist(x, y, claspCx, claspCy);
-    if (d < claspR) return [...INK, 255];
-    if (d < claspR * 1.45) return [...GOLD_SOFT, 255];
-    // thin fold crease near the top of the body
-    if (Math.abs(y - (bTop + bh * 0.24)) < h * 0.010 * scale) return [...INK, 255];
-    return [...GOLD_SOFT, 255];
+  const inBag = inEllipse(x, y, bagCx, bagCy, bagR, bagR * 0.95);
+  if (!inBag) {
+    // bow: a small knot plus two floppy tie-ends, sitting just above the pouch
+    const knotCx = cx, knotCy = bagCy - bagR * 0.98, knotR = w * 0.05 * scale;
+    if (dist(x, y, knotCx, knotCy) < knotR) return [...BAG_BROWN, 255];
+    const tieRx = w * 0.065 * scale, tieRy = h * 0.045 * scale;
+    const tieCy = bagCy - bagR * 0.88;
+    if (inEllipse(x, y, cx - w * 0.10 * scale, tieCy, tieRx, tieRy)) return [...BAG_BROWN, 255];
+    if (inEllipse(x, y, cx + w * 0.10 * scale, tieCy, tieRx, tieRy)) return [...BAG_BROWN, 255];
+    return null;
   }
-  if (inRoundedRect(x, y, cLeft, cTop, cw, ch, cRadius)) {
-    return [...GOLD, 255]; // the peeking card, darker gold for contrast against the body
-  }
-  return null; // outside the wallet shape
+
+  // gather line near the top of the pouch, where the fabric is cinched shut under the bow —
+  // naturally follows the circle's own curve since it's only drawn where already inside inBag.
+  const gatherY = bagCy - bagR * 0.62;
+  if (Math.abs(y - gatherY) < h * 0.024 * scale) return [...BAG_BROWN, 255];
+
+  // "$" mark on the front: a vertical bar through two opposite-opening rings (an S built from
+  // two C-shapes) — the top ring opens right, the bottom ring opens left.
+  const dollarR = bagR * 0.30, dollarRingW = w * 0.045 * scale;
+  const armY = bagR * 0.22;
+  const topCy = bagCy - armY, botCy = bagCy + armY;
+  const dTop = dist(x, y, cx, topCy), dBot = dist(x, y, cx, botCy);
+  const inTopRing = dTop < dollarR && dTop > dollarR - dollarRingW && x <= cx;
+  const inBotRing = dBot < dollarR && dBot > dollarR - dollarRingW && x >= cx;
+  const barTop = topCy - dollarR, barBottom = botCy + dollarR;
+  const inBar = Math.abs(x - cx) < w * 0.016 * scale && y > barTop && y < barBottom;
+  if (inTopRing || inBotRing || inBar) return [...BAG_BROWN, 255];
+
+  // shaded lower-right of the pouch for a touch of roundness/depth
+  const shadeCx = bagCx + bagR * 0.35, shadeCy = bagCy + bagR * 0.4;
+  if (inEllipse(x, y, shadeCx, shadeCy, bagR * 0.55, bagR * 0.5)) return [...BAG_YELLOW_SHADE, 255];
+
+  return [...BAG_YELLOW, 255];
 }
 
-// square icon with rounded corners, dark teal bg, gold wallet centered on top
+// square icon with rounded corners, dark teal bg, gold money bag centered on top
 function drawIcon(x, y, w, h) {
   const radius = w * 0.22; // corner radius
   const inCorner =
@@ -107,15 +132,15 @@ function drawIcon(x, y, w, h) {
     (x > w - radius && y > h - radius && dist(x, y, w - radius, h - radius) > radius);
   if (inCorner) return [0, 0, 0, 0];
 
-  const wallet = drawWallet(x, y, w, h, 1);
-  if (wallet) return wallet;
+  const bag = drawMoneyBag(x, y, w, h, 1);
+  if (bag) return bag;
   return [...INK, 255];
 }
 
-// adaptive-icon foreground: transparent bg, wallet only, slightly smaller (safe zone)
+// adaptive-icon foreground: transparent bg, money bag only, slightly smaller (safe zone)
 function drawForeground(x, y, w, h) {
-  const wallet = drawWallet(x, y, w, h, 0.72);
-  if (wallet) return wallet;
+  const bag = drawMoneyBag(x, y, w, h, 0.72);
+  if (bag) return bag;
   return [0, 0, 0, 0];
 }
 
@@ -124,9 +149,9 @@ function drawBackground(x, y, w, h) {
 }
 
 // Exported so other generator scripts (e.g. gen-web-icons.js, for the PWA/iOS home-screen
-// icons) can reuse the exact same drawing logic instead of duplicating the wallet motif —
+// icons) can reuse the exact same drawing logic instead of duplicating the money-bag motif —
 // running this file directly still regenerates the Capacitor/Android icon set as before.
-module.exports = { makePng, drawIcon, drawForeground, drawBackground, drawWallet, INK, GOLD, GOLD_SOFT };
+module.exports = { makePng, drawIcon, drawForeground, drawBackground, drawMoneyBag, INK, GOLD, GOLD_SOFT };
 
 if (require.main === module) {
   const outDir = process.argv[2] || "build/icons";
