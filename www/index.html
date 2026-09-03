@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<title data-i18n="app.title">فلوسفة</title>
+<title data-i18n="app.title">معايا كام؟</title>
 <meta name="theme-color" content="#16302E">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="فلوسفة">
+<meta name="apple-mobile-web-app-title" content="معايا كام؟">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316302E'/%3E%3Ctext x='50' y='64' font-size='52' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
 <!-- iOS Safari doesn't support SVG apple-touch-icons (silently falls back to a screenshot
      thumbnail on the home screen) — this has to be a real opaque PNG. -->
@@ -383,7 +383,7 @@
 
   <div class="topbar">
     <div class="brand">
-      <h1 data-i18n="app.title">💰 فلوسفة</h1>
+      <h1 data-i18n="app.title">💰 معايا كام؟</h1>
       <div style="display:flex; align-items:center; gap:8px;">
         <div class="undo-redo-pill">
           <button id="undoBtn" data-i18n-title="undo.title" title="تراجع عن آخر تغيير" disabled>↩️</button>
@@ -892,7 +892,7 @@
 
 <div class="lock-overlay" id="lockOverlay">
   <div class="lock-icon">🔒</div>
-  <h2 data-i18n="lock.title">فلوسفة مقفولة</h2>
+  <h2 data-i18n="lock.title">معايا كام؟ مقفولة</h2>
   <p data-i18n="lock.body">افتحها ببصمتك أو رمز قفل موبايلك عشان بياناتك المالية تفضل سرية.</p>
   <button class="btn btn-primary" id="lockRetryBtn" style="width:auto; min-width:180px; padding:12px 24px;" data-i18n="lock.retry">🔓 افتح دلوقتي</button>
 </div>
@@ -994,7 +994,7 @@ function maintItemLabel(name){ const i = MAINT_ITEMS.indexOf(name); return (stat
 // (via t()/tf()).
 const I18N = {
   ar: {
-    "app.title":"💰 فلوسفة", "undo.title":"تراجع عن آخر تغيير", "redo.title":"إعادة آخر تراجع",
+    "app.title":"💰 معايا كام؟", "undo.title":"تراجع عن آخر تغيير", "redo.title":"إعادة آخر تراجع",
     "hero.label":"معايا كام؟", "common.currency":"ج",
     "home.flexTitle":"🎯 مرونة الشهر ده", "home.spentOf":"اتصرف من أصل",
     "home.accountsTitle":"💳 أرصدة الحسابات", "home.accountsHint":'مستقلة عن "معايا كام؟"',
@@ -1078,7 +1078,7 @@ const I18N = {
     "modal.item.sourceNote":`لو اخترت مصدر، القيمة الشهرية هتتسجّل تلقائيًا كحركة سحب حقيقية على
         الحساب ده (تقدر تشوفها في "📜 حركات الحسابات")، بادئ من الشهر الحالي
         وبعده بس — مش رجعي على شهور فاتت.`,
-    "lock.title":"فلوسفة مقفولة", "lock.body":"افتحها ببصمتك أو رمز قفل موبايلك عشان بياناتك المالية تفضل سرية.",
+    "lock.title":"معايا كام؟ مقفولة", "lock.body":"افتحها ببصمتك أو رمز قفل موبايلك عشان بياناتك المالية تفضل سرية.",
     "lock.retry":"🔓 افتح دلوقتي",
     "onboard.title":"أهلاً بيك!",
     "onboard.body":`خلينا نظبط بياناتك الأساسية الأول. تقدر تعدّل أي حاجة تاني من تبويب الإعدادات في أي وقت،
@@ -1177,10 +1177,10 @@ const I18N = {
     "toast.allocSaved":"اتسجلت العملية ✅", "toast.enterValidKm":"اكتب كيلومترات صحيحة", "toast.enterValidCost":"اكتب تكلفة صحيحة",
     "maintenance.expenseNotePrefix":"صيانة", "toast.maintSaved":"اتسجلت الصيانة ✅",
     "toast.addSourceFirstShort":"ضيف مصدر صرف الأول من الإعدادات", "toast.moveSaved":"اتسجلت الحركة ✅",
-    "lock.unlockPromptTitle":"افتح فلوسفة", "lock.unlockPromptSubtitle":"تحقق ببصمتك أو رمز قفل الشاشة",
+    "lock.unlockPromptTitle":"افتح معايا كام؟", "lock.unlockPromptSubtitle":"تحقق ببصمتك أو رمز قفل الشاشة",
   },
   en: {
-    "app.title":"💰 Floosfa", "undo.title":"Undo last change", "redo.title":"Redo last undo",
+    "app.title":"💰 What's Left?", "undo.title":"Undo last change", "redo.title":"Redo last undo",
     "hero.label":"What's left?", "common.currency":"EGP",
     "home.flexTitle":"🎯 This Month's Flex", "home.spentOf":"Spent out of",
     "home.accountsTitle":"💳 Account Balances", "home.accountsHint":'Independent of "What\'s left?"',
@@ -1268,7 +1268,7 @@ const I18N = {
     "modal.item.sourceNote":`If you pick a source, the monthly amount will automatically be logged as a real
         withdrawal on that account (you can see it in "📜 Account Movements"), starting from the
         current month onward — not retroactive for past months.`,
-    "lock.title":"Floosfa is Locked", "lock.body":"Unlock it with your fingerprint or phone lock code to keep your financial data private.",
+    "lock.title":"What's Left? is Locked", "lock.body":"Unlock it with your fingerprint or phone lock code to keep your financial data private.",
     "lock.retry":"🔓 Unlock Now",
     "onboard.title":"Welcome!",
     "onboard.body":`Let's set up your basic info first. You can change anything later from the Settings tab,
@@ -1367,7 +1367,7 @@ const I18N = {
     "toast.allocSaved":"Transaction logged ✅", "toast.enterValidKm":"Enter a valid odometer reading", "toast.enterValidCost":"Enter a valid cost",
     "maintenance.expenseNotePrefix":"Maintenance", "toast.maintSaved":"Maintenance logged ✅",
     "toast.addSourceFirstShort":"Add a payment source first from Settings", "toast.moveSaved":"Movement logged ✅",
-    "lock.unlockPromptTitle":"Unlock Floosfa", "lock.unlockPromptSubtitle":"Verify with your fingerprint or screen lock code",
+    "lock.unlockPromptTitle":"Unlock What's Left?", "lock.unlockPromptSubtitle":"Verify with your fingerprint or screen lock code",
   },
 };
 function t(key){ const d = I18N[state.settings.lang] || I18N.ar; return (key in d) ? d[key] : (I18N.ar[key] !== undefined ? I18N.ar[key] : key); }
@@ -3618,7 +3618,7 @@ document.getElementById("exportExcel").onclick = async ()=>{
   if(typeof XLSX === "undefined"){ showToast("محتاج إنترنت لتحميل مكتبة الإكسيل أول مرة"); return; }
   const wb = XLSX.utils.book_new();
   const mk = curMonthKey; // the whole report is scoped to the month currently selected at the top
-  wb.Props = { Title:"تقرير مصاريفي — "+monthLabelOf(mk), Author:"فلوسفة", CreatedDate:new Date() };
+  wb.Props = { Title:"تقرير مصاريفي — "+monthLabelOf(mk), Author:"معايا كام؟", CreatedDate:new Date() };
 
   // ---- ملخص الشهر: the same figures the Home tab computes (hero amount, phase, allocations
   // breakdown), which had no representation anywhere in the export before — first sheet so the

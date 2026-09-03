@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">فلوسفة</string>
-    <string name="title_activity_main">فلوسفة</string>
+    <string name="app_name">معايا كام؟</string>
+    <string name="title_activity_main">معايا كام؟</string>
     <string name="package_name">com.salman.masarifi</string>
     <string name="custom_url_scheme">com.salman.masarifi</string>
 </resources>
