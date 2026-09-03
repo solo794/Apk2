@@ -840,6 +840,15 @@
         <input type="month" id="itPayoutMonth">
       </div>
     </div>
+    <div class="field">
+      <label>🔗 يتخصم من مصدر إيه؟ (اختياري)</label>
+      <div class="chip-row" id="itSourceChips"></div>
+      <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.6;">
+        لو اخترت مصدر، القيمة الشهرية هتتسجّل تلقائيًا كحركة سحب حقيقية على
+        الحساب ده (تقدر تشوفها في "📜 حركات الحسابات")، بادئ من الشهر الحالي
+        وبعده بس — مش رجعي على شهور فاتت.
+      </p>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="cancelItemAdd">إلغاء</button>
       <button class="btn btn-primary" id="saveItemAdd">حفظ</button>
@@ -1014,6 +1023,11 @@ function appendCollapseToggle(container, key, totalCount, onToggle){
 
 function monthKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
 function monthLabelOf(key){ const [y,m] = key.split("-").map(Number); return MONTH_NAMES[m-1]+" "+y; }
+function nextMonthKey(key){ const [y,m] = key.split("-").map(Number); return monthKey(new Date(y,m,1)); }
+// The real calendar month "right now" — fixed at load, unlike curMonthKey which the user can
+// browse away from (prev/next month buttons). Auto-deduction catch-up must always run up to
+// today, regardless of which month is currently on screen.
+const REAL_TODAY_MONTH_KEY = monthKey(new Date());
 function fmt(n){ return Math.round(n).toLocaleString("en-US"); }
 function showToast(msg){
   const t = document.getElementById("toast");
@@ -1468,6 +1482,38 @@ function itemActiveForMonth(it, monthKeyStr){
   if(!itemInRangeForMonth(it, monthKeyStr)) return false;
   return !!it.active;
 }
+// An obligation item linked to a payment source (it.source) should actually withdraw real money
+// from that account every month it's due — not just count against the "معايا كام؟" budget math
+// the way every item already does regardless of linking. This materializes one real accountMoves
+// withdrawal per (item, month), starting from it.autoDeductStartMonth (set once, the first time a
+// source gets linked — never retroactive) through the real current month.
+//
+// it.linkedSyncedMonths tracks which months already got a movement created, independently of
+// whether that movement still exists — so manually deleting an auto-created row (from "📜 حركات
+// الحسابات", same as any other movement) sticks and never gets silently recreated. A month with
+// no marker yet is re-checked every call, which is what lets turning an item back on later in the
+// same month (or retroactively for an older one) still produce its withdrawal on the next sync.
+async function syncLinkedItemWithdrawals(){
+  let changed = false;
+  state.items.forEach(it=>{
+    if(!it.source || !it.autoDeductStartMonth) return;
+    if(!state.settings.sources.includes(it.source)) return; // source renamed/deleted since linking — leave it be rather than write against a name that no longer exists
+    it.linkedSyncedMonths = it.linkedSyncedMonths || {};
+    for(let mk = it.autoDeductStartMonth; mk <= REAL_TODAY_MONTH_KEY; mk = nextMonthKey(mk)){
+      if(it.linkedSyncedMonths[mk]) continue;
+      if(!itemActiveForMonth(it, mk)) continue;
+      const moveId = "lw"+it.id+"_"+mk;
+      state.accountMoves.push({
+        id: moveId, source: it.source, type: "withdraw", amount: itemAmountForMonth(it, mk),
+        note: "خصم تلقائي: "+it.name, date: mk+"-01", linkedItemId: it.id, linkedMonth: mk
+      });
+      it.linkedSyncedMonths[mk] = moveId;
+      changed = true;
+    }
+  });
+  if(changed){ await saveItems(); await saveAccountMoves(); }
+  return changed;
+}
 function computeMonth(monthKeyStr){
   const active = state.items.filter(it=>itemActiveForMonth(it, monthKeyStr));
   const byCat = {"قسط":0,"ثابت":0,"جمعية":0};
@@ -1764,8 +1810,12 @@ function renderSettings(){
       // same as deleting a category — so their old name just stops matching anything). Balances
       // now survive that (computeAllAccountBalances() picks orphaned names back up as "legacy"),
       // but a warning here is still worth it before the source disappears from Settings itself.
-      const stillUsed = state.expenses.some(e=>e.source===name) || state.accountMoves.some(m=>m.source===name);
-      if(stillUsed && !confirm(`فيه مصاريف أو حركات مسجلة على "${name}"، وهتفضل زي ما هي (مش هتتمسح) لكن هتظهر كمصدر قديم منفصل بدل ما تتدار من هنا. تكمل الحذف؟`)) return;
+      const linkedItems = state.items.filter(it=>it.source===name);
+      const stillUsed = state.expenses.some(e=>e.source===name) || state.accountMoves.some(m=>m.source===name) || linkedItems.length>0;
+      const linkedWarning = linkedItems.length>0
+        ? ` وفيه ${linkedItems.length} بند التزام مرتبط بيه (${linkedItems.map(it=>it.name).join("، ")}) هيوقف يتخصم منه تلقائيًا بعد الحذف.`
+        : "";
+      if(stillUsed && !confirm(`فيه مصاريف أو حركات مسجلة على "${name}"، وهتفضل زي ما هي (مش هتتمسح) لكن هتظهر كمصدر قديم منفصل بدل ما تتدار من هنا.${linkedWarning} تكمل الحذف؟`)) return;
       state.settings.sources.splice(Number(btn.dataset.idx),1);
       await saveSettings(); render();
     };
@@ -1810,6 +1860,7 @@ function renderSettings(){
     if(activeOverridden) extraNotes.push(`✏️ ${itemActiveForMonth(it,curMonthKey)?"مفعّل":"موقوف"} لشهر ${monthLabelOf(curMonthKey)} بس <span class="itmResetActiveOverride">(رجّع للافتراضي: ${it.active?"مفعّل":"موقوف"})</span>`);
     const rangeNote = (it.startMonth ? " · من "+monthLabelOf(it.startMonth) : "") + (it.endMonth ? " · لحد "+monthLabelOf(it.endMonth) : "");
     const payoutNote = (it.cat==="جمعية" && it.payoutMonth) ? ` · هتقبض ${fmt(it.payoutAmount||0)} في ${monthLabelOf(it.payoutMonth)}` : "";
+    const sourceNote = it.source ? ` · 🔗 يتخصم من ${it.source}` : "";
     // Name gets its own full-width row (was squeezed next to the amount/toggle/delete buttons on
     // one line before, cutting long names off) — everything else that used to be crammed into one
     // long wrapping sentence (edit/reset/delete links) moved into a short action row instead, so a
@@ -1824,7 +1875,7 @@ function renderSettings(){
       </div>
       <div class="oi-sub">
         <input type="number" class="amt-in itmAmount" value="${itemAmountForMonth(it, curMonthKey)}">
-        <div class="oi-meta">${it.cat}${rangeNote}${payoutNote}</div>
+        <div class="oi-meta">${it.cat}${rangeNote}${payoutNote}${sourceNote}</div>
       </div>
       ${extraNotes.length ? `<div class="oi-notes">${extraNotes.join("<br>")}</div>` : ""}
       <div class="oi-actions">
@@ -2308,6 +2359,7 @@ document.getElementById("addItemBtn").onclick = addNewObligationItem;
 const itemModalBg = document.getElementById("itemModalBg");
 const ITEM_CATS = [{k:"قسط", i:"💳"}, {k:"ثابت", i:"🏠"}, {k:"جمعية", i:"🤝"}];
 let selectedItemCat = "قسط";
+let selectedItemSource = null;
 let editingItemId = null;
 function updateItemModalFieldsForCat(cat){
   document.getElementById("itAmountLabel").textContent = cat==="جمعية" ? "قيمتك الشهرية في الجمعية (ج)" : "القيمة الشهرية (ج)";
@@ -2336,6 +2388,19 @@ function openItemModal(existingItem){
     };
   });
   updateItemModalFieldsForCat(selectedItemCat);
+
+  selectedItemSource = existingItem ? (existingItem.source || null) : null;
+  const noneChip = `<button class="chip ${!selectedItemSource?'sel':''}" data-src="">🚫 بدون خصم تلقائي</button>`;
+  const sourceChipsHtml = noneChip + state.settings.sources.map(s=>
+    `<button class="chip ${s===selectedItemSource?'sel':''}" data-src="${s}">💳 ${s}</button>`).join("");
+  document.getElementById("itSourceChips").innerHTML = sourceChipsHtml;
+  document.querySelectorAll("#itSourceChips .chip").forEach(ch=>{
+    ch.onclick = ()=>{
+      selectedItemSource = ch.dataset.src || null;
+      document.querySelectorAll("#itSourceChips .chip").forEach(c=>c.classList.toggle("sel", c===ch));
+    };
+  });
+
   itemModalBg.classList.add("show");
 }
 document.getElementById("closeItemModal").onclick = ()=>itemModalBg.classList.remove("show");
@@ -2355,17 +2420,27 @@ document.getElementById("saveItemAdd").onclick = async ()=>{
   }
   if(editingItemId){
     const item = state.items.find(x=>x.id===editingItemId);
+    const wasLinked = !!item.source;
     item.name = name; item.amount = amount; item.cat = selectedItemCat;
     item.startMonth = startMonth; item.endMonth = endMonth;
     item.payoutAmount = payoutAmount; item.payoutMonth = payoutMonth;
+    item.source = selectedItemSource;
+    // Anchor the auto-deduction start point only the first time a source gets linked — switching
+    // an already-linked item to a different source keeps its original start (same ongoing
+    // commitment, just paid from elsewhere now); unlinking clears it so relinking later starts
+    // fresh from that later "now" instead of resurrecting the old anchor.
+    if(item.source && !wasLinked) item.autoDeductStartMonth = REAL_TODAY_MONTH_KEY;
+    if(!item.source) item.autoDeductStartMonth = null;
   } else {
     state.items.push({
       id:"c"+Date.now(), name, amount, cat:selectedItemCat,
       startMonth, endMonth, payoutAmount, payoutMonth,
+      source: selectedItemSource, autoDeductStartMonth: selectedItemSource ? REAL_TODAY_MONTH_KEY : null,
       active:true, amountOverrides:{}, activeOverrides:{}
     });
   }
   await saveItems();
+  await syncLinkedItemWithdrawals();
   itemModalBg.classList.remove("show");
   render();
   showToast(editingItemId ? "اتحفظت التعديلات ✅" : "اتضاف بند جديد ✅");
@@ -3012,6 +3087,7 @@ function setupNativeApp(){
       // right after the user had just passed it, which is the "lock keeps reappearing" bug.
       if(relockTimer){ clearTimeout(relockTimer); relockTimer = null; }
       checkPendingSmsTransactions();
+      syncLinkedItemWithdrawals().then(changed=>{ if(changed) render(); }); // catches a month rollover while the app sat backgrounded
       if(state.settings.biometricLock.enabled) tryUnlock();
     } else if(state.settings.biometricLock.enabled){
       // Real backgrounding still re-locks effectively instantly (300ms is well under human
@@ -3037,6 +3113,7 @@ function setupNativeApp(){
 
 (async ()=>{
   await loadState();
+  await syncLinkedItemWithdrawals();
   render();
   setupNativeApp();
   checkPendingSmsTransactions();
