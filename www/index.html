@@ -1637,6 +1637,23 @@ async function checkPendingSmsTransactions(){
     render();
   }catch(e){}
 }
+// ---------- home-screen "quick add" widget (Android) ----------
+// The widget itself never touches app data — it just tells MainActivity which button was
+// tapped, which stashes that in SharedPreferences (see QuickAddPlugin). We poll for it here
+// (same two call sites as checkPendingSmsTransactions: app boot + resume-from-background)
+// instead of native code injecting JS directly, since openModal/startVoiceExpenseInput depend
+// on state that's only ready once loadState() has finished.
+async function checkPendingQuickAdd(){
+  if(!isNativeApp()) return;
+  try{
+    const { QuickAdd } = window.Capacitor.Plugins;
+    const res = await QuickAdd.getPendingAction();
+    if(!res.mode) return;
+    await QuickAdd.clearPendingAction();
+    if(res.mode==="voice") startVoiceExpenseInput();
+    else openModal(null);
+  }catch(e){}
+}
 
 // ---------- voice-add expenses (Android: native SpeechToText plugin; web/PWA: Web Speech API best-effort) ----------
 // Small keyword table for guessing a category from free-spoken text. Matched against whichever
@@ -3666,6 +3683,7 @@ function setupNativeApp(){
       // right after the user had just passed it, which is the "lock keeps reappearing" bug.
       if(relockTimer){ clearTimeout(relockTimer); relockTimer = null; }
       checkPendingSmsTransactions();
+      checkPendingQuickAdd();
       syncLinkedItemWithdrawals().then(changed=>{ if(changed) render(); }); // catches a month rollover while the app sat backgrounded
       if(state.settings.biometricLock.enabled) tryUnlock();
     } else if(state.settings.biometricLock.enabled){
@@ -3690,6 +3708,18 @@ function setupNativeApp(){
   }).catch(()=>{});
 }
 
+// PWA/web "shortcut" equivalent of the Android widget — a ?add=text|voice on the URL (from
+// manifest.json's "shortcuts", or a bookmarked link) triggers the same quick-add flow once the
+// app has finished booting, then the param is stripped so a refresh doesn't repeat it.
+function checkQuickAddUrlParam(){
+  const params = new URLSearchParams(location.search);
+  const add = params.get("add");
+  if(!add) return;
+  history.replaceState(null, "", location.pathname);
+  if(add==="voice") startVoiceExpenseInput();
+  else if(add==="text") openModal(null);
+}
+
 (async ()=>{
   await loadState();
   applyLanguage();
@@ -3697,6 +3727,8 @@ function setupNativeApp(){
   render();
   setupNativeApp();
   checkPendingSmsTransactions();
+  checkPendingQuickAdd();
+  checkQuickAddUrlParam();
   await tryUnlock();
   if(needsOnboarding()) showOnboarding();
 })();

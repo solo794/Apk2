@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static Arabic labels regardless of the in-app language setting (state.settings.lang) —
+     RemoteViews widgets follow the device's system locale, not the app's own language toggle,
+     and duplicating full locale-qualified resources for two short button labels isn't worth the
+     added complexity. Kept intentionally simple: icon + one short word per button. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="➕ أضف مصروف"
+        android:textColor="#F3EEDD"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:paddingBottom="6dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/widgetTextBtn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/widget_btn_bg"
+            android:text="✏️ اكتب"
+            android:textAllCaps="false"
+            android:textColor="#16302E"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/widgetVoiceBtn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_btn_bg"
+            android:text="🎤 اتكلم"
+            android:textAllCaps="false"
+            android:textColor="#16302E"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+</LinearLayout>

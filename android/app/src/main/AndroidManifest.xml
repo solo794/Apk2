@@ -40,6 +40,19 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
+
+        <!-- Home-screen "quick add expense" widget — the user adds it manually from the system's
+             widget picker (like any Android widget), it's never placed automatically. -->
+        <receiver
+            android:name=".QuickAddWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_add_info" />
+        </receiver>
     </application>
 
     <!-- Package-visibility declaration (Android 11+/API 30+): lets the app's own
