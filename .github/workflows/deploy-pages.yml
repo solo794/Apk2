@@ -27,8 +27,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # enablement:true lets this action create the Pages site itself (build type "workflow")
+      # on the very first run — without it, configure-pages only reads the existing config and
+      # fails outright when no Pages site exists yet at all.
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       # www/ is the entire app (same single-page app the Android build wraps) — served as-is,
       # no build step needed.
