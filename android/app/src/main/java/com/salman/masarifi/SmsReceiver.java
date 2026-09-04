@@ -11,6 +11,8 @@ import android.os.Build;
 import android.provider.Telephony;
 import android.telephony.SmsMessage;
 import androidx.core.app.NotificationCompat;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -37,13 +39,40 @@ public class SmsReceiver extends BroadcastReceiver {
         SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         String[] senders = prefs.getString(KEY_SENDERS, DEFAULT_SENDERS).split(",");
 
+        // One broadcast can carry several PDUs: either a few whole SMS messages received in the
+        // same batch, or the several parts of ONE long/multi-part message the carrier split up.
+        // getMessagesFromIntent() hands back one SmsMessage per PDU either way, so a naive
+        // "handle every SmsMessage as its own transaction" loop (the old code) processes each
+        // part of a long message separately — this is exactly the "same message read twice, once
+        // whole and once as a fragment with a wrong-looking sender" the user reported, since a
+        // continuation part occasionally reports no/garbled originating address. Group parts by
+        // sender (in order) and concatenate their bodies back into one logical message first; a
+        // part with no address is folded into whichever message is currently being built instead
+        // of starting a bogus separate entry.
+        LinkedHashMap<String, StringBuilder> bodyBySender = new LinkedHashMap<>();
+        String lastSender = null;
         for (SmsMessage msg : Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
+            String part = msg.getMessageBody();
+            if (part == null) continue;
             String sender = msg.getOriginatingAddress();
-            String body = msg.getMessageBody();
-            if (sender == null || body == null) continue;
+            if (sender == null || sender.trim().isEmpty()) sender = lastSender;
+            if (sender == null) continue;
+            lastSender = sender;
+            StringBuilder sb = bodyBySender.get(sender);
+            if (sb == null) {
+                sb = new StringBuilder();
+                bodyBySender.put(sender, sb);
+            }
+            sb.append(part);
+        }
+
+        long now = System.currentTimeMillis();
+        for (Map.Entry<String, StringBuilder> entry : bodyBySender.entrySet()) {
+            String sender = entry.getKey();
+            String body = entry.getValue().toString();
             if (!matchesBank(sender, senders)) continue;
 
-            storePending(prefs, sender, body, msg.getTimestampMillis());
+            storePending(prefs, sender, body, now);
             showNotification(context, sender, body);
         }
     }

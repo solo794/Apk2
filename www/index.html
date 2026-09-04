@@ -1614,7 +1614,25 @@ function parseBankSms(sender, body){
   const text = (body||"").trim();
   if(!text) return null;
   if(/otp|رمز التحقق|كود التحقق|verification code/i.test(text)) return null;
-  if(/رصيدك الحالي|available balance|current balance/i.test(text) && !/(debit|خصم|purchase|شراء|دفع)/i.test(text)) return null;
+
+  // Credit (money IN) vs debit (money OUT) — broadened past the original narrow keyword list
+  // after real-world reports of deposit/incoming-transfer messages (e.g. "تم اضافة مبلغ...",
+  // which the old list didn't recognize at all) being misclassified as an expense. Covers the
+  // common Egyptian-bank phrasings for "added/deposited/received" on the credit side and
+  // "debited/withdrawn/purchased/paid" on the debit side; when neither side's wording is found,
+  // this still falls back to a debit candidate (unchanged default) rather than silently dropping
+  // an SMS with unrecognized wording, but a message with clear credit wording — and no clashing
+  // debit wording in the same text — is now correctly excluded from the expense list. Computed
+  // up front (before the balance-inquiry guard below) so it can tell a real credit/debit message
+  // apart from a pure balance check even when the message also mentions "current balance".
+  const creditRe = /credited|deposit(ed)?|received|إيداع|ايداع|تحويل\s*وارد|تم\s*(ال)?(إضافة|اضافة)|تمت?\s*(ال)?(إضافة|اضافة)|أضيف|اضيف|استلام|استلمت/i;
+  const debitRe = /debit(ed)?|purchase|withdraw(al)?|خصم|شراء|دفع|سحب|تحويل\s*صادر/i;
+  const isCredit = creditRe.test(text) && !debitRe.test(text);
+
+  // Pure balance-inquiry messages ("your current balance is...") aren't a transaction at all —
+  // skip them, but only when the message has no credit or debit wording elsewhere, since real
+  // transaction messages often tack "current balance: ..." on as a trailer after the amount.
+  if(/رصيدك الحالي|available balance|current balance/i.test(text) && !isCredit && !debitRe.test(text)) return null;
 
   // Currency markers: EGP/LE (Latin), ج.م and جنيه (spelled out), and جم — the abbreviation
   // real CIB messages actually use (e.g. "بمبلغ 14220.00 جم"), which ج\.م's literal dot doesn't match.
@@ -1625,8 +1643,6 @@ function parseBankSms(sender, body){
   const amount = amountMatch ? Number(amountMatch[0].replace(/[^\d.]/g, ""))
     : byAmountMatch ? Number(byAmountMatch[0].replace(/[^\d.]/g, ""))
     : null;
-
-  const isCredit = /credited|إيداع|تحويل وارد|received/i.test(text) && !/debit|خصم|purchase|شراء/i.test(text);
 
   let merchant = "";
   const atMatch = text.match(/(?:at|في|لدى)\s+([A-Za-z0-9؀-ۿ .\-]{2,30})/i);
