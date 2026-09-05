@@ -1167,7 +1167,7 @@ const I18N = {
     "notif.capExceededTitle":"تجاوزت حد {0}", "notif.capExceededBody":"صرفت {0} ج من حد {1} ج المخصص لفئة {2} الشهر ده",
     "phase.deficit":"⚠️ عجز في الميزانية", "phase.pressure":"🔴 مرحلة الضغط",
     "phase.transition":"🟡 مرحلة الانتقال", "phase.launch":"🟢 مرحلة الانطلاق",
-    "obl.salary":"المرتب", "obl.extraIncome":"دخل إضافي (جمعية)", "obl.installments":"أقساط",
+    "obl.salary":"المرتب", "obl.extraIncome":"دخل إضافي (قبضة جمعية/سلفة)", "obl.installments":"أقساط",
     "obl.fixed":"مصروفات ثابتة", "obl.gam3iyas":"جمعيات", "obl.recurringSurplus":"الفائض الشهري المتكرر",
     "common.overriddenSuffix":" (معدّلة)", "home.outOf":"من", "common.perDay":"ج/يوم",
     "expenses.emptyMonth":"لسه مفيش مصاريف الشهر ده", "common.all":"الكل",
@@ -1203,6 +1203,8 @@ const I18N = {
     "home.addSourceFirst":"ضيف مصدر صرف الأول من الإعدادات (زي فيزا أو كاش).", "home.legacySource":"مصدر محذوف — لسه له مصاريف",
     "common.total":"الإجمالي", "settings.movesEmpty":"لسه مفيش حركات مسجلة على أي حساب.",
     "modal.account.deposit":"إيداع", "modal.account.withdraw":"سحب", "toast.moveDeleted":"اتمسحت الحركة",
+    "toast.moveAndAdvanceItemDeleted":"اتمسحت الحركة وبند قسط السداد المرتبط بيها",
+    "toast.itemAndAdvanceMoveDeleted":`اتمسح "{0}" وحركة الإيداع المرتبطة بيه`,
     "sms.bannerTitle":"معاملات بنكية مكتشفة ({0}) — مراجعتك مطلوبة", "sms.unclearAmount":"المبلغ مش واضح",
     "sms.addAsExpense":"إضافة كمصروف", "sms.addAsDeposit":"إضافة كإيداع", "sms.openManual":"افتح وسجّل يدوي", "sms.dismiss":"تجاهل", "sms.fromSender":"من {0}",
     "voice.fabTitle":"أضف مصروف بالصوت", "voice.listening":"🎤 بتسمعك... اتكلم دلوقتي",
@@ -1369,7 +1371,7 @@ const I18N = {
     "notif.capExceededTitle":"You exceeded the {0} limit", "notif.capExceededBody":"You spent {0} EGP out of the {1} EGP limit set for {2} this month",
     "phase.deficit":"⚠️ Budget Deficit", "phase.pressure":"🔴 Pressure Phase",
     "phase.transition":"🟡 Transition Phase", "phase.launch":"🟢 Launch Phase",
-    "obl.salary":"Salary", "obl.extraIncome":"Extra Income (Gam3iya)", "obl.installments":"Installments",
+    "obl.salary":"Salary", "obl.extraIncome":"Extra Income (Gam3iya/Advance)", "obl.installments":"Installments",
     "obl.fixed":"Fixed Bills", "obl.gam3iyas":"Gam3iyas", "obl.recurringSurplus":"Recurring Monthly Surplus",
     "common.overriddenSuffix":" (adjusted)", "home.outOf":"out of", "common.perDay":"EGP/day",
     "expenses.emptyMonth":"No expenses yet this month", "common.all":"All",
@@ -1405,6 +1407,8 @@ const I18N = {
     "home.addSourceFirst":"Add a payment source first from Settings (like Visa or Cash).", "home.legacySource":"Deleted source — still has expenses",
     "common.total":"Total", "settings.movesEmpty":"No movements logged on any account yet.",
     "modal.account.deposit":"Deposit", "modal.account.withdraw":"Withdraw", "toast.moveDeleted":"Movement deleted",
+    "toast.moveAndAdvanceItemDeleted":"Movement deleted, along with its linked repayment item",
+    "toast.itemAndAdvanceMoveDeleted":`Deleted "{0}", along with its linked deposit movement`,
     "sms.bannerTitle":"Bank transactions detected ({0}) — review needed", "sms.unclearAmount":"Amount unclear",
     "sms.addAsExpense":"Add as expense", "sms.addAsDeposit":"Add as deposit", "sms.openManual":"Open and log manually", "sms.dismiss":"Dismiss", "sms.fromSender":"From {0}",
     "voice.fabTitle":"Add an expense by voice", "voice.listening":"🎤 Listening... speak now",
@@ -2759,13 +2763,22 @@ function renderSettings(){
       await saveItems(); render();
       showToast(tf("toast.itemToggledAllMonths", item.name, item.active?t("obligations.active"):t("obligations.paused")));
     };
-    row.querySelector(".itmDeleteForever").onclick = (ev)=>{
+    row.querySelector(".itmDeleteForever").onclick = async (ev)=>{
       ev.stopPropagation();
       const item = state.items.find(x=>x.id===id);
       if(!confirm(tf("confirm.deleteItemForever", item.name))) return;
       state.items = state.items.filter(x=>x.id!==id);
-      saveItems().then(render);
-      showToast(tf("toast.itemDeletedForever", item.name));
+      // The other half of a سلفة (see openAdvanceModal) — deleting the repayment item on its own
+      // would leave its deposit sitting in "حركات الحسابات" with nothing tracking that it needs
+      // to be paid back, so it goes with the item instead of turning into an untracked windfall.
+      let alsoRemovedMove = false;
+      if(item.advanceId && state.accountMoves.some(m=>m.advanceId===item.advanceId)){
+        state.accountMoves = state.accountMoves.filter(m=>m.advanceId!==item.advanceId);
+        await saveAccountMoves();
+        alsoRemovedMove = true;
+      }
+      await saveItems(); render();
+      showToast(alsoRemovedMove ? tf("toast.itemAndAdvanceMoveDeleted", item.name) : tf("toast.itemDeletedForever", item.name));
     };
   });
 }
@@ -2927,8 +2940,18 @@ function renderAccountMoves(){
   }).join("");
   el.querySelectorAll(".exp-del").forEach(btn=>{
     btn.onclick = async ()=>{
+      const move = state.accountMoves.find(m=>m.id===btn.dataset.id);
       state.accountMoves = state.accountMoves.filter(m=>m.id!==btn.dataset.id);
-      await saveAccountMoves(); render(); showToast(t("toast.moveDeleted"));
+      // A سلفة deposit deleted on its own would leave its repayment item still claiming an
+      // extra-income payout that no longer has any real money behind it — take the item with it.
+      let alsoRemovedItem = false;
+      if(move && move.advanceId && state.items.some(it=>it.advanceId===move.advanceId)){
+        state.items = state.items.filter(it=>it.advanceId!==move.advanceId);
+        await saveItems();
+        alsoRemovedItem = true;
+      }
+      await saveAccountMoves(); render();
+      showToast(alsoRemovedItem ? t("toast.moveAndAdvanceItemDeleted") : t("toast.moveDeleted"));
     };
   });
   appendCollapseToggle(el, "accountMoves", list.length, renderAccountMoves);
@@ -3678,9 +3701,15 @@ document.getElementById("saveAdvanceAdd").onclick = async ()=>{
     repayEnd = repayStart;
     for(let i=1;i<months;i++) repayEnd = nextMonthKey(repayEnd);
   }
+  // The deposit and the repayment item are two halves of one advance — tagged with the same
+  // advanceId so deleting either one (from "📜 حركات الحسابات" or the item's own "🗑️ حذف نهائي")
+  // takes the other with it instead of leaving an orphan: a repayment item with no deposit behind
+  // it keeps counting a payout that was never actually reflected in any account's balance, or a
+  // deposit with no item silently loses the fact that it needs to be paid back.
+  const advanceId = "advid"+Date.now();
   state.accountMoves.push({
     id:"adv"+Date.now(), source:selectedAdvanceSource, type:"deposit", amount, date,
-    note: tf("advance.depositNote", name)
+    note: tf("advance.depositNote", name), advanceId
   });
   await saveAccountMoves();
   state.items.push({
@@ -3688,7 +3717,7 @@ document.getElementById("saveAdvanceAdd").onclick = async ()=>{
     startMonth: repayStart, endMonth: repayEnd,
     payoutAmount: amount, payoutMonth: date.slice(0,7),
     source: null, autoDeductStartMonth: null,
-    active: hasRepayment, amountOverrides:{}, activeOverrides:{}
+    active: hasRepayment, amountOverrides:{}, activeOverrides:{}, advanceId
   });
   await saveItems();
   advanceModalBg.classList.remove("show");
