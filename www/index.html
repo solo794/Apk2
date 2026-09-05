@@ -420,6 +420,7 @@
     <div class="section-title"><span data-i18n="home.accountsTitle">💳 أرصدة الحسابات</span> <span class="hint" data-i18n="home.accountsHint">مستقلة عن "معايا كام؟"</span></div>
     <div class="obl-list" id="accountsList"></div>
     <button class="btn btn-ghost" id="addMoveBtn" style="margin-top:8px;" data-i18n="home.addMove">+ تسجيل حركة (إيداع/سحب)</button>
+    <button class="btn btn-ghost" id="addAdvanceBtn" style="margin-top:8px;" data-i18n="home.addAdvance">+ سلفة/دفعة ائتمانية جديدة</button>
 
     <div class="section-title" data-i18n="home.quickLookTitle">📌 نظرة سريعة</div>
     <div class="stat-grid">
@@ -888,6 +889,56 @@
   </div>
 </div>
 
+<div class="modal-bg" id="advanceModalBg">
+  <div class="modal">
+    <button class="close-x" id="closeAdvanceModal">✕</button>
+    <h2 data-i18n="modal.advance.title">سلفة/دفعة ائتمانية جديدة</h2>
+    <div class="field">
+      <label data-i18n="modal.advance.nameLabel">اسم السلفة</label>
+      <input type="text" id="advName" data-i18n-placeholder="modal.advance.namePlaceholder" placeholder="مثال: سلفة تراخيص العربية">
+    </div>
+    <div class="field">
+      <label data-i18n="modal.advance.sourceLabel">هتتحط في حساب/كارت إيه؟</label>
+      <div class="chip-row" id="advSourceChips"></div>
+    </div>
+    <div class="field">
+      <label data-i18n="modal.advance.amountLabel">قيمة السلفة (ج)</label>
+      <input type="number" id="advAmount" placeholder="مثال: 14169">
+    </div>
+    <div class="field">
+      <label data-i18n="common.date">التاريخ</label>
+      <input type="date" id="advDate">
+    </div>
+    <div class="toggle-row" style="border-bottom:none;">
+      <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="modal.advance.hasRepaymentLabel">هتتسدد بقسط شهري؟</span>
+      <label class="switch"><input type="checkbox" id="advHasRepayment" checked><span class="slider"></span></label>
+    </div>
+    <div id="advRepaymentFields">
+      <div class="field">
+        <label data-i18n="modal.advance.installmentLabel">قيمة القسط الشهري (ج)</label>
+        <input type="number" id="advInstallment" placeholder="مثال: 1200">
+      </div>
+      <div class="field">
+        <label data-i18n="modal.advance.monthsLabel">هتتسدد على كام شهر؟</label>
+        <input type="number" id="advMonths" placeholder="مثال: 12">
+      </div>
+      <div class="field">
+        <label data-i18n="modal.advance.repayStartLabel">هيبدأ الخصم شهر إيه؟</label>
+        <input type="month" id="advRepayStart">
+      </div>
+    </div>
+    <p style="font-size:11px; color:var(--ink-soft); margin:0 0 8px; line-height:1.6;" data-i18n="modal.advance.note">
+      السلفة بتتسجّل كإيداع حقيقي في الحساب اللي اخترته (مش زيادة في «المرتب الشهري»)، وبتتحسب كدخل
+      إضافي للشهر ده بس في "معايا كام؟". قسط السداد بيتحسب كالتزام شهري عادي بادئ من الشهر اللي
+      حددته — تقدر تعدّله أو تربطه بحساب معيّن بعدين من تبويب الالتزامات.
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelAdvanceAdd" data-i18n="common.cancel">إلغاء</button>
+      <button class="btn btn-primary" id="saveAdvanceAdd" data-i18n="common.save">حفظ</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div class="lock-overlay" id="lockOverlay">
@@ -998,7 +1049,7 @@ const I18N = {
     "hero.label":"معايا كام؟", "common.currency":"ج",
     "home.flexTitle":"🎯 مرونة الشهر ده", "home.spentOf":"اتصرف من أصل",
     "home.accountsTitle":"💳 أرصدة الحسابات", "home.accountsHint":'مستقلة عن "معايا كام؟"',
-    "home.addMove":"+ تسجيل حركة (إيداع/سحب)", "home.quickLookTitle":"📌 نظرة سريعة",
+    "home.addMove":"+ تسجيل حركة (إيداع/سحب)", "home.addAdvance":"+ سلفة/دفعة ائتمانية جديدة", "home.quickLookTitle":"📌 نظرة سريعة",
     "home.topCatLabel":"أكتر فئة صرف", "home.avgDailyLabel":"متوسط يومي (مرونة)",
     "home.obligationsTitle":"📊 التزامات الشهر",
     "expenses.byCatTitle":"🥧 المصروفات حسب الفئة", "expenses.allTitle":"🧾 كل المصاريف",
@@ -1078,6 +1129,15 @@ const I18N = {
     "modal.item.sourceNote":`لو اخترت مصدر، القيمة الشهرية هتتسجّل تلقائيًا كحركة سحب حقيقية على
         الحساب ده (تقدر تشوفها في "📜 حركات الحسابات")، بادئ من الشهر الحالي
         وبعده بس — مش رجعي على شهور فاتت.`,
+    "modal.advance.title":"سلفة/دفعة ائتمانية جديدة", "modal.advance.nameLabel":"اسم السلفة",
+    "modal.advance.namePlaceholder":"مثال: سلفة تراخيص العربية",
+    "modal.advance.sourceLabel":"هتتحط في حساب/كارت إيه؟", "modal.advance.amountLabel":"قيمة السلفة (ج)",
+    "modal.advance.hasRepaymentLabel":"هتتسدد بقسط شهري؟", "modal.advance.installmentLabel":"قيمة القسط الشهري (ج)",
+    "modal.advance.monthsLabel":"هتتسدد على كام شهر؟", "modal.advance.repayStartLabel":"هيبدأ الخصم شهر إيه؟",
+    "modal.advance.note":`السلفة بتتسجّل كإيداع حقيقي في الحساب اللي اخترته (مش زيادة في «المرتب
+        الشهري»)، وبتتحسب كدخل إضافي للشهر ده بس في "معايا كام؟". قسط السداد بيتحسب كالتزام شهري
+        عادي بادئ من الشهر اللي حددته — تقدر تعدّله أو تربطه بحساب معيّن بعدين من تبويب الالتزامات.`,
+    "advance.depositNote":"سلفة: {0}", "advance.repaymentItemName":"سداد {0}",
     "lock.title":"معايا كام؟ مقفولة", "lock.body":"افتحها ببصمتك أو رمز قفل موبايلك عشان بياناتك المالية تفضل سرية.",
     "lock.retry":"🔓 افتح دلوقتي",
     "onboard.title":"أهلاً بيك!",
@@ -1162,6 +1222,8 @@ const I18N = {
     "toast.enterItemName":"اكتب اسم البند", "toast.enterValidMonthlyAmount":"اكتب قيمة شهرية صحيحة",
     "toast.endBeforeStart":"شهر النهاية لازم يكون بعد شهر البداية",
     "toast.itemEdited":"اتحفظت التعديلات ✅", "toast.itemAdded":"اتضاف بند جديد ✅",
+    "toast.enterAdvanceName":"اكتب اسم للسلفة", "toast.enterValidMonthsCount":"اكتب عدد شهور صحيح",
+    "toast.advanceSaved":"اتسجلت السلفة ✅",
     "backup.exportFilename":"نسخة_احتياطية_مصاريفي", "toast.backupExported":"اتصدرت النسخة الاحتياطية ✅",
     "confirm.importBackup":"هيتم استبدال كل البيانات الحالية بالنسخة المستوردة. متأكد؟",
     "toast.backupImported":"اتستوردت النسخة الاحتياطية ✅", "toast.badFile":"الملف مش سليم، جرب تاني",
@@ -1184,7 +1246,7 @@ const I18N = {
     "hero.label":"What's left?", "common.currency":"EGP",
     "home.flexTitle":"🎯 This Month's Flex", "home.spentOf":"Spent out of",
     "home.accountsTitle":"💳 Account Balances", "home.accountsHint":'Independent of "What\'s left?"',
-    "home.addMove":"+ Log a Move (Deposit/Withdraw)", "home.quickLookTitle":"📌 Quick Look",
+    "home.addMove":"+ Log a Move (Deposit/Withdraw)", "home.addAdvance":"+ New Advance/Credit Draw", "home.quickLookTitle":"📌 Quick Look",
     "home.topCatLabel":"Top Spend Category", "home.avgDailyLabel":"Daily Avg (Flex)",
     "home.obligationsTitle":"📊 This Month's Obligations",
     "expenses.byCatTitle":"🥧 Spending by Category", "expenses.allTitle":"🧾 All Expenses",
@@ -1268,6 +1330,16 @@ const I18N = {
     "modal.item.sourceNote":`If you pick a source, the monthly amount will automatically be logged as a real
         withdrawal on that account (you can see it in "📜 Account Movements"), starting from the
         current month onward — not retroactive for past months.`,
+    "modal.advance.title":"New Advance/Credit Draw", "modal.advance.nameLabel":"Advance Name",
+    "modal.advance.namePlaceholder":"e.g. Car License Advance",
+    "modal.advance.sourceLabel":"Which account/card will it land in?", "modal.advance.amountLabel":"Advance Amount (EGP)",
+    "modal.advance.hasRepaymentLabel":"Repaid via a monthly installment?", "modal.advance.installmentLabel":"Monthly Installment (EGP)",
+    "modal.advance.monthsLabel":"Over how many months?", "modal.advance.repayStartLabel":"Which month does repayment start?",
+    "modal.advance.note":`The advance is logged as a real deposit into the account you picked (not an increase to
+        "Monthly Salary"), and counts as one-time extra income for the month it's received in "What's
+        left?". The repayment installment counts as a normal monthly obligation starting the month you
+        set — you can edit it or link it to a specific source later from the Obligations tab.`,
+    "advance.depositNote":"Advance: {0}", "advance.repaymentItemName":"Repayment: {0}",
     "lock.title":"What's Left? is Locked", "lock.body":"Unlock it with your fingerprint or phone lock code to keep your financial data private.",
     "lock.retry":"🔓 Unlock Now",
     "onboard.title":"Welcome!",
@@ -1352,6 +1424,8 @@ const I18N = {
     "toast.enterItemName":"Enter the item's name", "toast.enterValidMonthlyAmount":"Enter a valid monthly amount",
     "toast.endBeforeStart":"The end month must be after the start month",
     "toast.itemEdited":"Changes saved ✅", "toast.itemAdded":"New item added ✅",
+    "toast.enterAdvanceName":"Enter a name for the advance", "toast.enterValidMonthsCount":"Enter a valid number of months",
+    "toast.advanceSaved":"Advance logged ✅",
     "backup.exportFilename":"masarifi_backup", "toast.backupExported":"Backup exported ✅",
     "confirm.importBackup":"This will replace all current data with the imported copy. Are you sure?",
     "toast.backupImported":"Backup imported ✅", "toast.badFile":"That file isn't valid, try again",
@@ -2207,10 +2281,19 @@ function computeMonth(monthKeyStr){
     byCat[it.cat] = (byCat[it.cat]||0) + itemAmountForMonth(it, monthKeyStr);
   });
   const obligations = byCat["قسط"]+byCat["ثابت"]+byCat["جمعية"];
+  // A one-time payout (a جمعية pot you collect, or a سلفة/advance you draw down — see
+  // openAdvanceModal) lands in whichever month it's actually received, independently of whether
+  // the item counts as an active recurring obligation that same month — a fresh advance's
+  // repayment schedule usually only *starts* the month after it's received, so checking every
+  // item (not just this month's `active` ones) is what makes the payout still count the month it
+  // actually happened instead of being silently dropped.
   let extraIncome = 0;
-  active.forEach(it=>{ if(it.cat==="جمعية" && it.payoutMonth === monthKeyStr) extraIncome += Number(it.payoutAmount||0); });
+  state.items.forEach(it=>{ if(it.payoutMonth === monthKeyStr) extraIncome += Number(it.payoutAmount||0); });
   const salary = Number(state.settings.salary||0);
-  const recurringSurplus = salary - obligations;
+  // Previously this left extraIncome out entirely — a جمعية payout (or a سلفة's disbursement)
+  // was shown as its own line in the obligations breakdown but never actually added to the total
+  // underneath it, so "معايا كام؟" didn't move even the month you actually received the money.
+  const recurringSurplus = salary + extraIncome - obligations;
   let phase, pE, pI, pF;
   if(recurringSurplus < 0){ phase="عجز"; pE=0;pI=0;pF=0; }
   else if(recurringSurplus < 13000){ phase="ضغط"; pE=.5;pI=.25;pF=.25; }
@@ -3506,6 +3589,89 @@ document.getElementById("saveAccountAdd").onclick = async ()=>{
   accountModalBg.classList.remove("show");
   render();
   showToast(t("toast.moveSaved"));
+};
+
+// ---------- new advance / credit draw (سلفة) ----------
+// A سلفة (a cash advance drawn against a credit line — or any lump sum received now that gets
+// paid back gradually) used to have no dedicated way to record it: the temptation was to bump
+// the base "المرتب الشهري" setting by the advance amount and invent an unrelated offsetting
+// source just so the totals stopped looking like a deficit — which permanently inflates every
+// future month's income (recurringSurplus, phase, allocation suggestions) instead of only the
+// one month the money actually arrived, and hides the real debt instead of tracking it.
+//
+// This does the same job with the app's existing building blocks and nothing fake:
+//  1. A real accountMoves deposit into whichever account the advance landed in — so that
+//     account's balance (e.g. a credit-card source sitting negative from the spending it
+//     already funded) reflects the advance actually being there, not a made-up "بعد التسوية"
+//     source with nothing behind it.
+//  2. One "قسط" item that does double duty: `payoutAmount`/`payoutMonth` (the same mechanism a
+//     جمعية payout already uses) count the advance as one-time extra income for the month it's
+//     received — which is what actually keeps "معايا كام؟" from looking like a deficit that
+//     month — while its `amount`/`startMonth` make the *repayment* installment a normal ongoing
+//     obligation from whichever month it actually starts (usually the month after), same as any
+//     other قسط. If there's no repayment plan at all, the item is created inactive with no
+//     amount — just a dormant historical record of the payout, editable later like any item.
+const advanceModalBg = document.getElementById("advanceModalBg");
+let selectedAdvanceSource = null;
+function updateAdvanceRepaymentFieldsVisibility(){
+  document.getElementById("advRepaymentFields").style.display =
+    document.getElementById("advHasRepayment").checked ? "" : "none";
+}
+function openAdvanceModal(){
+  if(state.settings.sources.length===0){ showToast(t("toast.addSourceFirstShort")); return; }
+  document.getElementById("advName").value = "";
+  document.getElementById("advAmount").value = "";
+  document.getElementById("advDate").value = new Date().toISOString().slice(0,10);
+  document.getElementById("advHasRepayment").checked = true;
+  document.getElementById("advInstallment").value = "";
+  document.getElementById("advMonths").value = "";
+  document.getElementById("advRepayStart").value = nextMonthKey(curMonthKey);
+  updateAdvanceRepaymentFieldsVisibility();
+  selectedAdvanceSource = state.settings.sources[0];
+  document.getElementById("advSourceChips").innerHTML = state.settings.sources.map(s=>
+    `<button class="chip ${s===selectedAdvanceSource?'sel':''}" data-src="${s}">💳 ${s}</button>`).join("");
+  document.querySelectorAll("#advSourceChips .chip").forEach(ch=>{
+    ch.onclick = ()=>{ selectedAdvanceSource = ch.dataset.src; document.querySelectorAll("#advSourceChips .chip").forEach(c=>c.classList.toggle("sel", c===ch)); };
+  });
+  advanceModalBg.classList.add("show");
+}
+document.getElementById("addAdvanceBtn").onclick = openAdvanceModal;
+document.getElementById("closeAdvanceModal").onclick = ()=>advanceModalBg.classList.remove("show");
+document.getElementById("cancelAdvanceAdd").onclick = ()=>advanceModalBg.classList.remove("show");
+document.getElementById("advHasRepayment").onchange = updateAdvanceRepaymentFieldsVisibility;
+document.getElementById("saveAdvanceAdd").onclick = async ()=>{
+  const name = document.getElementById("advName").value.trim();
+  if(!name){ showToast(t("toast.enterAdvanceName")); return; }
+  const amount = Number(document.getElementById("advAmount").value);
+  if(!amount || amount<=0){ showToast(t("toast.enterValidAmount")); return; }
+  const date = document.getElementById("advDate").value || new Date().toISOString().slice(0,10);
+  const hasRepayment = document.getElementById("advHasRepayment").checked;
+  let installment = 0, repayStart = null, repayEnd = null;
+  if(hasRepayment){
+    installment = Number(document.getElementById("advInstallment").value);
+    const months = Number(document.getElementById("advMonths").value);
+    if(!installment || installment<=0){ showToast(t("toast.enterValidMonthlyAmount")); return; }
+    if(!months || months<=0){ showToast(t("toast.enterValidMonthsCount")); return; }
+    repayStart = document.getElementById("advRepayStart").value || nextMonthKey(curMonthKey);
+    repayEnd = repayStart;
+    for(let i=1;i<months;i++) repayEnd = nextMonthKey(repayEnd);
+  }
+  state.accountMoves.push({
+    id:"adv"+Date.now(), source:selectedAdvanceSource, type:"deposit", amount, date,
+    note: tf("advance.depositNote", name)
+  });
+  await saveAccountMoves();
+  state.items.push({
+    id:"c"+Date.now(), name: tf("advance.repaymentItemName", name), amount: installment, cat:"قسط",
+    startMonth: repayStart, endMonth: repayEnd,
+    payoutAmount: amount, payoutMonth: date.slice(0,7),
+    source: null, autoDeductStartMonth: null,
+    active: hasRepayment, amountOverrides:{}, activeOverrides:{}
+  });
+  await saveItems();
+  advanceModalBg.classList.remove("show");
+  render();
+  showToast(t("toast.advanceSaved"));
 };
 
 // ---------- excel export styling (xlsx-js-style — see the CDN <script> comment in <head>) ----------
