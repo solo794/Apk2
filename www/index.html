@@ -492,7 +492,11 @@
           عايز تمسحه نهائي، استخدم رابط "🗑️ حذف نهائي" جنب البند.
         </p>
       </div>
+      <div class="obl-list" id="itemsGrandTotalWrap" style="margin-bottom:10px;"></div>
+      <div class="filter-scroll" id="itemsFilterChips"></div>
+      <div class="filter-scroll" id="itemsSourceFilterChips"></div>
       <div class="filter-scroll" id="itemsSortChips"></div>
+      <div class="obl-list" id="itemsFilteredSumWrap" style="margin-bottom:10px;"></div>
       <div id="itemsEdit"></div>
       <div id="itemsPausedWrap" style="margin-top:10px;"></div>
       <button class="btn btn-ghost" id="addItemBtn" style="margin-top:10px;" data-i18n="obligations.addItem">+ إضافة بند جديد</button>
@@ -1075,6 +1079,7 @@ const I18N = {
           أو يوقف البند في <b>كل الشهور</b> مرة واحدة (وبيشيل أي استثناءات شهرية كانت متسجلة له). لو
           عايز تمسحه نهائي، استخدم رابط "🗑️ حذف نهائي" جنب البند.`,
     "obligations.addItem":"+ إضافة بند جديد",
+    "obligations.grandTotalLabel":"إجمالي كل الالتزامات الشهر ده", "obligations.filteredSumLabel":"الإجمالي ({0} بند)",
     "maintenance.statusTitle":"🚗 حالة العربية", "maintenance.budgetTitle":"⛽ مصاريف العربية الشهر ده",
     "maintenance.budgetHint":"بنزين، جراج، صيانة... كل حاجة فئة عربية",
     "maintenance.odometerLabel":"الكيلومترات الحالية (KM)", "maintenance.odometerPlaceholder":"مثال: 15000",
@@ -1277,6 +1282,7 @@ const I18N = {
           monthly exceptions recorded for it). To delete it permanently, use the "🗑️ Delete
           permanently" link next to the item.`,
     "obligations.addItem":"+ Add New Item",
+    "obligations.grandTotalLabel":"Total of All This Month's Obligations", "obligations.filteredSumLabel":"Total ({0} items)",
     "maintenance.statusTitle":"🚗 Car Status", "maintenance.budgetTitle":"⛽ This Month's Car Spending",
     "maintenance.budgetHint":"Gas, garage, maintenance... anything in the Car category",
     "maintenance.odometerLabel":"Current Odometer (KM)", "maintenance.odometerPlaceholder":"e.g. 15000",
@@ -1508,6 +1514,8 @@ let editingExpenseId = null;
 let selectedAllocCat = ALLOC_CATS[0].k;
 let filterCat = "الكل";
 let filterSource = "الكل"; // "الكل" = no filter, "__NONE__" = expenses with no source at all, else an exact source name
+let itemFilterCat = "الكل"; // same idea as filterCat, scoped to the obligations tab (قسط/ثابت/جمعية)
+let itemFilterSource = "الكل"; // same idea as filterSource, for items linked to an auto-deduct source
 let allocFilterCat = "الكل";
 let searchTerm = "";
 let pendingSms = []; // candidate transactions detected from bank SMS — not persisted, reviewed each app open
@@ -2694,11 +2702,46 @@ function renderSettings(){
 
   document.getElementById("itemsMonthHint").textContent = monthLabelOf(curMonthKey);
   document.getElementById("exportExcelMonthLbl").textContent = monthLabelOf(curMonthKey);
+
+  // Grand total — always every active-for-month item, regardless of whatever filter is currently
+  // selected below (same number as "الفائض الشهري المتكرر"'s obligations component on the home
+  // tab), shown once at the very top so it's never hidden behind a filter.
+  const allActiveThisMonth = state.items.filter(it=>itemActiveForMonth(it, curMonthKey));
+  const grandTotal = allActiveThisMonth.reduce((s,it)=>s+itemAmountForMonth(it, curMonthKey), 0);
+  document.getElementById("itemsGrandTotalWrap").innerHTML =
+    `<div class="obl-row total"><span class="name">${t("obligations.grandTotalLabel")}</span><span class="val">${fmt(grandTotal)} ${t("common.currency")}</span></div>`;
+
+  // Category filter — same "الكل" + one chip per category idiom as the expenses tab.
+  const itemFilterEntries = [{k:"الكل"}, ...ITEM_CATS];
+  document.getElementById("itemsFilterChips").innerHTML = itemFilterEntries.map(c=>
+    `<button class="fchip ${c.k===itemFilterCat?'sel':''}" data-cat="${c.k}">${c.k==="الكل"?t("common.all"):catLabel(c)}</button>`).join("");
+  document.querySelectorAll("#itemsFilterChips .fchip").forEach(ch=>{
+    ch.onclick = ()=>{ itemFilterCat = ch.dataset.cat; render(); };
+  });
+
+  // Source filter — only items linked to an auto-deduct source (see modal.item.sourceLabel) carry
+  // one at all, so most items fall under "بدون مصدر" here; still useful to isolate "what's coming
+  // out of CIB automatically every month" from everything else.
+  const itemSourceNames = new Set(state.settings.sources);
+  state.items.forEach(it=>{ if(it.source) itemSourceNames.add(it.source); });
+  const hasSourcelessItem = state.items.some(it=>!it.source);
+  const itemSourceFilterEntries = ["الكل", ...itemSourceNames, ...(hasSourcelessItem ? ["__NONE__"] : [])];
+  document.getElementById("itemsSourceFilterChips").innerHTML = itemSourceFilterEntries.map(s=>
+    `<button class="fchip ${s===itemFilterSource?'sel':''}" data-src="${s}">${
+      s==="الكل" ? t("common.all") : s==="__NONE__" ? t("expenses.noSource") : "💳 "+s
+    }</button>`).join("");
+  document.querySelectorAll("#itemsSourceFilterChips .fchip").forEach(ch=>{
+    ch.onclick = ()=>{ itemFilterSource = ch.dataset.src; render(); };
+  });
+
   renderSortChips("itemsSortChips", SORT_OPTIONS_ITEMS, itemsSortBy, (k)=>{ itemsSortBy = k; render(); });
   const el = document.getElementById("itemsEdit");
   // sort by each item's *effective amount for the month being viewed*, not its static base
   // value, so "highest/lowest amount" matches what's actually shown below
-  const itemsWithEffAmount = state.items.map(it=>({...it, _effAmount: itemAmountForMonth(it, curMonthKey)}));
+  let itemsWithEffAmount = state.items.map(it=>({...it, _effAmount: itemAmountForMonth(it, curMonthKey)}));
+  if(itemFilterCat!=="الكل") itemsWithEffAmount = itemsWithEffAmount.filter(it=>it.cat===itemFilterCat);
+  if(itemFilterSource==="__NONE__") itemsWithEffAmount = itemsWithEffAmount.filter(it=>!it.source);
+  else if(itemFilterSource!=="الكل") itemsWithEffAmount = itemsWithEffAmount.filter(it=>it.source===itemFilterSource);
   const sortedItems = sortList(itemsWithEffAmount, itemsSortBy, null, "_effAmount");
   function itemRowHtml(it){
     const amtOverridden = it.amountOverrides && it.amountOverrides[curMonthKey]!==undefined;
@@ -2737,6 +2780,17 @@ function renderSettings(){
   // flipped, which read as "nothing happened" (reported: "بيجيبلي رسالة إنه اتشال بس لسه ظاهر").
   const visibleItems = sortedItems.filter(it=>itemActiveForMonth(it, curMonthKey));
   const pausedItems = sortedItems.filter(it=>!itemActiveForMonth(it, curMonthKey));
+
+  // Sum under the currently active filter (cat/source) — paused items don't count (they cost
+  // nothing this month, same convention as the grand total above), only the active/visible ones.
+  const filteredSumWrap = document.getElementById("itemsFilteredSumWrap");
+  if(itemFilterCat==="الكل" && itemFilterSource==="الكل"){ filteredSumWrap.innerHTML = ""; }
+  else if(visibleItems.length===0){ filteredSumWrap.innerHTML = ""; }
+  else {
+    const filteredSum = visibleItems.reduce((s,it)=>s+it._effAmount, 0);
+    filteredSumWrap.innerHTML = `<div class="obl-row total"><span class="name">${tf("obligations.filteredSumLabel", visibleItems.length)}</span><span class="val">${fmt(filteredSum)} ${t("common.currency")}</span></div>`;
+  }
+
   el.innerHTML = collapseSlice(visibleItems, "items").map(itemRowHtml).join("");
   appendCollapseToggle(el, "items", visibleItems.length, render);
 
