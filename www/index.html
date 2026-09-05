@@ -1204,7 +1204,7 @@ const I18N = {
     "common.total":"الإجمالي", "settings.movesEmpty":"لسه مفيش حركات مسجلة على أي حساب.",
     "modal.account.deposit":"إيداع", "modal.account.withdraw":"سحب", "toast.moveDeleted":"اتمسحت الحركة",
     "sms.bannerTitle":"معاملات بنكية مكتشفة ({0}) — مراجعتك مطلوبة", "sms.unclearAmount":"المبلغ مش واضح",
-    "sms.addAsExpense":"إضافة كمصروف", "sms.openManual":"افتح وسجّل يدوي", "sms.dismiss":"تجاهل", "sms.fromSender":"من {0}",
+    "sms.addAsExpense":"إضافة كمصروف", "sms.addAsDeposit":"إضافة كإيداع", "sms.openManual":"افتح وسجّل يدوي", "sms.dismiss":"تجاهل", "sms.fromSender":"من {0}",
     "voice.fabTitle":"أضف مصروف بالصوت", "voice.listening":"🎤 بتسمعك... اتكلم دلوقتي",
     "voice.recognized":"✅ اتسجل من الصوت — راجع البيانات واحفظ", "voice.recognizedNoAmount":"🎤 مسمعتش مبلغ واضح، اكتبه يدوي",
     "voice.permissionDenied":"🎤 محتاج إذن الميكروفون عشان يسمعك", "voice.failed":"⚠️ حصل خطأ في التعرف على الصوت",
@@ -1406,7 +1406,7 @@ const I18N = {
     "common.total":"Total", "settings.movesEmpty":"No movements logged on any account yet.",
     "modal.account.deposit":"Deposit", "modal.account.withdraw":"Withdraw", "toast.moveDeleted":"Movement deleted",
     "sms.bannerTitle":"Bank transactions detected ({0}) — review needed", "sms.unclearAmount":"Amount unclear",
-    "sms.addAsExpense":"Add as expense", "sms.openManual":"Open and log manually", "sms.dismiss":"Dismiss", "sms.fromSender":"From {0}",
+    "sms.addAsExpense":"Add as expense", "sms.addAsDeposit":"Add as deposit", "sms.openManual":"Open and log manually", "sms.dismiss":"Dismiss", "sms.fromSender":"From {0}",
     "voice.fabTitle":"Add an expense by voice", "voice.listening":"🎤 Listening... speak now",
     "voice.recognized":"✅ Captured from voice — review and save", "voice.recognizedNoAmount":"🎤 Couldn't catch a clear amount, enter it manually",
     "voice.permissionDenied":"🎤 Needs microphone permission to listen", "voice.failed":"⚠️ Voice recognition failed",
@@ -1734,7 +1734,11 @@ async function checkPendingSmsTransactions(){
     await SmsReader.clearPendingTransactions();
     items.forEach(it=>{
       const parsed = parseBankSms(it.sender, it.body);
-      if(parsed && !parsed.isCredit){
+      // Credit messages used to be silently dropped here — but SmsReceiver.java shows a system
+      // notification for every matching-sender message regardless of credit/debit, so tapping a
+      // credit one's notification opened the app to... nothing related to it at all. Surfacing
+      // both in the same banner (renderPendingSms tells them apart via isCredit) closes that gap.
+      if(parsed){
         pendingSms.push({ id:"sms"+Date.now()+Math.random().toString(36).slice(2,6), ...parsed, timestamp: it.timestamp });
       }
     });
@@ -2938,10 +2942,10 @@ function renderPendingSms(){
     <div class="sb-title">🏦 ${tf("sms.bannerTitle", pendingSms.length)}</div>
     ${pendingSms.map(s=>`
       <div class="sms-item" data-id="${s.id}">
-        <div class="si-top"><span class="si-amt">${s.amount!=null ? fmt(s.amount)+" "+t("common.currency") : t("sms.unclearAmount")}</span><span class="si-src">${s.sender}${s.merchant ? " · "+s.merchant : ""}</span></div>
+        <div class="si-top"><span class="si-amt">${s.isCredit?"⬆️ ":""}${s.amount!=null ? fmt(s.amount)+" "+t("common.currency") : t("sms.unclearAmount")}</span><span class="si-src">${s.sender}${s.merchant ? " · "+s.merchant : ""}</span></div>
         <div class="si-body">${(s.rawBody||"").slice(0,140)}</div>
         <div class="si-actions">
-          <button class="si-add" data-id="${s.id}">✅ ${s.amount!=null ? t("sms.addAsExpense") : t("sms.openManual")}</button>
+          <button class="si-add" data-id="${s.id}">✅ ${s.amount!=null ? t(s.isCredit?"sms.addAsDeposit":"sms.addAsExpense") : t("sms.openManual")}</button>
           <button class="si-dismiss" data-id="${s.id}">✖️ ${t("sms.dismiss")}</button>
         </div>
       </div>`).join("")}
@@ -2955,9 +2959,27 @@ function renderPendingSms(){
       if(!s) return;
       pendingSms = pendingSms.filter(x=>x.id!==s.id);
       renderPendingSms();
-      openModal(null);
-      if(s.amount!=null) document.getElementById("mAmount").value = s.amount;
-      document.getElementById("mNote").value = s.merchant || tf("sms.fromSender", s.sender);
+      if(s.isCredit){
+        // A credit/incoming-transfer SMS is a deposit, not an expense — send it to the account
+        // movement modal instead (pre-selecting the matching source when the sender code — e.g.
+        // "QNB"/"CIB" — matches one of the user's own source names), still letting them review/
+        // edit before saving, same as the expense path below.
+        openAccountModal();
+        if(s.amount!=null) document.getElementById("acAmount").value = s.amount;
+        document.getElementById("acNote").value = s.merchant || tf("sms.fromSender", s.sender);
+        const guess = state.settings.sources.find(src=>{
+          const a = src.toUpperCase(), b = (s.sender||"").toUpperCase();
+          return a && b && (a.includes(b) || b.includes(a));
+        });
+        if(guess){
+          selectedAccountSource = guess;
+          document.querySelectorAll("#accountChips .chip").forEach(c=>c.classList.toggle("sel", c.dataset.src===guess));
+        }
+      } else {
+        openModal(null);
+        if(s.amount!=null) document.getElementById("mAmount").value = s.amount;
+        document.getElementById("mNote").value = s.merchant || tf("sms.fromSender", s.sender);
+      }
     };
   });
 }
