@@ -449,7 +449,9 @@
       <input type="text" id="searchBox" data-i18n-placeholder="expenses.searchPlaceholder" placeholder="دور بالملاحظة...">
     </div>
     <div class="filter-scroll" id="filterChips"></div>
+    <div class="filter-scroll" id="sourceFilterChips"></div>
     <div class="filter-scroll" id="expSortChips"></div>
+    <div class="obl-list" id="expSumWrap" style="margin-bottom:10px;"></div>
     <div id="expList"></div>
     <button class="btn btn-ghost" id="exportCsv" style="margin-top:6px;" data-i18n="expenses.exportCsv">⬇️ تصدير مصاريف الشهر (CSV)</button>
   </div>
@@ -1179,6 +1181,7 @@ const I18N = {
     "obl.fixed":"مصروفات ثابتة", "obl.gam3iyas":"جمعيات", "obl.recurringSurplus":"الفائض الشهري المتكرر",
     "common.overriddenSuffix":" (معدّلة)", "home.outOf":"من", "common.perDay":"ج/يوم",
     "expenses.emptyMonth":"لسه مفيش مصاريف الشهر ده", "common.all":"الكل",
+    "expenses.noSource":"🚫 بدون مصدر", "expenses.filteredSumLabel":"الإجمالي ({0} عملية)",
     "expenses.emptyList":"لسه مفيش مصاريف تطابق البحث.<br>دوس على زرار + وسجّل مصروف.",
     "common.noNote":"بدون ملاحظة", "toast.expenseDeleted":"اتمسح المصروف",
     "allocations.cumulativeSuffix":"(تراكمي)", "allocations.emptyMonthly":"لسه مفيش توزيعات مسجلة.<br>دوس + وسجّل أول عملية.",
@@ -1383,6 +1386,7 @@ const I18N = {
     "obl.fixed":"Fixed Bills", "obl.gam3iyas":"Gam3iyas", "obl.recurringSurplus":"Recurring Monthly Surplus",
     "common.overriddenSuffix":" (adjusted)", "home.outOf":"out of", "common.perDay":"EGP/day",
     "expenses.emptyMonth":"No expenses yet this month", "common.all":"All",
+    "expenses.noSource":"🚫 No source", "expenses.filteredSumLabel":"Total ({0} transactions)",
     "expenses.emptyList":"No expenses match the search.<br>Tap the + button and log one.",
     "common.noNote":"No note", "toast.expenseDeleted":"Expense deleted",
     "allocations.cumulativeSuffix":"(cumulative)", "allocations.emptyMonthly":"No allocations logged yet.<br>Tap + and log the first one.",
@@ -1503,6 +1507,7 @@ let selectedSource = null;
 let editingExpenseId = null;
 let selectedAllocCat = ALLOC_CATS[0].k;
 let filterCat = "الكل";
+let filterSource = "الكل"; // "الكل" = no filter, "__NONE__" = expenses with no source at all, else an exact source name
 let allocFilterCat = "الكل";
 let searchTerm = "";
 let pendingSms = []; // candidate transactions detected from bank SMS — not persisted, reviewed each app open
@@ -2481,13 +2486,43 @@ function renderExpenses(){
   document.querySelectorAll("#filterChips .fchip").forEach(ch=>{
     ch.onclick = ()=>{ filterCat = ch.dataset.cat; render(); };
   });
+
+  // Source filter chips — union of the currently-configured sources and any source name still
+  // referenced by an expense this month (same "don't silently drop a renamed/deleted source"
+  // idea as computeAllAccountBalances), plus a dedicated chip for expenses logged with no source
+  // at all (older entries from before the source field existed, or ones added without picking one).
+  const monthExpensesForSourceChips = expensesForMonth(curMonthKey);
+  const sourceNames = new Set(state.settings.sources);
+  monthExpensesForSourceChips.forEach(e=>{ if(e.source) sourceNames.add(e.source); });
+  const hasSourcelessExpense = monthExpensesForSourceChips.some(e=>!e.source);
+  const sourceFilterEntries = ["الكل", ...sourceNames, ...(hasSourcelessExpense ? ["__NONE__"] : [])];
+  document.getElementById("sourceFilterChips").innerHTML = sourceFilterEntries.map(s=>
+    `<button class="fchip ${s===filterSource?'sel':''}" data-src="${s}">${
+      s==="الكل" ? t("common.all") : s==="__NONE__" ? t("expenses.noSource") : "💳 "+s
+    }</button>`).join("");
+  document.querySelectorAll("#sourceFilterChips .fchip").forEach(ch=>{
+    ch.onclick = ()=>{ filterSource = ch.dataset.src; render(); };
+  });
+
   renderSortChips("expSortChips", SORT_OPTIONS_DATE_AMOUNT, expenseSortBy, (k)=>{ expenseSortBy = k; render(); });
   document.getElementById("searchBox").value = searchTerm;
 
   let list = expensesForMonth(curMonthKey);
   if(filterCat!=="الكل") list = list.filter(e=>e.cat===filterCat);
+  if(filterSource==="__NONE__") list = list.filter(e=>!e.source);
+  else if(filterSource!=="الكل") list = list.filter(e=>e.source===filterSource);
   if(searchTerm.trim()) list = list.filter(e=>(e.note||"").includes(searchTerm.trim()));
   list = sortList(list, expenseSortBy, "date", "amount");
+
+  // Sum of every expense under whatever filter is active (category/source/search combined) — not
+  // just the visible page (collapseSlice below only limits how many *rows* render, the sum always
+  // reflects the full filtered set, matching what "كل المصاريف" implies once you've filtered it).
+  const sumWrap = document.getElementById("expSumWrap");
+  if(list.length===0){ sumWrap.innerHTML = ""; }
+  else {
+    const filteredSum = list.reduce((s,e)=>s+Number(e.amount),0);
+    sumWrap.innerHTML = `<div class="obl-row total"><span class="name">${tf("expenses.filteredSumLabel", list.length)}</span><span class="val">${fmt(filteredSum)} ${t("common.currency")}</span></div>`;
+  }
 
   if(list.length===0){
     el.innerHTML = `<div class="empty-state"><div class="big">🧾</div><p>${t("expenses.emptyList")}</p></div>`;
