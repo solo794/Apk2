@@ -96,11 +96,14 @@
   .hero .label{font-size:12.5px; opacity:.75; font-weight:500;}
   .hero .amount{font-size:40px; font-weight:800; line-height:1.15; display:flex; align-items:baseline; gap:6px;}
   .hero .amount small{font-size:16px; font-weight:600; opacity:.8;}
-  .hero .phase-chip{
-    display:inline-flex; align-self:flex-start; margin-top:8px;
+  /* Shared by the hero (real balance) and the flex-card (theoretical budget) — both have a dark
+     background, so the same semi-transparent-white pill reads fine in either place. */
+  .hero .phase-chip, .flex-card .phase-chip{
+    display:inline-flex; align-self:flex-start;
     font-size:12px; font-weight:700; padding:4px 12px; border-radius:999px;
     background:rgba(255,255,255,.16);
   }
+  .hero .phase-chip{ margin-top:8px; }
 
   /* ---------- content ---------- */
   .content{padding:16px 16px 110px; flex:1; animation:tabFadeIn .28s ease;}
@@ -399,7 +402,6 @@
     <div class="hero">
       <div class="label" id="heroLabel" data-i18n="hero.label">معايا كام؟</div>
       <div class="amount" id="heroAmount">0 <small data-i18n="common.currency">ج</small></div>
-      <div class="phase-chip" id="phaseChip">—</div>
     </div>
   </div>
 
@@ -409,6 +411,12 @@
     <div class="section-title" data-i18n="home.flexTitle">🎯 مرونة الشهر ده</div>
     <div class="flex-card">
       <div class="flex-top">
+        <div><div class="t1" data-i18n="home.theoreticalRemainingLabel">الفائض النظري المتبقي</div><div class="t2" id="theoreticalRemaining">0 ج</div></div>
+        <div style="text-align:left;">
+          <div class="phase-chip" id="phaseChip">—</div>
+        </div>
+      </div>
+      <div class="flex-top" style="margin-top:14px;">
         <div><div class="t1" data-i18n="home.spentOf">اتصرف من أصل</div><div class="t2" id="flexSpent">0 ج</div></div>
         <div style="text-align:left;">
           <div class="t3" id="flexBudget">من 0 ج</div>
@@ -417,7 +425,7 @@
       <div class="bar-track"><div class="bar-fill" id="flexBar" style="width:0%"></div></div>
     </div>
 
-    <div class="section-title"><span data-i18n="home.accountsTitle">💳 أرصدة الحسابات</span> <span class="hint" data-i18n="home.accountsHint">مستقلة عن "معايا كام؟"</span></div>
+    <div class="section-title"><span data-i18n="home.accountsTitle">💳 أرصدة الحسابات</span> <span class="hint" data-i18n="home.accountsHint">تفصيل رقم "معايا كام؟" فوق لكل حساب</span></div>
     <div class="obl-list" id="accountsList"></div>
     <button class="btn btn-ghost" id="addMoveBtn" style="margin-top:8px;" data-i18n="home.addMove">+ تسجيل حركة (إيداع/سحب)</button>
     <button class="btn btn-ghost" id="addAdvanceBtn" style="margin-top:8px;" data-i18n="home.addAdvance">+ سلفة/دفعة ائتمانية جديدة</button>
@@ -1047,8 +1055,8 @@ const I18N = {
   ar: {
     "app.title":"💰 معايا كام؟", "undo.title":"تراجع عن آخر تغيير", "redo.title":"إعادة آخر تراجع",
     "hero.label":"معايا كام؟", "common.currency":"ج",
-    "home.flexTitle":"🎯 مرونة الشهر ده", "home.spentOf":"اتصرف من أصل",
-    "home.accountsTitle":"💳 أرصدة الحسابات", "home.accountsHint":'مستقلة عن "معايا كام؟"',
+    "home.flexTitle":"🎯 مرونة الشهر ده", "home.theoreticalRemainingLabel":"الفائض النظري المتبقي", "home.spentOf":"اتصرف من أصل",
+    "home.accountsTitle":"💳 أرصدة الحسابات", "home.accountsHint":'تفصيل رقم "معايا كام؟" فوق لكل حساب',
     "home.addMove":"+ تسجيل حركة (إيداع/سحب)", "home.addAdvance":"+ سلفة/دفعة ائتمانية جديدة", "home.quickLookTitle":"📌 نظرة سريعة",
     "home.topCatLabel":"أكتر فئة صرف", "home.avgDailyLabel":"متوسط يومي (مرونة)",
     "home.obligationsTitle":"📊 التزامات الشهر",
@@ -1246,8 +1254,8 @@ const I18N = {
   en: {
     "app.title":"💰 What's Left?", "undo.title":"Undo last change", "redo.title":"Redo last undo",
     "hero.label":"What's left?", "common.currency":"EGP",
-    "home.flexTitle":"🎯 This Month's Flex", "home.spentOf":"Spent out of",
-    "home.accountsTitle":"💳 Account Balances", "home.accountsHint":'Independent of "What\'s left?"',
+    "home.flexTitle":"🎯 This Month's Flex", "home.theoreticalRemainingLabel":"Theoretical Surplus Remaining", "home.spentOf":"Spent out of",
+    "home.accountsTitle":"💳 Account Balances", "home.accountsHint":'Breakdown of the "What\'s left?" number above, per account',
     "home.addMove":"+ Log a Move (Deposit/Withdraw)", "home.addAdvance":"+ New Advance/Credit Draw", "home.quickLookTitle":"📌 Quick Look",
     "home.topCatLabel":"Top Spend Category", "home.avgDailyLabel":"Daily Avg (Flex)",
     "home.obligationsTitle":"📊 This Month's Obligations",
@@ -2356,11 +2364,26 @@ function render(){
 
   const monthAllocations = state.allocations.filter(a=>a.date.slice(0,7)===curMonthKey);
   const allocSpent = monthAllocations.reduce((s,a)=>s+Number(a.amount),0);
-  const remaining = m.recurringSurplus - spent - allocSpent;
-  document.getElementById("heroAmount").innerHTML = fmt(remaining) + " <small>"+t("common.currency")+"</small>";
-  document.getElementById("heroAmount").style.color = remaining<0 ? "var(--brick)" : "";
-  document.getElementById("heroLabel").textContent = t("hero.label");
+  // "الفائض النظري المتبقي" — the theoretical monthly allowance (salary + extra income minus
+  // obligations) minus everything actually spent/allocated so far. This USED to be the hero
+  // number, but it's a budget projection, not money that's actually anywhere — real deposits
+  // and withdrawals (سلفة included) don't move it, only expenses/allocations logged this month
+  // do. Reported as confusing precisely because of that mismatch, so it now lives here, grouped
+  // with the rest of the theoretical monthly picture (this card + "التزامات الشهر" below it),
+  // and the hero above is the actual account total instead — see totalBalance below.
+  const theoreticalRemaining = m.recurringSurplus - spent - allocSpent;
+  document.getElementById("theoreticalRemaining").textContent = fmt(theoreticalRemaining) + " " + t("common.currency");
+  document.getElementById("theoreticalRemaining").style.color = theoreticalRemaining<0 ? "var(--brick)" : "";
   document.getElementById("phaseChip").textContent = phaseLabel(m.phase);
+
+  // "معايا كام؟" (the hero) — literally what's actually in your accounts right now: the same
+  // running total as "أرصدة الحسابات" → "الإجمالي" below (computeAllAccountBalances is
+  // month-independent by design, same as that section — your real balance doesn't change
+  // depending on which month you're browsing).
+  const totalBalance = computeAllAccountBalances().reduce((s,b)=>s+b.balance, 0);
+  document.getElementById("heroAmount").innerHTML = fmt(totalBalance) + " <small>"+t("common.currency")+"</small>";
+  document.getElementById("heroAmount").style.color = totalBalance<0 ? "var(--brick)" : "";
+  document.getElementById("heroLabel").textContent = t("hero.label");
 
   const rows = [];
   rows.push(oblRow(t("obl.salary"), m.salary));
@@ -3862,14 +3885,18 @@ document.getElementById("exportExcel").onclick = async ()=>{
   const monthAllocationsForSummary = state.allocations.filter(a=>a.date.slice(0,7)===mk);
   const allocSpentForSummary = monthAllocationsForSummary.reduce((s,a)=>s+Number(a.amount),0);
   const remainingForSummary = m.recurringSurplus - spentForSummary - allocSpentForSummary;
+  const totalBalanceForSummary = computeAllAccountBalances().reduce((s,b)=>s+b.balance, 0);
   const phaseLabel =
     m.phase==="عجز" ? "⚠️ عجز في الميزانية" :
     m.phase==="ضغط" ? "🔴 مرحلة الضغط" :
     m.phase==="انتقال" ? "🟡 مرحلة الانتقال" : "🟢 مرحلة الانطلاق";
   const monthSummaryRows = [
     {البند:"الشهر", القيمة: monthLabelOf(mk)},
+    {البند:"معايا كام؟ (رصيدك الفعلي في كل الحسابات)", القيمة: totalBalanceForSummary},
+    {البند:"", القيمة: ""},
+    {البند:"— الصورة النظرية للشهر ده —", القيمة: ""},
     {البند:"المرتب", القيمة: m.salary},
-    {البند:"دخل إضافي (جمعية)", القيمة: m.extraIncome},
+    {البند:"دخل إضافي (قبضة جمعية/سلفة)", القيمة: m.extraIncome},
     {البند:"إجمالي الأقساط", القيمة: m.byCat["قسط"]},
     {البند:"إجمالي المصروفات الثابتة", القيمة: m.byCat["ثابت"]},
     {البند:"إجمالي الجمعيات", القيمة: m.byCat["جمعية"]},
@@ -3877,7 +3904,7 @@ document.getElementById("exportExcel").onclick = async ()=>{
     {البند:"الفائض الشهري المتكرر", القيمة: m.recurringSurplus},
     {البند:"إجمالي المصاريف الفعلية هذا الشهر", القيمة: spentForSummary},
     {البند:"إجمالي التوزيعات الفعلية هذا الشهر", القيمة: allocSpentForSummary},
-    {البند:"معايا كام؟", القيمة: remainingForSummary},
+    {البند:"الفائض النظري المتبقي", القيمة: remainingForSummary},
     {البند:"المرحلة", القيمة: phaseLabel},
     {البند:"طوارئ", القيمة: m.emergency},
     {البند:"استثمار", القيمة: m.invest},
