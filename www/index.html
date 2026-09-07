@@ -297,24 +297,28 @@
   /* Both FABs used to float much higher up the screen (bottom:96px/164px), anchored near the
      right edge — reported as constantly covering real content (numbers/rows) while scrolling,
      since that's well inside the actual content area, not just the bottom margin reserved for
-     them. They're centered as a pair and raised just enough to sit right on top of the tab bar's
-     edge instead — a fixed physical offset (not inset-inline-end) works the same in RTL/LTR here
+     them. They're now the same size, level with each other, and sit as a close pair raised just
+     above the tab bar — plus the bar itself grows a matching bump behind them (.tabbar::before
+     below) so the two read as one merged shape instead of buttons floating separately over a flat
+     edge. A fixed physical offset (not inset-inline-end) centers them the same way in RTL/LTR
      since centering doesn't depend on reading direction the way edge-anchoring did. */
+  .fab, .fab-voice{
+    position:fixed; bottom:calc(40px + env(safe-area-inset-bottom));
+    width:52px; height:52px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;
+    z-index:21; transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
+  }
   .fab{
-    position:fixed; bottom:calc(58px + env(safe-area-inset-bottom)); left:calc(50% + 27px); transform:translateX(-50%);
-    width:56px; height:56px; border-radius:50%; background:var(--gold); color:var(--ink);
-    display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; border:none; cursor:pointer;
-    box-shadow:0 8px 20px rgba(184,134,59,.45); z-index:21;
-    transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
+    left:calc(50% + 27px); transform:translateX(-50%);
+    background:var(--gold); color:var(--ink); font-size:25px; font-weight:800;
+    box-shadow:0 8px 20px rgba(184,134,59,.45);
   }
   .fab:active{transform:translateX(-50%) scale(.88); box-shadow:0 4px 10px rgba(184,134,59,.5);}
 
   .fab-voice{
-    position:fixed; bottom:calc(63px + env(safe-area-inset-bottom)); left:calc(50% - 32px); transform:translateX(-50%);
-    width:46px; height:46px; border-radius:50%; background:var(--teal); color:#fff;
-    display:flex; align-items:center; justify-content:center; font-size:19px; border:none; cursor:pointer;
-    box-shadow:0 8px 18px rgba(22,48,46,.4); z-index:21;
-    transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
+    left:calc(50% - 27px); transform:translateX(-50%);
+    background:var(--teal); color:#fff; font-size:20px;
+    box-shadow:0 8px 18px rgba(22,48,46,.4);
   }
   .fab-voice:active{transform:translateX(-50%) scale(.88);}
 
@@ -322,6 +326,20 @@
     position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
     background:#fff; border-top:1px solid var(--line); display:flex;
     padding:8px 8px calc(8px + env(safe-area-inset-bottom)); z-index:20;
+  }
+  /* The idea: instead of the two FABs floating above a flat bar edge with a gap of bare page
+     showing through underneath them, the bar's own white background grows a low dome behind them
+     — a half-ellipse the same color as the bar, sitting flush on its top edge and rising just
+     high enough to reach around the buttons' midpoint, so the buttons read as sitting IN the bar
+     rather than hovering separately over it. Same color as the bar (not a new surface), so inside
+     the bar's own boundary it's invisible — the bump only exists in the strip of space above the
+     bar's flat edge, and pointer-events:none keeps it from ever intercepting a tap. */
+  .tabbar::before{
+    content:""; position:absolute; top:-30px; left:50%; transform:translateX(-50%);
+    width:150px; height:30px; background:#fff;
+    border-radius:50% 50% 0 0 / 100% 100% 0 0;
+    box-shadow:0 -3px 8px rgba(22,48,46,.06);
+    pointer-events:none;
   }
   .tabbtn{flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; cursor:pointer; color:var(--ink-soft); font-family:'Cairo'; transition:color .2s ease;}
   .tabbtn .ic{
