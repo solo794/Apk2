@@ -58,7 +58,7 @@
   .topbar{
     background:linear-gradient(160deg,var(--teal-dark),var(--teal) 70%);
     color:var(--paper);
-    padding:calc(18px + env(safe-area-inset-top)) 20px 26px;
+    padding:calc(18px + env(safe-area-inset-top)) 20px 30px;
     border-radius:0 0 26px 26px;
     flex-shrink:0;
   }
@@ -66,8 +66,10 @@
     display:flex; align-items:center; justify-content:space-between;
     margin-bottom:18px;
   }
+  /* Just the emoji mark now — this used to repeat the full app name ("💰 معايا كام؟") right above
+     the hero's own "معايا كام؟" label, reading as the same phrase printed twice stacked. */
   .brand h1{
-    font-size:17px; font-weight:700; margin:0; letter-spacing:.2px;
+    font-size:20px; font-weight:700; margin:0; letter-spacing:.2px; line-height:1;
   }
   .month-switch{
     display:flex; align-items:center; gap:6px;
@@ -92,10 +94,14 @@
   .undo-redo-pill button:active:not(:disabled){background:rgba(255,255,255,.2);}
   .undo-redo-pill button:disabled{opacity:.3; cursor:default;}
 
-  .hero{display:flex; flex-direction:column; gap:4px;}
-  .hero .label{font-size:12.5px; opacity:.75; font-weight:500;}
-  .hero .amount{font-size:40px; font-weight:800; line-height:1.15; display:flex; align-items:baseline; gap:6px;}
-  .hero .amount small{font-size:16px; font-weight:600; opacity:.8;}
+  .hero{display:flex; flex-direction:column; gap:3px;}
+  .hero .label{font-size:14.5px; opacity:.88; font-weight:600;}
+  .hero .amount{font-size:48px; font-weight:800; line-height:1.15; display:flex; align-items:baseline; gap:7px; margin-top:2px;}
+  .hero .amount small{font-size:18px; font-weight:600; opacity:.85;}
+  /* Spells out what the big number actually is (your real balance, right now, across every
+     account) — added after the number's meaning changed from a budget projection to something
+     literal, so it needs to read unambiguously without relying on the label question alone. */
+  .hero-sub{font-size:12px; opacity:.72; font-weight:500; margin-top:3px;}
   /* Shared by the hero (real balance) and the flex-card (theoretical budget) — both have a dark
      background, so the same semi-transparent-white pill reads fine in either place. */
   .hero .phase-chip, .flex-card .phase-chip{
@@ -106,7 +112,11 @@
   .hero .phase-chip{ margin-top:8px; }
 
   /* ---------- content ---------- */
-  .content{padding:16px 16px 110px; flex:1; animation:tabFadeIn .28s ease;}
+  /* Bottom padding must clear both FABs (bottom:58-63px + up to 56px tall, so up to ~114px above
+     the viewport bottom) with room to spare — this used to be 110px, just short of that, so the
+     last section on a tab (usually "التزامات الشهر") still peeked out from under them when
+     scrolled all the way down. */
+  .content{padding:16px 16px 140px; flex:1; animation:tabFadeIn .28s ease;}
   @keyframes tabFadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
   .section-title{
     font-size:14px; font-weight:700; color:var(--ink);
@@ -127,7 +137,17 @@
   .obl-row:last-child{border-bottom:none;}
   .obl-row .name{color:var(--ink); font-weight:600;}
   .obl-row .val{font-weight:700; color:var(--ink);}
-  .obl-row.total{background:var(--paper-dim); font-weight:800;}
+  /* Shared by every "total" row in the app (account balances, obligations' recurring surplus,
+     the filtered-sum/grand-total rows in expenses and obligations) — a gold top border + bigger
+     teal value make these stand out from an ordinary row at a glance instead of blending in with
+     just a slightly different background. */
+  .obl-row.total{
+    background:linear-gradient(135deg, var(--paper-dim), #fff);
+    font-weight:800; padding:15px 16px;
+    border-top:2px solid var(--gold);
+  }
+  .obl-row.total .name{font-size:13.5px;}
+  .obl-row.total .val{font-size:16.5px; color:var(--teal);}
 
   .alloc-grid{display:flex; gap:8px;}
   .alloc-card{flex:1; background:#fff; border:1px solid var(--line); border-radius:16px; padding:12px 10px; text-align:center; transition:transform .12s ease;}
@@ -269,30 +289,29 @@
   .btn-danger{background:none; color:var(--brick); border:1px solid var(--brick);}
   .btn:active{transform:scale(.97); opacity:.85;}
 
+  /* Both FABs used to float much higher up the screen (bottom:96px/164px), anchored near the
+     right edge — reported as constantly covering real content (numbers/rows) while scrolling,
+     since that's well inside the actual content area, not just the bottom margin reserved for
+     them. They're centered as a pair and raised just enough to sit right on top of the tab bar's
+     edge instead — a fixed physical offset (not inset-inline-end) works the same in RTL/LTR here
+     since centering doesn't depend on reading direction the way edge-anchoring did. */
   .fab{
-    /* inset-inline-end (not a physical left) so this sits on the right in LTR/English and the
-       left in RTL/Arabic — matches the standard convention for each direction instead of staying
-       pinned to the same physical side regardless of language. */
-    position:fixed; bottom:calc(96px + env(safe-area-inset-bottom)); inset-inline-end:calc(50% - 220px + 20px);
+    position:fixed; bottom:calc(58px + env(safe-area-inset-bottom)); left:calc(50% + 27px); transform:translateX(-50%);
     width:56px; height:56px; border-radius:50%; background:var(--gold); color:var(--ink);
     display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; border:none; cursor:pointer;
-    box-shadow:0 8px 20px rgba(184,134,59,.45); z-index:20;
+    box-shadow:0 8px 20px rgba(184,134,59,.45); z-index:21;
     transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
   }
-  .fab:active{transform:scale(.88); box-shadow:0 4px 10px rgba(184,134,59,.5);}
-  @media (max-width:500px){ .fab{ inset-inline-end:20px; } }
+  .fab:active{transform:translateX(-50%) scale(.88); box-shadow:0 4px 10px rgba(184,134,59,.5);}
 
   .fab-voice{
-    /* +5px vs. .fab's inset: .fab is 56px wide and .fab-voice 46px, so equal insets would leave
-       their centers 5px apart — this keeps the mic button centered directly above "+". */
-    position:fixed; bottom:calc(164px + env(safe-area-inset-bottom)); inset-inline-end:calc(50% - 220px + 25px);
+    position:fixed; bottom:calc(63px + env(safe-area-inset-bottom)); left:calc(50% - 32px); transform:translateX(-50%);
     width:46px; height:46px; border-radius:50%; background:var(--teal); color:#fff;
     display:flex; align-items:center; justify-content:center; font-size:19px; border:none; cursor:pointer;
-    box-shadow:0 8px 18px rgba(22,48,46,.4); z-index:20;
+    box-shadow:0 8px 18px rgba(22,48,46,.4); z-index:21;
     transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
   }
-  .fab-voice:active{transform:scale(.88);}
-  @media (max-width:500px){ .fab-voice{ inset-inline-end:25px; } }
+  .fab-voice:active{transform:translateX(-50%) scale(.88);}
 
   .tabbar{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
@@ -386,7 +405,7 @@
 
   <div class="topbar">
     <div class="brand">
-      <h1 data-i18n="app.title">💰 معايا كام؟</h1>
+      <h1>💰</h1>
       <div style="display:flex; align-items:center; gap:8px;">
         <div class="undo-redo-pill">
           <button id="undoBtn" data-i18n-title="undo.title" title="تراجع عن آخر تغيير" disabled>↩️</button>
@@ -402,6 +421,7 @@
     <div class="hero">
       <div class="label" id="heroLabel" data-i18n="hero.label">معايا كام؟</div>
       <div class="amount" id="heroAmount">0 <small data-i18n="common.currency">ج</small></div>
+      <div class="hero-sub" data-i18n="hero.subLabel">رصيدك الفعلي دلوقتي في كل حساباتك</div>
     </div>
   </div>
 
@@ -438,6 +458,7 @@
 
     <div class="section-title" data-i18n="home.obligationsTitle">📊 التزامات الشهر</div>
     <div class="obl-list" id="oblList"></div>
+    <button class="btn btn-ghost" id="addExtraIncomeBtn" style="margin-top:8px;" data-i18n="home.addExtraIncome">+ دخل إضافي جديد</button>
   </div>
 
   <div class="content" id="tab-expenses" style="display:none;">
@@ -493,6 +514,9 @@
         </p>
       </div>
       <div class="obl-list" id="itemsGrandTotalWrap" style="margin-bottom:10px;"></div>
+      <div class="search-wrap">
+        <input type="text" id="itemsSearchBox" data-i18n-placeholder="obligations.searchPlaceholder" placeholder="دور باسم البند...">
+      </div>
       <div class="filter-scroll" id="itemsFilterChips"></div>
       <div class="filter-scroll" id="itemsSourceFilterChips"></div>
       <div class="filter-scroll" id="itemsSortChips"></div>
@@ -906,24 +930,24 @@
 <div class="modal-bg" id="advanceModalBg">
   <div class="modal">
     <button class="close-x" id="closeAdvanceModal">✕</button>
-    <h2 data-i18n="modal.advance.title">سلفة/دفعة ائتمانية جديدة</h2>
+    <h2 id="advanceModalTitle">سلفة/دفعة ائتمانية جديدة</h2>
     <div class="field">
-      <label data-i18n="modal.advance.nameLabel">اسم السلفة</label>
-      <input type="text" id="advName" data-i18n-placeholder="modal.advance.namePlaceholder" placeholder="مثال: سلفة تراخيص العربية">
+      <label id="advNameLabel">اسم السلفة</label>
+      <input type="text" id="advName" placeholder="مثال: سلفة تراخيص العربية">
     </div>
     <div class="field">
       <label data-i18n="modal.advance.sourceLabel">هتتحط في حساب/كارت إيه؟</label>
       <div class="chip-row" id="advSourceChips"></div>
     </div>
     <div class="field">
-      <label data-i18n="modal.advance.amountLabel">قيمة السلفة (ج)</label>
+      <label id="advAmountLabel">قيمة السلفة (ج)</label>
       <input type="number" id="advAmount" placeholder="مثال: 14169">
     </div>
     <div class="field">
       <label data-i18n="common.date">التاريخ</label>
       <input type="date" id="advDate">
     </div>
-    <div class="toggle-row" style="border-bottom:none;">
+    <div class="toggle-row" id="advHasRepaymentRow" style="border-bottom:none;">
       <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="modal.advance.hasRepaymentLabel">هتتسدد بقسط شهري؟</span>
       <label class="switch"><input type="checkbox" id="advHasRepayment" checked><span class="slider"></span></label>
     </div>
@@ -941,10 +965,10 @@
         <input type="month" id="advRepayStart">
       </div>
     </div>
-    <p style="font-size:11px; color:var(--ink-soft); margin:0 0 8px; line-height:1.6;" data-i18n="modal.advance.note">
+    <p style="font-size:11px; color:var(--ink-soft); margin:0 0 8px; line-height:1.6;" id="advanceModalNote">
       السلفة بتتسجّل كإيداع حقيقي في الحساب اللي اخترته (مش زيادة في «المرتب الشهري»)، وبتتحسب كدخل
-      إضافي للشهر ده بس في "معايا كام؟". قسط السداد بيتحسب كالتزام شهري عادي بادئ من الشهر اللي
-      حددته — تقدر تعدّله أو تربطه بحساب معيّن بعدين من تبويب الالتزامات.
+      إضافي للشهر ده بس في "الفائض النظري المتبقي". قسط السداد بيتحسب كالتزام شهري عادي بادئ من
+      الشهر اللي حددته — تقدر تعدّله أو تربطه بحساب معيّن بعدين من تبويب الالتزامات.
     </p>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="cancelAdvanceAdd" data-i18n="common.cancel">إلغاء</button>
@@ -1060,10 +1084,11 @@ function maintItemLabel(name){ const i = MAINT_ITEMS.indexOf(name); return (stat
 const I18N = {
   ar: {
     "app.title":"💰 معايا كام؟", "undo.title":"تراجع عن آخر تغيير", "redo.title":"إعادة آخر تراجع",
-    "hero.label":"معايا كام؟", "common.currency":"ج",
+    "hero.label":"معايا كام؟", "hero.subLabel":"رصيدك الفعلي دلوقتي في كل حساباتك", "common.currency":"ج",
     "home.flexTitle":"🎯 مرونة الشهر ده", "home.theoreticalRemainingLabel":"الفائض النظري المتبقي", "home.spentOf":"اتصرف من أصل",
     "home.accountsTitle":"💳 أرصدة الحسابات", "home.accountsHint":'تفصيل رقم "معايا كام؟" فوق لكل حساب',
-    "home.addMove":"+ تسجيل حركة (إيداع/سحب)", "home.addAdvance":"+ سلفة/دفعة ائتمانية جديدة", "home.quickLookTitle":"📌 نظرة سريعة",
+    "home.addMove":"+ تسجيل حركة (إيداع/سحب)", "home.addAdvance":"+ سلفة/دفعة ائتمانية جديدة",
+    "home.addExtraIncome":"+ دخل إضافي جديد", "home.quickLookTitle":"📌 نظرة سريعة",
     "home.topCatLabel":"أكتر فئة صرف", "home.avgDailyLabel":"متوسط يومي (مرونة)",
     "home.obligationsTitle":"📊 التزامات الشهر",
     "expenses.byCatTitle":"🥧 المصروفات حسب الفئة", "expenses.allTitle":"🧾 كل المصاريف",
@@ -1080,6 +1105,7 @@ const I18N = {
           عايز تمسحه نهائي، استخدم رابط "🗑️ حذف نهائي" جنب البند.`,
     "obligations.addItem":"+ إضافة بند جديد",
     "obligations.grandTotalLabel":"إجمالي كل الالتزامات الشهر ده", "obligations.filteredSumLabel":"الإجمالي ({0} بند)",
+    "obligations.searchPlaceholder":"دور باسم البند...",
     "maintenance.statusTitle":"🚗 حالة العربية", "maintenance.budgetTitle":"⛽ مصاريف العربية الشهر ده",
     "maintenance.budgetHint":"بنزين، جراج، صيانة... كل حاجة فئة عربية",
     "maintenance.odometerLabel":"الكيلومترات الحالية (KM)", "maintenance.odometerPlaceholder":"مثال: 15000",
@@ -1150,9 +1176,16 @@ const I18N = {
     "modal.advance.hasRepaymentLabel":"هتتسدد بقسط شهري؟", "modal.advance.installmentLabel":"قيمة القسط الشهري (ج)",
     "modal.advance.monthsLabel":"هتتسدد على كام شهر؟", "modal.advance.repayStartLabel":"هيبدأ الخصم شهر إيه؟",
     "modal.advance.note":`السلفة بتتسجّل كإيداع حقيقي في الحساب اللي اخترته (مش زيادة في «المرتب
-        الشهري»)، وبتتحسب كدخل إضافي للشهر ده بس في "معايا كام؟". قسط السداد بيتحسب كالتزام شهري
-        عادي بادئ من الشهر اللي حددته — تقدر تعدّله أو تربطه بحساب معيّن بعدين من تبويب الالتزامات.`,
+        الشهري»)، وبتتحسب كدخل إضافي للشهر ده بس في "الفائض النظري المتبقي". قسط السداد بيتحسب
+        كالتزام شهري عادي بادئ من الشهر اللي حددته — تقدر تعدّله أو تربطه بحساب معيّن بعدين من
+        تبويب الالتزامات.`,
     "advance.depositNote":"سلفة: {0}", "advance.repaymentItemName":"سداد {0}",
+    "modal.income.title":"دخل إضافي جديد", "modal.income.nameLabel":"مصدر الدخل",
+    "modal.income.namePlaceholder":"مثال: مكافأة من الشغل", "modal.income.amountLabel":"قيمة الدخل (ج)",
+    "modal.income.note":`الدخل بيتسجّل كإيداع حقيقي في الحساب اللي اخترته (مش زيادة في «المرتب
+        الشهري»)، وبيتحسب كدخل إضافي لشهر الاستلام بس في "الفائض النظري المتبقي" —
+        مافيش قسط سداد لأنه مش سلفة، ده دخل بتاعك خالص.`,
+    "extraIncome.depositNote":"دخل إضافي: {0}", "extraIncome.itemName":"دخل إضافي: {0}",
     "lock.title":"معايا كام؟ مقفولة", "lock.body":"افتحها ببصمتك أو رمز قفل موبايلك عشان بياناتك المالية تفضل سرية.",
     "lock.retry":"🔓 افتح دلوقتي",
     "onboard.title":"أهلاً بيك!",
@@ -1241,7 +1274,7 @@ const I18N = {
     "toast.endBeforeStart":"شهر النهاية لازم يكون بعد شهر البداية",
     "toast.itemEdited":"اتحفظت التعديلات ✅", "toast.itemAdded":"اتضاف بند جديد ✅",
     "toast.enterAdvanceName":"اكتب اسم للسلفة", "toast.enterValidMonthsCount":"اكتب عدد شهور صحيح",
-    "toast.advanceSaved":"اتسجلت السلفة ✅",
+    "toast.advanceSaved":"اتسجلت السلفة ✅", "toast.extraIncomeSaved":"اتسجل الدخل الإضافي ✅",
     "backup.exportFilename":"نسخة_احتياطية_مصاريفي", "toast.backupExported":"اتصدرت النسخة الاحتياطية ✅",
     "confirm.importBackup":"هيتم استبدال كل البيانات الحالية بالنسخة المستوردة. متأكد؟",
     "toast.backupImported":"اتستوردت النسخة الاحتياطية ✅", "toast.badFile":"الملف مش سليم، جرب تاني",
@@ -1261,10 +1294,11 @@ const I18N = {
   },
   en: {
     "app.title":"💰 What's Left?", "undo.title":"Undo last change", "redo.title":"Redo last undo",
-    "hero.label":"What's left?", "common.currency":"EGP",
+    "hero.label":"What's left?", "hero.subLabel":"Your actual balance right now, across all your accounts", "common.currency":"EGP",
     "home.flexTitle":"🎯 This Month's Flex", "home.theoreticalRemainingLabel":"Theoretical Surplus Remaining", "home.spentOf":"Spent out of",
     "home.accountsTitle":"💳 Account Balances", "home.accountsHint":'Breakdown of the "What\'s left?" number above, per account',
-    "home.addMove":"+ Log a Move (Deposit/Withdraw)", "home.addAdvance":"+ New Advance/Credit Draw", "home.quickLookTitle":"📌 Quick Look",
+    "home.addMove":"+ Log a Move (Deposit/Withdraw)", "home.addAdvance":"+ New Advance/Credit Draw",
+    "home.addExtraIncome":"+ New Extra Income", "home.quickLookTitle":"📌 Quick Look",
     "home.topCatLabel":"Top Spend Category", "home.avgDailyLabel":"Daily Avg (Flex)",
     "home.obligationsTitle":"📊 This Month's Obligations",
     "expenses.byCatTitle":"🥧 Spending by Category", "expenses.allTitle":"🧾 All Expenses",
@@ -1283,6 +1317,7 @@ const I18N = {
           permanently" link next to the item.`,
     "obligations.addItem":"+ Add New Item",
     "obligations.grandTotalLabel":"Total of All This Month's Obligations", "obligations.filteredSumLabel":"Total ({0} items)",
+    "obligations.searchPlaceholder":"Search by item name...",
     "maintenance.statusTitle":"🚗 Car Status", "maintenance.budgetTitle":"⛽ This Month's Car Spending",
     "maintenance.budgetHint":"Gas, garage, maintenance... anything in the Car category",
     "maintenance.odometerLabel":"Current Odometer (KM)", "maintenance.odometerPlaceholder":"e.g. 15000",
@@ -1355,10 +1390,17 @@ const I18N = {
     "modal.advance.hasRepaymentLabel":"Repaid via a monthly installment?", "modal.advance.installmentLabel":"Monthly Installment (EGP)",
     "modal.advance.monthsLabel":"Over how many months?", "modal.advance.repayStartLabel":"Which month does repayment start?",
     "modal.advance.note":`The advance is logged as a real deposit into the account you picked (not an increase to
-        "Monthly Salary"), and counts as one-time extra income for the month it's received in "What's
-        left?". The repayment installment counts as a normal monthly obligation starting the month you
-        set — you can edit it or link it to a specific source later from the Obligations tab.`,
+        "Monthly Salary"), and counts as one-time extra income for the month it's received in the
+        "Theoretical Surplus Remaining". The repayment installment counts as a normal monthly
+        obligation starting the month you set — you can edit it or link it to a specific source
+        later from the Obligations tab.`,
     "advance.depositNote":"Advance: {0}", "advance.repaymentItemName":"Repayment: {0}",
+    "modal.income.title":"New Extra Income", "modal.income.nameLabel":"Income Source",
+    "modal.income.namePlaceholder":"e.g. Work Bonus", "modal.income.amountLabel":"Income Amount (EGP)",
+    "modal.income.note":`The income is logged as a real deposit into the account you picked (not an increase to
+        "Monthly Salary"), and counts as one-time extra income for the month it's received in the
+        "Theoretical Surplus Remaining" — no repayment, since it's not an advance, it's yours to keep.`,
+    "extraIncome.depositNote":"Extra income: {0}", "extraIncome.itemName":"Extra income: {0}",
     "lock.title":"What's Left? is Locked", "lock.body":"Unlock it with your fingerprint or phone lock code to keep your financial data private.",
     "lock.retry":"🔓 Unlock Now",
     "onboard.title":"Welcome!",
@@ -1447,7 +1489,7 @@ const I18N = {
     "toast.endBeforeStart":"The end month must be after the start month",
     "toast.itemEdited":"Changes saved ✅", "toast.itemAdded":"New item added ✅",
     "toast.enterAdvanceName":"Enter a name for the advance", "toast.enterValidMonthsCount":"Enter a valid number of months",
-    "toast.advanceSaved":"Advance logged ✅",
+    "toast.advanceSaved":"Advance logged ✅", "toast.extraIncomeSaved":"Extra income logged ✅",
     "backup.exportFilename":"masarifi_backup", "toast.backupExported":"Backup exported ✅",
     "confirm.importBackup":"This will replace all current data with the imported copy. Are you sure?",
     "toast.backupImported":"Backup imported ✅", "toast.badFile":"That file isn't valid, try again",
@@ -1516,6 +1558,7 @@ let filterCat = "الكل";
 let filterSource = "الكل"; // "الكل" = no filter, "__NONE__" = expenses with no source at all, else an exact source name
 let itemFilterCat = "الكل"; // same idea as filterCat, scoped to the obligations tab (قسط/ثابت/جمعية)
 let itemFilterSource = "الكل"; // same idea as filterSource, for items linked to an auto-deduct source
+let itemsSearchTerm = ""; // same idea as searchTerm, matched against item name instead of expense note
 let allocFilterCat = "الكل";
 let searchTerm = "";
 let pendingSms = []; // candidate transactions detected from bank SMS — not persisted, reviewed each app open
@@ -2702,6 +2745,7 @@ function renderSettings(){
 
   document.getElementById("itemsMonthHint").textContent = monthLabelOf(curMonthKey);
   document.getElementById("exportExcelMonthLbl").textContent = monthLabelOf(curMonthKey);
+  document.getElementById("itemsSearchBox").value = itemsSearchTerm;
 
   // Grand total — always every active-for-month item, regardless of whatever filter is currently
   // selected below (same number as "الفائض الشهري المتكرر"'s obligations component on the home
@@ -2742,6 +2786,7 @@ function renderSettings(){
   if(itemFilterCat!=="الكل") itemsWithEffAmount = itemsWithEffAmount.filter(it=>it.cat===itemFilterCat);
   if(itemFilterSource==="__NONE__") itemsWithEffAmount = itemsWithEffAmount.filter(it=>!it.source);
   else if(itemFilterSource!=="الكل") itemsWithEffAmount = itemsWithEffAmount.filter(it=>it.source===itemFilterSource);
+  if(itemsSearchTerm.trim()) itemsWithEffAmount = itemsWithEffAmount.filter(it=>(it.name||"").includes(itemsSearchTerm.trim()));
   const sortedItems = sortList(itemsWithEffAmount, itemsSortBy, null, "_effAmount");
   function itemRowHtml(it){
     const amtOverridden = it.amountOverrides && it.amountOverrides[curMonthKey]!==undefined;
@@ -3470,6 +3515,7 @@ document.getElementById("resetBtn").onclick = async ()=>{
 };
 
 document.getElementById("searchBox").oninput = (e)=>{ searchTerm = e.target.value; renderExpenses(); };
+document.getElementById("itemsSearchBox").oninput = (e)=>{ itemsSearchTerm = e.target.value; render(); };
 
 document.getElementById("exportCsv").onclick = async ()=>{
   const list = expensesForMonth(curMonthKey);
@@ -3770,16 +3816,32 @@ document.getElementById("saveAccountAdd").onclick = async ()=>{
 //     amount — just a dormant historical record of the payout, editable later like any item.
 const advanceModalBg = document.getElementById("advanceModalBg");
 let selectedAdvanceSource = null;
+// Same modal, two entry points: a سلفة (advance/credit draw, usually repaid via installment) and
+// a plain "دخل إضافي" (extra income — a bonus, gift, refund... anything with no repayment at
+// all). The underlying record is identical either way (a deposit + an extra-income item, see the
+// block comment above) — only the copy and whether the repayment toggle is offered differ, so one
+// mode flag avoids maintaining a whole second modal for what's really the same feature.
+let advanceModalMode = "advance";
 function updateAdvanceRepaymentFieldsVisibility(){
   document.getElementById("advRepaymentFields").style.display =
     document.getElementById("advHasRepayment").checked ? "" : "none";
 }
-function openAdvanceModal(){
+function openAdvanceModal(mode){
   if(state.settings.sources.length===0){ showToast(t("toast.addSourceFirstShort")); return; }
+  advanceModalMode = mode || "advance";
+  const isIncome = advanceModalMode==="income";
+  document.getElementById("advanceModalTitle").textContent = t(isIncome ? "modal.income.title" : "modal.advance.title");
+  document.getElementById("advNameLabel").textContent = t(isIncome ? "modal.income.nameLabel" : "modal.advance.nameLabel");
+  document.getElementById("advName").placeholder = t(isIncome ? "modal.income.namePlaceholder" : "modal.advance.namePlaceholder");
+  document.getElementById("advanceModalNote").textContent = t(isIncome ? "modal.income.note" : "modal.advance.note");
+  document.getElementById("advAmountLabel").textContent = t(isIncome ? "modal.income.amountLabel" : "modal.advance.amountLabel");
+  // Extra income never gets "repaid" — the whole toggle only makes sense for an actual advance,
+  // so it's hidden (not just left unchecked) rather than offering a choice that doesn't apply.
+  document.getElementById("advHasRepaymentRow").style.display = isIncome ? "none" : "";
   document.getElementById("advName").value = "";
   document.getElementById("advAmount").value = "";
   document.getElementById("advDate").value = new Date().toISOString().slice(0,10);
-  document.getElementById("advHasRepayment").checked = true;
+  document.getElementById("advHasRepayment").checked = !isIncome;
   document.getElementById("advInstallment").value = "";
   document.getElementById("advMonths").value = "";
   document.getElementById("advRepayStart").value = nextMonthKey(curMonthKey);
@@ -3792,7 +3854,8 @@ function openAdvanceModal(){
   });
   advanceModalBg.classList.add("show");
 }
-document.getElementById("addAdvanceBtn").onclick = openAdvanceModal;
+document.getElementById("addAdvanceBtn").onclick = ()=>openAdvanceModal("advance");
+document.getElementById("addExtraIncomeBtn").onclick = ()=>openAdvanceModal("income");
 document.getElementById("closeAdvanceModal").onclick = ()=>advanceModalBg.classList.remove("show");
 document.getElementById("cancelAdvanceAdd").onclick = ()=>advanceModalBg.classList.remove("show");
 document.getElementById("advHasRepayment").onchange = updateAdvanceRepaymentFieldsVisibility;
@@ -3818,14 +3881,15 @@ document.getElementById("saveAdvanceAdd").onclick = async ()=>{
   // takes the other with it instead of leaving an orphan: a repayment item with no deposit behind
   // it keeps counting a payout that was never actually reflected in any account's balance, or a
   // deposit with no item silently loses the fact that it needs to be paid back.
+  const isIncome = advanceModalMode==="income";
   const advanceId = "advid"+Date.now();
   state.accountMoves.push({
     id:"adv"+Date.now(), source:selectedAdvanceSource, type:"deposit", amount, date,
-    note: tf("advance.depositNote", name), advanceId
+    note: tf(isIncome ? "extraIncome.depositNote" : "advance.depositNote", name), advanceId
   });
   await saveAccountMoves();
   state.items.push({
-    id:"c"+Date.now(), name: tf("advance.repaymentItemName", name), amount: installment, cat:"قسط",
+    id:"c"+Date.now(), name: tf(isIncome ? "extraIncome.itemName" : "advance.repaymentItemName", name), amount: installment, cat:"قسط",
     startMonth: repayStart, endMonth: repayEnd,
     payoutAmount: amount, payoutMonth: date.slice(0,7),
     source: null, autoDeductStartMonth: null,
@@ -3834,7 +3898,7 @@ document.getElementById("saveAdvanceAdd").onclick = async ()=>{
   await saveItems();
   advanceModalBg.classList.remove("show");
   render();
-  showToast(t("toast.advanceSaved"));
+  showToast(t(isIncome ? "toast.extraIncomeSaved" : "toast.advanceSaved"));
 };
 
 // ---------- excel export styling (xlsx-js-style — see the CDN <script> comment in <head>) ----------
