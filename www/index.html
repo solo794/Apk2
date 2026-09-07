@@ -148,6 +148,11 @@
   }
   .obl-row.total .name{font-size:13.5px;}
   .obl-row.total .val{font-size:16.5px; color:var(--teal);}
+  /* An inline "add" action sitting right inside a list of rows (e.g. "+ دخل إضافي جديد" directly
+     under the "المرتب" row) instead of as a separate button below the whole card. */
+  .obl-row-action{justify-content:center; cursor:pointer; transition:opacity .12s ease;}
+  .obl-row-action:active{opacity:.65;}
+  .obl-row-action .name{color:var(--teal);}
 
   .alloc-grid{display:flex; gap:8px;}
   .alloc-card{flex:1; background:#fff; border:1px solid var(--line); border-radius:16px; padding:12px 10px; text-align:center; transition:transform .12s ease;}
@@ -458,7 +463,6 @@
 
     <div class="section-title" data-i18n="home.obligationsTitle">📊 التزامات الشهر</div>
     <div class="obl-list" id="oblList"></div>
-    <button class="btn btn-ghost" id="addExtraIncomeBtn" style="margin-top:8px;" data-i18n="home.addExtraIncome">+ دخل إضافي جديد</button>
   </div>
 
   <div class="content" id="tab-expenses" style="display:none;">
@@ -2443,6 +2447,9 @@ function render(){
 
   const rows = [];
   rows.push(oblRow(t("obl.salary"), m.salary));
+  // Sits right under "المرتب" — its own row inside the list, not a separate button under the
+  // whole card, since it's directly related to (and updates) the row right above it.
+  rows.push(`<div class="obl-row obl-row-action" id="oblAddExtraIncomeRow"><span class="name">${t("home.addExtraIncome")}</span></div>`);
   if(m.extraIncome>0) rows.push(oblRow(t("obl.extraIncome"), m.extraIncome));
   rows.push(oblRow(t("obl.installments"), -m.byCat["قسط"]));
   rows.push(oblRow(t("obl.fixed"), -m.byCat["ثابت"]));
@@ -2450,6 +2457,7 @@ function render(){
   document.getElementById("oblList").innerHTML = rows.join("") +
     `<div class="obl-row total"><span class="name">${t("obl.recurringSurplus")}</span>
        <span class="val" style="color:${m.recurringSurplus<0?'var(--brick)':'var(--sage)'}">${fmt(m.recurringSurplus)} ${t("common.currency")}</span></div>`;
+  document.getElementById("oblAddExtraIncomeRow").onclick = ()=>openAdvanceModal("income");
 
   document.getElementById("allocSuggestionMonthLbl").textContent = "— " + monthLabelOf(curMonthKey);
   document.getElementById("allocGrid").innerHTML = `
@@ -3855,7 +3863,8 @@ function openAdvanceModal(mode){
   advanceModalBg.classList.add("show");
 }
 document.getElementById("addAdvanceBtn").onclick = ()=>openAdvanceModal("advance");
-document.getElementById("addExtraIncomeBtn").onclick = ()=>openAdvanceModal("income");
+// "+ دخل إضافي جديد" itself is rendered inside #oblList (right under "المرتب") and rewired on
+// every render() call above, since innerHTML replacement there drops any previously-bound handler.
 document.getElementById("closeAdvanceModal").onclick = ()=>advanceModalBg.classList.remove("show");
 document.getElementById("cancelAdvanceAdd").onclick = ()=>advanceModalBg.classList.remove("show");
 document.getElementById("advHasRepayment").onchange = updateAdvanceRepaymentFieldsVisibility;
