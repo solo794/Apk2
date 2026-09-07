@@ -297,13 +297,15 @@
   /* Both FABs used to float much higher up the screen (bottom:96px/164px), anchored near the
      right edge — reported as constantly covering real content (numbers/rows) while scrolling,
      since that's well inside the actual content area, not just the bottom margin reserved for
-     them. They're now the same size, level with each other, and sit as a close pair raised just
-     above the tab bar — plus the bar itself grows a matching bump behind them (.tabbar::before
-     below) so the two read as one merged shape instead of buttons floating separately over a flat
-     edge. A fixed physical offset (not inset-inline-end) centers them the same way in RTL/LTR
-     since centering doesn't depend on reading direction the way edge-anchoring did. */
+     them. Centering them over the bar's middle then made them dip low enough to sit directly on
+     top of (and hide) the two tab buttons that live there (measured: bottom:40px put their bottom
+     edge ~27px inside the bar's own 67px-tall content row) — bottom is now pinned to that same
+     67px so the FABs float entirely above the bar's row and never overlap a tab icon/label, with
+     the bar's own bump (.tabbar::before below) filling the visual gap between them instead. A
+     fixed physical offset (not inset-inline-end) centers them the same way in RTL/LTR since
+     centering doesn't depend on reading direction the way edge-anchoring did. */
   .fab, .fab-voice{
-    position:fixed; bottom:calc(40px + env(safe-area-inset-bottom));
+    position:fixed; bottom:calc(69px + env(safe-area-inset-bottom));
     width:52px; height:52px; border-radius:50%;
     display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;
     z-index:21; transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
