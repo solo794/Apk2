@@ -984,6 +984,17 @@
         <span class="set-txt"><span class="n" data-i18n="settings.capReminder">تنبيه لما أتجاوز حد فئة مصروف</span></span>
         <label class="switch"><input type="checkbox" id="notifCapEnabled"><span class="slider"></span></label>
       </div>
+      <div class="set-row" data-static style="--sq:var(--b1)">
+        <span class="set-sq">📅</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.itemDueReminder">تذكير قبل موعد استحقاق كل بند</span><span class="s" data-i18n="settings.itemDueReminderSub">بيشتغل للبنود اللي حاطط لها يوم استحقاق بس</span></span>
+        <label class="switch"><input type="checkbox" id="notifItemDueEnabled"><span class="slider"></span></label>
+      </div>
+      <div class="set-panel" id="notifItemDueField">
+        <div class="field" style="margin-bottom:0;">
+          <label data-i18n="settings.itemDueDaysBefore">قبل الاستحقاق بكام يوم؟</label>
+          <input type="number" id="notifItemDueDays" min="0" max="10" step="1">
+        </div>
+      </div>
       <div class="set-row" data-static id="notifMaintRow" style="--sq:var(--b2)">
         <span class="set-sq">🚗</span>
         <span class="set-txt"><span class="n" data-i18n="settings.maintReminder">تنبيه قرب موعد صيانة العربية</span></span>
@@ -1254,6 +1265,10 @@
       <label data-i18n="modal.item.endLabel">هينتهي شهر إيه؟ (سيبه فاضي لو مالوش نهاية معروفة)</label>
       <input type="month" id="itEndMonth">
     </div>
+    <div class="field">
+      <label data-i18n="modal.item.dueDayLabel">بيتستحق يوم كام من الشهر؟ (اختياري — للتذكير)</label>
+      <input type="number" id="itDueDay" min="1" max="31" placeholder="مثال: 5">
+    </div>
     <div id="itGam3iyaFields">
       <div class="field">
         <label data-i18n="modal.item.payoutAmountLabel">هتتقبض كام؟ (إجمالي مبلغ القبضة كاملة)</label>
@@ -1427,12 +1442,23 @@ function defaultSettings(){
     // a fortune on one salary and a rounding error on another, so absolute cut-offs only ever fit
     // one person. Editable, since "comfortable" is personal.
     phasePct: { pressure: 25, launch: 45 },
-    notif: { daily:{enabled:false, time:"21:00"}, weeklyBackup:{enabled:false}, capAlert:{enabled:true}, maintDue:{enabled:true} },
+    notif: { daily:{enabled:false, time:"21:00"}, weeklyBackup:{enabled:false}, capAlert:{enabled:true}, maintDue:{enabled:true},
+             // تنبيه قبل كل قسط/بند له يوم استحقاق محدّد، بعدد أيام قابل للتعديل
+             itemDue:{enabled:true, daysBefore:2} },
     smsAuto: { enabled:false },
     biometricLock: { enabled:false },
   };
 }
 const NOTIF_IDS = { daily: 1001, weeklyBackup: 1002 };
+// كل بند له يوم استحقاق بياخد إشعار خاص بيه، فمحتاج معرّف ثابت مشتق من id البند نفسه
+// (مش من ترتيبه في القايمة، عشان إضافة/حذف بند ميحرّكش إشعارات باقي البنود). المدى مفصول
+// تمامًا عن المعرّفات الثابتة فوق فمستحيل يتصادم معاها.
+const ITEM_NOTIF_BASE = 20000, ITEM_NOTIF_SPAN = 5000;
+function itemNotifId(itemId){
+  let h = 0;
+  for(let i=0; i<String(itemId).length; i++) h = (h*31 + String(itemId).charCodeAt(i)) % ITEM_NOTIF_SPAN;
+  return ITEM_NOTIF_BASE + h;
+}
 const ALLOC_CATS = [
   {k:"طوارئ", i:"🛟", lEn:"Emergency"}, {k:"استثمار", i:"📈", lEn:"Invest"}, {k:"مرونة", i:"🎯", lEn:"Flex"}
 ];
@@ -1486,7 +1512,11 @@ const I18N = {
     "obligations.helpIntro":"المبالغ تحت خاصة بشهر", "obligations.helpIntroSuffix":"بس.",
     "obligations.knowMore":"إزاي التعديل الشهري بيشتغل؟",
     "obligations.summaryTitle":"التزامات", "obligations.listTitle":"البنود",
-    "obligations.ofIncome":"من دخل الشهر", "obligations.leftAfter":"فاضل بعد الالتزامات: {0} {cur}",
+    "obligations.ofIncome":"من دخل الشهر", "obligations.ofSalary":"من المرتب الشهري",
+    "obligations.oneOffIncome":"شامل دخل إضافي {0} {cur} وصل الشهر ده مرة واحدة",
+    "obligations.oneOffLoan":"شامل سلفة {1} {cur} الشهر ده (فلوس مستلفة، مش دخل)",
+    "obligations.oneOffBoth":"شامل دخل إضافي {0} {cur} وسلفة {1} {cur} الشهر ده",
+    "obligations.leftAfter":"فاضل بعد الالتزامات: {0} {cur}",
     "obligations.noneThisMonth":"مفيش التزامات نشطة الشهر ده",
     "obligations.groupCount":"{0} بند", "obligations.thisMonthOnly":"الشهر ده",
     "obligations.paidOf":"مدفوع {0} من {1}", "obligations.leftToPay":"فاضل {0} {1} · {2} {cur}",
@@ -1534,6 +1564,9 @@ const I18N = {
     "settings.dailyReminder":"تذكير يومي بتسجيل المصاريف",
     "settings.weeklyReminder":"تذكير أسبوعي بعمل نسخة احتياطية",
     "settings.capReminder":"تنبيه لما أتجاوز حد فئة مصروف", "settings.maintReminder":"تنبيه قرب موعد صيانة العربية",
+    "settings.itemDueReminder":"تذكير قبل موعد استحقاق كل بند",
+    "settings.itemDueReminderSub":"بيشتغل للبنود اللي حاطط لها يوم استحقاق بس",
+    "settings.itemDueDaysBefore":"قبل الاستحقاق بكام يوم؟ (0 = يوم الاستحقاق نفسه)",
     "settings.remindersNote":"بعض الأجهزة بتأخر التذكيرات المجدولة بسبب إعدادات توفير البطارية — لو التذكير مش بيوصل، جرّب تستثني التطبيق من توفير البطارية من إعدادات الأندرويد.",
     "settings.smsTitle":"🏦 كشف مصاريف من رسائل البنك (تجريبي)", "settings.smsEnable":"كشف المصاريف من رسائل البنك",
     "settings.smsSendersLabel":"البنوك المتابَعة (افصل بفاصلة)", "common.save":"حفظ",
@@ -1629,6 +1662,8 @@ const I18N = {
     "modal.account.typeLabel":"نوع الحركة", "modal.account.notePlaceholder":"مثال: تحويل المرتب",
     "modal.item.nameLabel":"الاسم", "modal.item.namePlaceholder":"مثال: قسط العربية",
     "modal.item.startLabel":"هيبدأ شهر إيه؟", "modal.item.endLabel":"هينتهي شهر إيه؟ (سيبه فاضي لو مالوش نهاية معروفة)",
+    "modal.item.dueDayLabel":"بيتستحق يوم كام من الشهر؟ (اختياري — للتذكير)",
+    "obligations.dueDayMeta":"يستحق يوم {0}",
     "modal.item.payoutAmountLabel":"هتتقبض كام؟ (إجمالي مبلغ القبضة كاملة)",
     "modal.item.payoutMonthLabel":"دورك في القبض إمتى؟ (الشهر اللي هتاخد فيه القبضة)",
     "modal.item.sourceLabel":"🔗 يتخصم من مصدر إيه؟ (اختياري)",
@@ -1662,6 +1697,7 @@ const I18N = {
     "collapse.fold":"▲ اطوِ القايمة", "collapse.showAll":"▼ عرض الكل ({0})",
     "toast.saveShareTitle":"حفظ أو مشاركة الملف", "toast.saveFileFailed":"تعذّر حفظ الملف: {0}", "toast.unknownError":"خطأ غير معروف",
     "notif.dailyBody":"متنساش تسجّل مصاريف النهاردة 🧾", "notif.weeklyBody":"متنساش تاخد نسخة احتياطية من بياناتك 💾",
+    "notif.itemDueBody":"{0} ({1} {2}) بيستحق يوم {3} 📅", "notif.itemDueTodayBody":"{0} ({1} {2}) مستحق النهاردة 📅",
     "notif.maintTitle":"صيانة العربية قربت 🔧", "notif.maintBody":"باقيلك حوالي {0} كم على صيانة {1} كم (السعر المتوقع {2} ج)",
     "google.nativeOnly":"شغالة بس جوه تطبيق الموبايل.", "google.backupNow":"☁️ ارفع نسخة دلوقتي",
     "google.restore":"⬇️ استرجع من Drive", "google.signOut":"تسجيل خروج",
@@ -1680,7 +1716,8 @@ const I18N = {
     "notif.capExceededTitle":"تجاوزت حد {0}", "notif.capExceededBody":"صرفت {0} ج من حد {1} ج المخصص لفئة {2} الشهر ده",
     "phase.deficit":"⚠️ عجز في الميزانية", "phase.pressure":"🔴 مرحلة الضغط",
     "phase.transition":"🟡 مرحلة الانتقال", "phase.launch":"🟢 مرحلة الانطلاق",
-    "obl.salary":"المرتب", "obl.extraIncome":"دخل إضافي (قبضة جمعية/سلفة)", "obl.installments":"أقساط",
+    "obl.salary":"المرتب", "obl.extraIncome":"دخل إضافي (قبضة جمعية/مكافأة)",
+    "obl.loanIn":"سلفة الشهر ده (مش دخل)", "obl.installments":"أقساط",
     "obl.fixed":"مصروفات ثابتة", "obl.gam3iyas":"جمعيات", "obl.recurringSurplus":"الفائض الشهري المتكرر",
     "common.overriddenSuffix":" (معدّلة)", "home.outOf":"من", "common.perDay":"{cur}/يوم",
     "expenses.emptyMonth":"لسه مفيش مصاريف الشهر ده", "common.all":"الكل",
@@ -1781,7 +1818,11 @@ const I18N = {
     "obligations.helpIntro":"Amounts below are specific to", "obligations.helpIntroSuffix":"only.",
     "obligations.knowMore":"How do monthly edits work?",
     "obligations.summaryTitle":"Obligations", "obligations.listTitle":"Items",
-    "obligations.ofIncome":"of this month's income", "obligations.leftAfter":"Left after obligations: {0} {cur}",
+    "obligations.ofIncome":"of this month's income", "obligations.ofSalary":"of monthly salary",
+    "obligations.oneOffIncome":"Includes {0} {cur} of one-off extra income this month",
+    "obligations.oneOffLoan":"Includes a {1} {cur} advance this month (borrowed money, not income)",
+    "obligations.oneOffBoth":"Includes {0} {cur} extra income and a {1} {cur} advance this month",
+    "obligations.leftAfter":"Left after obligations: {0} {cur}",
     "obligations.noneThisMonth":"No active obligations this month",
     "obligations.groupCount":"{0} items", "obligations.thisMonthOnly":"this month",
     "obligations.paidOf":"Paid {0} of {1}", "obligations.leftToPay":"{0} {1} left · {2} {cur}",
@@ -1832,6 +1873,9 @@ const I18N = {
     "settings.dailyReminder":"Daily reminder to log expenses",
     "settings.weeklyReminder":"Weekly backup reminder",
     "settings.capReminder":"Alert when I exceed a category limit", "settings.maintReminder":"Alert when car maintenance is due soon",
+    "settings.itemDueReminder":"Remind me before each obligation is due",
+    "settings.itemDueReminderSub":"Only for obligations you gave a due day",
+    "settings.itemDueDaysBefore":"How many days before? (0 = on the due day)",
     "settings.remindersNote":"Some devices delay scheduled reminders because of battery-saving settings — if a reminder isn't arriving, try excluding the app from battery optimization in Android settings.",
     "settings.smsTitle":"🏦 Bank SMS Expense Detection (Experimental)", "settings.smsEnable":"Detect expenses from bank SMS",
     "settings.smsSendersLabel":"Watched banks (comma-separated)", "common.save":"Save",
@@ -1929,6 +1973,8 @@ const I18N = {
     "modal.account.typeLabel":"Movement Type", "modal.account.notePlaceholder":"e.g. Salary transfer",
     "modal.item.nameLabel":"Name", "modal.item.namePlaceholder":"e.g. Car installment",
     "modal.item.startLabel":"Which month does it start?", "modal.item.endLabel":"Which month does it end? (leave blank if no known end)",
+    "modal.item.dueDayLabel":"Which day of the month is it due? (optional — for reminders)",
+    "obligations.dueDayMeta":"due on day {0}",
     "modal.item.payoutAmountLabel":"How much will you collect? (the full payout amount)",
     "modal.item.payoutMonthLabel":"When's your turn to collect? (the month you'll get the payout)",
     "modal.item.sourceLabel":"🔗 Auto-deduct from which source? (optional)",
@@ -1963,6 +2009,7 @@ const I18N = {
     "collapse.fold":"▲ Collapse list", "collapse.showAll":"▼ Show all ({0})",
     "toast.saveShareTitle":"Save or share the file", "toast.saveFileFailed":"Couldn't save the file: {0}", "toast.unknownError":"Unknown error",
     "notif.dailyBody":"Don't forget to log today's expenses 🧾", "notif.weeklyBody":"Don't forget to back up your data 💾",
+    "notif.itemDueBody":"{0} ({1} {2}) is due on day {3} 📅", "notif.itemDueTodayBody":"{0} ({1} {2}) is due today 📅",
     "notif.maintTitle":"Car maintenance is coming up 🔧", "notif.maintBody":"About {0} km left to your {1} km service (expected price {2} EGP)",
     "google.nativeOnly":"Only works inside the mobile app.", "google.backupNow":"☁️ Upload Now",
     "google.restore":"⬇️ Restore from Drive", "google.signOut":"Sign Out",
@@ -1981,7 +2028,8 @@ const I18N = {
     "notif.capExceededTitle":"You exceeded the {0} limit", "notif.capExceededBody":"You spent {0} EGP out of the {1} EGP limit set for {2} this month",
     "phase.deficit":"⚠️ Budget Deficit", "phase.pressure":"🔴 Pressure Phase",
     "phase.transition":"🟡 Transition Phase", "phase.launch":"🟢 Launch Phase",
-    "obl.salary":"Salary", "obl.extraIncome":"Extra Income (Gam3iya/Advance)", "obl.installments":"Installments",
+    "obl.salary":"Salary", "obl.extraIncome":"Extra Income (Gam3iya payout/bonus)",
+    "obl.loanIn":"Advance taken this month (not income)", "obl.installments":"Installments",
     "obl.fixed":"Fixed Bills", "obl.gam3iyas":"Gam3iyas", "obl.recurringSurplus":"Recurring Monthly Surplus",
     "common.overriddenSuffix":" (adjusted)", "home.outOf":"out of", "common.perDay":"{cur}/day",
     "expenses.emptyMonth":"No expenses yet this month", "common.all":"All",
@@ -2302,6 +2350,61 @@ async function cancelWeeklyBackupReminder(){
   if(!isNativeApp()) return;
   try{ const { LocalNotifications } = window.Capacitor.Plugins; await LocalNotifications.cancel({notifications:[{id:NOTIF_IDS.weeklyBackup}]}); }catch(e){}
 }
+// One monthly-repeating reminder per obligation that has a due day, fired a few days before it.
+// Uses the platform's own monthly repeat (schedule.on.day) rather than computing dates ourselves,
+// so it keeps firing correctly without the app being opened.
+//
+// Everything is rescheduled from scratch on launch and after any change to the items or to the
+// setting: a per-item notification can't be "updated", and an item that ended or lost its due day
+// has to stop firing. Cancelling by the id range first is what makes that safe.
+async function rescheduleItemDueReminders(){
+  if(!isNativeApp()) return;
+  let LocalNotifications;
+  try{ LocalNotifications = window.Capacitor.Plugins.LocalNotifications; }catch(e){ return; }
+  if(!LocalNotifications) return;
+
+  // امسح اللي احنا جدولناه قبل كده (بالمدى بتاعنا بس — متلمسش التذكيرات التانية)
+  try{
+    const pending = await LocalNotifications.getPending();
+    const ours = (pending.notifications||[])
+      .filter(n=>n.id >= ITEM_NOTIF_BASE && n.id < ITEM_NOTIF_BASE + ITEM_NOTIF_SPAN)
+      .map(n=>({id:n.id}));
+    if(ours.length) await LocalNotifications.cancel({ notifications: ours });
+  }catch(e){}
+
+  const cfg = state.settings.notif.itemDue || {};
+  if(!cfg.enabled) return;
+
+  const daysBefore = Math.min(10, Math.max(0, Number(cfg.daysBefore ?? 2)));
+  const thisMonth = REAL_TODAY_MONTH_KEY;
+  const due = state.items.filter(it=>{
+    if(!it.dueDay) return false;
+    if(!it.active) return false;                          // موقوف في كل الشهور
+    if(it.endMonth && it.endMonth < thisMonth) return false; // خلص خلاص
+    return true;
+  });
+  // الصلاحية بتتطلب بعد ما نتأكد إن فيه حاجة فعلاً هتتجدول — عشان ميطلعش للمستخدم طلب إشعارات
+  // على الفاضي لو مفيش أي بند له يوم استحقاق
+  if(!due.length) return;
+  if(!(await ensureNotifPermission())) return;
+
+  const notifications = due.map(it=>{
+    // التنبيه بييجي قبل الاستحقاق بعدد الأيام المحدّد، وبنوقف عند يوم 1 بدل ما نلف للشهر
+    // اللي فات (تنبيه في آخر الشهر السابق بيبقى مضلّل أكتر من إنه مفيد).
+    const day = Math.max(1, Math.min(28, Number(it.dueDay) - daysBefore));
+    return {
+      id: itemNotifId(it.id),
+      title: t("app.title"),
+      body: daysBefore > 0
+        ? tf("notif.itemDueBody", it.name, fmt(itemAmountForMonth(it, thisMonth)), cur(), it.dueDay)
+        : tf("notif.itemDueTodayBody", it.name, fmt(itemAmountForMonth(it, thisMonth)), cur()),
+      schedule: { on:{ day, hour:10, minute:0 }, repeats:true, allowWhileIdle:true }
+    };
+  });
+  if(!notifications.length) return;
+  try{ await LocalNotifications.schedule({ notifications }); }catch(e){}
+}
+
 // fires a one-off notification when the next scheduled service is within 500km — call after any odometer update
 function checkMaintDueNotify(){
   if(!state.settings.hasCar || !state.settings.notif.maintDue.enabled) return;
@@ -2935,9 +3038,22 @@ function showGoogleSignInError(msg){
   showToast(t("toast.googleSignInFailed"));
 }
 
+// Stored settings are merged one level deep for the nested groups, not just at the top level:
+// a spread alone would let an OLD saved `notif` object (saved before a new reminder existed)
+// replace the whole default group, and the new sub-key would come back undefined for every
+// existing user — which is a crash the first time its toggle is touched, not just a missing
+// default. Same reasoning for any future nested group added here.
+function mergeSettings(stored){
+  const d = defaultSettings();
+  const merged = {...d, ...(stored||{})};
+  for(const k of ["notif", "phasePct"]) merged[k] = {...d[k], ...((stored||{})[k] || {})};
+  for(const k of Object.keys(d.notif)) merged.notif[k] = {...d.notif[k], ...(merged.notif[k] || {})};
+  return merged;
+}
+
 async function loadState(){
   loadProState();
-  try{ const s = localStorage.getItem("settings"); if(s) state.settings = {...defaultSettings(), ...JSON.parse(s)}; }catch(e){}
+  try{ const s = localStorage.getItem("settings"); if(s) state.settings = mergeSettings(JSON.parse(s)); }catch(e){}
   try{ const it = localStorage.getItem("items"); if(it) state.items = JSON.parse(it); }catch(e){}
   try{ const ex = localStorage.getItem("expenses"); if(ex) state.expenses = JSON.parse(ex); }catch(e){}
   try{ const al = localStorage.getItem("allocations"); if(al) state.allocations = JSON.parse(al); }catch(e){}
@@ -3136,6 +3252,14 @@ async function syncLinkedItemWithdrawals(){
   if(changed){ await saveItems(); await saveAccountMoves(); }
   return changed;
 }
+// سلفة (فلوس مستلفة لها سداد) ولا دخل حقيقي (قبضة جمعية/مكافأة)؟ البنود الجديدة بتتوسم عند
+// الإنشاء من مودال "سلفة/دخل إضافي" (payoutKind)، والبنود القديمة بتتعرف بالاستنتاج: السلفة هي
+// اللي ليها جدول سداد مربوط بنفس advanceId (دخل إضافي بيتسجّل بغير قسط وبـ active:false).
+function payoutKindOf(it){
+  if(it.payoutKind === "loan" || it.payoutKind === "income") return it.payoutKind;
+  if(it.advanceId && Number(it.amount) > 0 && it.startMonth) return "loan";
+  return "income";
+}
 function computeMonth(monthKeyStr){
   const active = state.items.filter(it=>itemActiveForMonth(it, monthKeyStr));
   const byCat = {"قسط":0,"ثابت":0,"جمعية":0};
@@ -3149,26 +3273,39 @@ function computeMonth(monthKeyStr){
   // repayment schedule usually only *starts* the month after it's received, so checking every
   // item (not just this month's `active` ones) is what makes the payout still count the month it
   // actually happened instead of being silently dropped.
-  let extraIncome = 0;
-  state.items.forEach(it=>{ if(it.payoutMonth === monthKeyStr) extraIncome += Number(it.payoutAmount||0); });
+  // السلفة مش دخل. الاتنين بيدخلوا كاش الشهر، بس اللي بيتحسب عليه النِسَب هو الدخل الحقيقي بس:
+  // لو السلفة اتحسبت دخل، الاستلاف نفسه بيخلّي الشهر يبان أحسن (نسبة الالتزامات بتقل والمرحلة
+  // بتقفز لـ"انطلاق" فالتطبيق يقولك استثمر 60% من فلوس مستلفة) — وده غلط منطقي صريح.
+  let extraIncome = 0, loanIn = 0;
+  state.items.forEach(it=>{
+    if(it.payoutMonth !== monthKeyStr) return;
+    const amt = Number(it.payoutAmount||0);
+    if(payoutKindOf(it) === "loan") loanIn += amt; else extraIncome += amt;
+  });
   const salary = Number(state.settings.salary||0);
   // Previously this left extraIncome out entirely — a جمعية payout (or a سلفة's disbursement)
   // was shown as its own line in the obligations breakdown but never actually added to the total
   // underneath it, so "معايا كام؟" didn't move even the month you actually received the money.
-  const recurringSurplus = salary + extraIncome - obligations;
+  // Cash keeps counting the سلفة (the money really is in your hand this month); only the ratios
+  // below stop counting it.
+  const cashIn = salary + extraIncome + loanIn;
+  const recurringSurplus = cashIn - obligations;
   // The phase is decided by what SHARE of your income survives your obligations, not by a fixed
   // number of pounds. The old cut-offs (13,000 / 17,000) were absolute, so they described exactly
   // one income: on a small salary nobody could ever leave "pressure", and on a large one everyone
   // started at "launch" no matter how stretched they actually were. Both thresholds are editable
   // in Settings, since where "comfortable" starts is personal.
   const income = salary + extraIncome;
+  // الفائض "الحقيقي" (من غير السلف) هو اللي بيحدّد المرحلة: شهر عجزه متغطّي بسلفة يفضل عجز،
+  // ومينفعش يتحوّل لانطلاق لأن صاحبه استلف.
+  const structuralSurplus = income - obligations;
   const pressurePct = Number(state.settings.phasePct?.pressure ?? 25) / 100;
   const launchPct = Number(state.settings.phasePct?.launch ?? 45) / 100;
   // With no income recorded at all there's no share to compute, so fall back to the sign of the
   // surplus rather than dividing by zero.
-  const surplusRatio = income > 0 ? (recurringSurplus / income) : (recurringSurplus > 0 ? 1 : -1);
+  const surplusRatio = income > 0 ? (structuralSurplus / income) : (structuralSurplus > 0 ? 1 : -1);
   let phase, pE, pI, pF;
-  if(recurringSurplus < 0){ phase="عجز"; pE=0;pI=0;pF=0; }
+  if(structuralSurplus < 0){ phase="عجز"; pE=0;pI=0;pF=0; }
   else if(surplusRatio < pressurePct){ phase="ضغط"; pE=.5;pI=.25;pF=.25; }
   else if(surplusRatio <= launchPct){ phase="انتقال"; pE=.3;pI=.45;pF=.25; }
   else { phase="انطلاق"; pE=.1;pI=.6;pF=.3; }
@@ -3184,7 +3321,7 @@ function computeMonth(monthKeyStr){
   });
   const pctOf = (v)=> base>0 ? Math.round((v/base)*100) : 0;
   return {
-    salary, extraIncome, obligations, byCat, recurringSurplus, phase,
+    salary, extraIncome, loanIn, cashIn, structuralSurplus, obligations, byCat, recurringSurplus, phase,
     emergency: vals.emergency, invest: vals.invest, flex: vals.flex,
     emergencyAuto: autoVals.emergency, investAuto: autoVals.invest, flexAuto: autoVals.flex,
     emergencyIsOverridden: isOverridden.emergency, investIsOverridden: isOverridden.invest, flexIsOverridden: isOverridden.flex,
@@ -3246,6 +3383,7 @@ function render(){
   // whole card, since it's directly related to (and updates) the row right above it.
   rows.push(`<div class="obl-row obl-row-action" id="oblAddExtraIncomeRow"><span class="name">${t("home.addExtraIncome")}</span></div>`);
   if(m.extraIncome>0) rows.push(oblRow(t("obl.extraIncome"), m.extraIncome));
+  if(m.loanIn>0) rows.push(oblRow(t("obl.loanIn"), m.loanIn));
   rows.push(oblRow(t("obl.installments"), -m.byCat["قسط"]));
   rows.push(oblRow(t("obl.fixed"), -m.byCat["ثابت"]));
   rows.push(oblRow(t("obl.gam3iyas"), -m.byCat["جمعية"]));
@@ -3370,9 +3508,12 @@ function phaseLabel(phase){
 }
 
 function oblRow(name, val){
-  const positive = val >= 0;
+  // `val === 0` is true for -0 as well, so this is what stops a zero row that came from a
+  // negation (-byCat["ثابت"] with nothing in it) from printing as "+-0 ج"
+  const v = val === 0 ? 0 : val;
+  const positive = v >= 0;
   return `<div class="obl-row"><span class="name">${name}</span>
-    <span class="val" style="color:${positive?'var(--sage)':'var(--ink)'}">${positive?'+':''}${fmt(val)} ${cur()}</span></div>`;
+    <span class="val" style="color:${positive?'var(--sage)':'var(--ink)'}">${positive?'+':''}${fmt(v)} ${cur()}</span></div>`;
 }
 
 function renderCategoryBars(monthExpenses){
@@ -3582,6 +3723,10 @@ function renderSettings(){
   document.getElementById("notifWeeklyEnabled").checked = state.settings.notif.weeklyBackup.enabled;
   document.getElementById("notifCapEnabled").checked = state.settings.notif.capAlert.enabled;
   document.getElementById("notifMaintEnabled").checked = state.settings.notif.maintDue.enabled;
+  const itemDueCfg = state.settings.notif.itemDue || {};
+  document.getElementById("notifItemDueEnabled").checked = !!itemDueCfg.enabled;
+  document.getElementById("notifItemDueDays").value = Number(itemDueCfg.daysBefore ?? 2);
+  document.getElementById("notifItemDueField").style.display = itemDueCfg.enabled ? "" : "none";
 
   document.getElementById("smsAutoEnabled").checked = state.settings.smsAuto.enabled;
 
@@ -3642,8 +3787,14 @@ function renderSettings(){
   const allActiveThisMonth = state.items.filter(it=>itemActiveForMonth(it, curMonthKey));
   const grandTotal = allActiveThisMonth.reduce((s,it)=>s+itemAmountForMonth(it, curMonthKey), 0);
   const mSum = computeMonth(curMonthKey);
-  const income = mSum.salary + mSum.extraIncome;
-  const sharePct = income>0 ? Math.round((grandTotal/income)*100) : 0;
+  // النسبة بتتقاس على الدخل المنتظم (المرتب)، مش على دخل الشهر بعد ما تدخل عليه تدفّقات لمرة
+  // واحدة. السبب اللي اتبلّغ عنه: نفس الالتزامات بالظبط (38,870) كانت بتطلع 62% في شهر و38% في
+  // شهر تاني وبتقلب لونها، بس لأن الشهر التاني فيه قبضة/سلفة مرة واحدة — والالتزامات دي شهرية
+  // متكررة، فقبضة بتوصل مرة مبتقللهاش ضغطها الشهر اللي بعده. لو مفيش مرتب مسجّل خالص بنرجع
+  // لدخل الشهر عشان الشريحة متختفيش (واللفظ بيتغيّر معاها).
+  const shareBase = mSum.salary > 0 ? mSum.salary : mSum.income;
+  const sharePct = shareBase>0 ? Math.round((grandTotal/shareBase)*100) : 0;
+  const oneOff = mSum.extraIncome + mSum.loanIn;
   const CAT_TONE = {"قسط":3, "ثابت":1, "جمعية":2};
   const catSums = ITEM_CATS.map(c=>({
     ...c,
@@ -3658,7 +3809,8 @@ function renderSettings(){
         <div class="os-lbl">${t("obligations.grandTotalLabel")}</div>
         <div class="os-amt">${fmt(grandTotal)}<small>${cur()}</small></div>
       </div>
-      ${income>0 ? `<div class="os-share${sharePct>=60?" hot":""}">${sharePct}%<span>${t("obligations.ofIncome")}</span></div>` : ""}
+      ${shareBase>0 ? `<div class="os-share${sharePct>=60?" hot":""}">${sharePct}%<span>${
+        t(mSum.salary>0 ? "obligations.ofSalary" : "obligations.ofIncome")}</span></div>` : ""}
     </div>
     ${withSum.length ? `
       <div class="os-bar">${withSum.map(c=>
@@ -3666,7 +3818,10 @@ function renderSettings(){
       <div class="os-leg">${withSum.map(c=>
         `<div><i style="background:var(--i${c.tone})"></i>${catLabel(c)} <b>${fmt(c.sum)}</b></div>`).join("")}</div>`
       : `<div class="os-note">${t("obligations.noneThisMonth")}</div>`}
-    ${income>0 ? `<div class="os-note">${tf("obligations.leftAfter", fmt(income - grandTotal))}</div>` : ""}`;
+    ${mSum.cashIn>0 ? `<div class="os-note">${tf("obligations.leftAfter", fmt(mSum.recurringSurplus))}</div>` : ""}
+    ${oneOff>0 ? `<div class="os-note">${tf(mSum.loanIn>0 && mSum.extraIncome>0 ? "obligations.oneOffBoth"
+        : (mSum.loanIn>0 ? "obligations.oneOffLoan" : "obligations.oneOffIncome"),
+        fmt(mSum.extraIncome), fmt(mSum.loanIn))}</div>` : ""}`;
 
   // Category filter — same "الكل" + one chip per category idiom as the expenses tab.
   const itemFilterEntries = [{k:"الكل"}, ...ITEM_CATS];
@@ -3804,7 +3959,8 @@ function renderSettings(){
       payoutChip = `<div class="oi-chip${got?" done":""}">${got?"✓":"🎁"} ${
         tf(got?"obligations.payoutGot":"obligations.payoutDue", fmt(it.payoutAmount||0), monthLabelOf(it.payoutMonth))}</div>`;
     }
-    const meta = [catLabel(cat), rangeNote.replace(/^ · /,""), sourceNote.replace(/^ · /,"")]
+    const dueNote = it.dueDay ? tf("obligations.dueDayMeta", it.dueDay) : "";
+    const meta = [catLabel(cat), dueNote, rangeNote.replace(/^ · /,""), sourceNote.replace(/^ · /,"")]
       .filter(Boolean).join(" · ");
     return `
     <div class="item-row-edit oi" data-id="${it.id}" style="--sq:var(--b${tone})">
@@ -3948,6 +4104,7 @@ function renderSettings(){
       item.active = !item.active;
       item.activeOverrides = {};
       await saveItems(); render();
+      rescheduleItemDueReminders();
       showToast(tf("toast.itemToggledAllMonths", item.name, item.active?t("obligations.active"):t("obligations.paused")));
     };
     row.querySelector(".itmDeleteForever").onclick = async (ev)=>{
@@ -3965,6 +4122,7 @@ function renderSettings(){
         alsoRemovedMove = true;
       }
       await saveItems(); render();
+      rescheduleItemDueReminders();
       showToast(alsoRemovedMove ? tf("toast.itemAndAdvanceMoveDeleted", item.name) : tf("toast.itemDeletedForever", item.name));
     };
   });
@@ -4373,6 +4531,27 @@ document.getElementById("notifWeeklyEnabled").onchange = async (e)=>{
 };
 document.getElementById("notifCapEnabled").onchange = async (e)=>{ state.settings.notif.capAlert.enabled = e.target.checked; await saveSettings(); };
 document.getElementById("notifMaintEnabled").onchange = async (e)=>{ state.settings.notif.maintDue.enabled = e.target.checked; await saveSettings(); };
+document.getElementById("notifItemDueEnabled").onchange = async (e)=>{
+  state.settings.notif.itemDue.enabled = e.target.checked;
+  document.getElementById("notifItemDueField").style.display = e.target.checked ? "" : "none";
+  await saveSettings();
+  await rescheduleItemDueReminders();
+  // لو الصلاحية اترفضت، الجدولة مش بتحصل — فبنرجّع الزرار مكانه بدل ما نسيبه شكله مفعّل وهو مش شغال
+  if(e.target.checked && !(await ensureNotifPermission())){
+    state.settings.notif.itemDue.enabled = false;
+    e.target.checked = false;
+    document.getElementById("notifItemDueField").style.display = "none";
+    await saveSettings();
+    showToast(t("toast.needNotifPermission"));
+  }
+};
+document.getElementById("notifItemDueDays").onchange = async (e)=>{
+  const v = Number(e.target.value);
+  state.settings.notif.itemDue.daysBefore = Math.min(10, Math.max(0, isFinite(v) ? Math.round(v) : 2));
+  e.target.value = state.settings.notif.itemDue.daysBefore;
+  await saveSettings();
+  await rescheduleItemDueReminders();
+};
 
 document.getElementById("smsAutoEnabled").onchange = async (e)=>{
   if(e.target.checked){
@@ -4442,6 +4621,7 @@ function openItemModal(existingItem){
   // "always existed"/"no known end", same as before this feature).
   document.getElementById("itStartMonth").value = existingItem ? (existingItem.startMonth || "") : curMonthKey;
   document.getElementById("itEndMonth").value = existingItem ? (existingItem.endMonth || "") : "";
+  document.getElementById("itDueDay").value = existingItem ? (existingItem.dueDay || "") : "";
   document.getElementById("itPayoutAmount").value = existingItem ? (existingItem.payoutAmount || "") : "";
   document.getElementById("itPayoutMonth").value = existingItem ? (existingItem.payoutMonth || "") : "";
   document.getElementById("itemCatChips").innerHTML = ITEM_CATS.map(c=>
@@ -4478,6 +4658,8 @@ document.getElementById("saveItemAdd").onclick = async ()=>{
   const startMonth = document.getElementById("itStartMonth").value || null;
   const endMonth = document.getElementById("itEndMonth").value || null;
   if(startMonth && endMonth && endMonth < startMonth){ showToast(t("toast.endBeforeStart")); return; }
+  const dueDayRaw = Number(document.getElementById("itDueDay").value);
+  const dueDay = (dueDayRaw >= 1 && dueDayRaw <= 31) ? Math.round(dueDayRaw) : null;
   let payoutAmount = null, payoutMonth = null;
   if(selectedItemCat === "جمعية"){
     payoutAmount = Number(document.getElementById("itPayoutAmount").value)||0;
@@ -4487,7 +4669,7 @@ document.getElementById("saveItemAdd").onclick = async ()=>{
     const item = state.items.find(x=>x.id===editingItemId);
     const wasLinked = !!item.source;
     item.name = name; item.amount = amount; item.cat = selectedItemCat;
-    item.startMonth = startMonth; item.endMonth = endMonth;
+    item.startMonth = startMonth; item.endMonth = endMonth; item.dueDay = dueDay;
     item.payoutAmount = payoutAmount; item.payoutMonth = payoutMonth;
     item.source = selectedItemSource;
     // Anchor the auto-deduction start point only the first time a source gets linked — switching
@@ -4499,13 +4681,14 @@ document.getElementById("saveItemAdd").onclick = async ()=>{
   } else {
     state.items.push({
       id:"c"+Date.now(), name, amount, cat:selectedItemCat,
-      startMonth, endMonth, payoutAmount, payoutMonth,
+      startMonth, endMonth, dueDay, payoutAmount, payoutMonth,
       source: selectedItemSource, autoDeductStartMonth: selectedItemSource ? REAL_TODAY_MONTH_KEY : null,
       active:true, amountOverrides:{}, activeOverrides:{}
     });
   }
   await saveItems();
   await syncLinkedItemWithdrawals();
+  rescheduleItemDueReminders();
   itemModalBg.classList.remove("show");
   render();
   showToast(editingItemId ? t("toast.itemEdited") : t("toast.itemAdded"));
@@ -4543,7 +4726,7 @@ function buildBackupPayload(){
     exportedAt: new Date().toISOString() };
 }
 async function applyBackupData(data){
-  if(data.settings) state.settings = {...defaultSettings(), ...data.settings};
+  if(data.settings) state.settings = mergeSettings(data.settings);
   if(data.items) state.items = data.items;
   if(data.expenses) state.expenses = data.expenses;
   if(data.allocations) state.allocations = data.allocations;
@@ -4555,6 +4738,7 @@ async function applyBackupData(data){
   await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
   await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
   localStorage.setItem("onboarded", "1");
+  rescheduleItemDueReminders();
   render();
 }
 
@@ -4585,6 +4769,7 @@ document.getElementById("resetBtn").onclick = async ()=>{
   await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
   await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
   await cancelDailyReminder(); await cancelWeeklyBackupReminder();
+  await rescheduleItemDueReminders();
   pendingSms = [];
   localStorage.removeItem("onboarded");
   applyLanguage();
@@ -5009,6 +5194,9 @@ document.getElementById("saveAdvanceAdd").onclick = async ()=>{
     id:"c"+Date.now(), name: tf(isIncome ? "extraIncome.itemName" : "advance.repaymentItemName", name), amount: installment, cat:"قسط",
     startMonth: repayStart, endMonth: repayEnd,
     payoutAmount: amount, payoutMonth: date.slice(0,7),
+    // يفرّق السلفة عن الدخل الحقيقي في كل الحسابات بعد كده (payoutKindOf) — من غيره الاستلاف
+    // بيبان زيادة في الدخل
+    payoutKind: isIncome ? "income" : "loan",
     source: null, autoDeductStartMonth: null,
     active: hasRepayment, amountOverrides:{}, activeOverrides:{}, advanceId
   });
@@ -5167,7 +5355,8 @@ document.getElementById("exportExcel").onclick = async ()=>{
     {البند:"", القيمة: ""},
     {البند:"— الصورة النظرية للشهر ده —", القيمة: ""},
     {البند:"المرتب", القيمة: m.salary},
-    {البند:"دخل إضافي (قبضة جمعية/سلفة)", القيمة: m.extraIncome},
+    {البند:"دخل إضافي (قبضة جمعية/مكافأة)", القيمة: m.extraIncome},
+    {البند:"سلفة مستلفة (مش دخل)", القيمة: m.loanIn},
     {البند:"إجمالي الأقساط", القيمة: m.byCat["قسط"]},
     {البند:"إجمالي المصروفات الثابتة", القيمة: m.byCat["ثابت"]},
     {البند:"إجمالي الجمعيات", القيمة: m.byCat["جمعية"]},
@@ -5401,6 +5590,11 @@ function checkQuickAddUrlParam(){
   // plugins, and a throw in any one of them would otherwise skip everything below it — including
   // the subscription check, which would silently lock a paying user out of what they paid for.
   refreshProStatus();
+  // Same placement reasoning as the line above (before render() and the native setup, not after):
+  // it runs on every launch, not only after an edit, because a repeating monthly notification
+  // belongs to the OS and has to be re-registered after a reinstall / a restore from backup / an
+  // item reaching its end month — and it must not be skippable by a throw from any plugin below.
+  rescheduleItemDueReminders();
   await syncLinkedItemWithdrawals();
   render();
   setupNativeApp();
