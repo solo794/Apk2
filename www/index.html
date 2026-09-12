@@ -1585,6 +1585,7 @@ const I18N = {
     "pro.unavailableWeb":"الاشتراك متاح في نسخة الأندرويد من Google Play. النسخة دي (الويب/الآيفون) بتشتغل بالمزايا المجانية.",
     "pro.freeNote":"كل حاجة تانية في التطبيق مجانية بالكامل: تسجيل المصاريف، الالتزامات، الحسابات، التوزيعات، والصيانة — والاشتراك بيفتح الأتمتة والتقارير والنسخة السحابية بس.",
     "toast.proActivated":"تم تفعيل النسخة الكاملة 🎉", "toast.proFailed":"متمّش الاشتراك — جرّب تاني",
+    "toast.ownerTapsLeft":"فاضل {0} دوسات...",
     "toast.devUnlockOn":"وضع التجربة اتفعّل (مزايا النسخة الكاملة مفتوحة)",
     "toast.devUnlockOff":"وضع التجربة اتقفل",
     "settings.currencyLabel":"العملة", "settings.currencySub":"تتغيّر في كل أرقام التطبيق والتقارير",
@@ -1875,6 +1876,7 @@ const I18N = {
     "pro.unavailableWeb":"Subscriptions are available in the Android version on Google Play. This version runs with the free features.",
     "pro.freeNote":"Everything else in the app is completely free: expenses, obligations, accounts, allocations and maintenance — the subscription only unlocks automation, reports and cloud backup.",
     "toast.proActivated":"Full version activated 🎉", "toast.proFailed":"Subscription didn't go through — try again",
+    "toast.ownerTapsLeft":"{0} more taps...",
     "toast.devUnlockOn":"Trial mode on (full-version features unlocked)",
     "toast.devUnlockOff":"Trial mode off",
     "settings.currencyLabel":"Currency", "settings.currencySub":"Applies to every number in the app and its reports",
@@ -4431,6 +4433,9 @@ function buildBackupPayload(){
   return { settings: state.settings, items: state.items, expenses: state.expenses, allocations: state.allocations,
     car: state.car, maintenanceSchedule: state.maintenanceSchedule, maintenanceLog: state.maintenanceLog,
     accountMoves: state.accountMoves,
+    // Carried so the owner's own unlock survives a reinstall or a move to another phone — a real
+    // Play subscription doesn't need this (Play restores it), but the local unlock would be lost.
+    ownerUnlock: !!proState.devUnlock,
     exportedAt: new Date().toISOString() };
 }
 async function applyBackupData(data){
@@ -4442,6 +4447,7 @@ async function applyBackupData(data){
   if(data.maintenanceSchedule) state.maintenanceSchedule = data.maintenanceSchedule;
   if(data.maintenanceLog) state.maintenanceLog = data.maintenanceLog;
   if(data.accountMoves) state.accountMoves = data.accountMoves;
+  if(data.ownerUnlock){ proState.devUnlock = true; saveProState(); }
   await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
   await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
   localStorage.setItem("onboarded", "1");
@@ -4600,22 +4606,32 @@ document.getElementById("paywallModalBg").addEventListener("click", (e)=>{
   if(e.target === document.getElementById("paywallModalBg")) document.getElementById("paywallModalBg").classList.remove("show");
 });
 document.getElementById("paywallBuyBtn").onclick = startProPurchase;
-// The owner's own way to try the paid features on a build Play can't talk to (sideloaded APK or
-// the web version). Long-press the version line in Settings. Not a licensing mechanism.
+// The owner's own way to run the paid features on a build Play can't sell through (the sideloaded
+// APK, or the web version). Tap the version line in Settings 7 times. Not a licensing mechanism —
+// see the note in BillingPlugin about client-side gating.
+const OWNER_TAPS_NEEDED = 7;
 (function(){
   const ver = document.getElementById("appVersionLbl");
   if(!ver) return;
-  let timer = null;
-  const start = ()=>{ timer = setTimeout(async ()=>{
+  let taps = 0, resetTimer = null;
+  ver.style.userSelect = "none";          // so tapping never starts a text selection
+  ver.style.webkitUserSelect = "none";
+  ver.style.cursor = "default";
+  ver.addEventListener("click", ()=>{
+    taps++;
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(()=>{ taps = 0; }, 2500); // the run has to be deliberate
+    const left = OWNER_TAPS_NEEDED - taps;
+    if(left > 0){
+      if(taps >= 3) showToast(tf("toast.ownerTapsLeft", left)); // silent until it's clearly on purpose
+      return;
+    }
+    taps = 0;
     proState.devUnlock = !proState.devUnlock;
     saveProState();
     showToast(proState.devUnlock ? t("toast.devUnlockOn") : t("toast.devUnlockOff"));
     render();
-  }, 1200); };
-  const stop = ()=>{ if(timer){ clearTimeout(timer); timer = null; } };
-  ver.addEventListener("touchstart", start, {passive:true});
-  ver.addEventListener("mousedown", start);
-  ["touchend","touchmove","touchcancel","mouseup","mouseleave"].forEach(ev=>ver.addEventListener(ev, stop));
+  });
 })();
 document.getElementById("closeModal").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
 document.getElementById("cancelAdd").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
