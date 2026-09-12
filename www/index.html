@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <title data-i18n="app.title">معايا كام؟</title>
-<meta name="theme-color" content="#16302E">
+<meta name="theme-color" content="#0E9F6E">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -21,18 +21,30 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* Palette "نعناعي" (template E) — chosen from the six-template comparison board. Emerald hero on
+     a mint-white ground, with the old cream/gold identity retired. Every surface in the app reads
+     through these tokens, so the whole app moves together rather than the home tab drifting away
+     from the rest of it. --gold keeps its name (it's referenced in dozens of rules) but is now the
+     primary *action* color rather than a literal gold. */
   :root{
-    --ink:#16302E;
-    --paper:#F3EEDD;
-    --paper-dim:#E8E1C8;
-    --gold:#B8863B;
-    --gold-soft:#E4C888;
-    --teal:#1F6F6B;
-    --teal-dark:#123F3D;
-    --brick:#A8462E;
-    --sage:#4B7756;
-    --line:#D9D0AE;
-    --ink-soft:#4B5D5A;
+    --ink:#0F2A22;
+    --paper:#F0F8F4;
+    --paper-dim:#E1EFE8;
+    --gold:#0E9F6E;
+    --gold-soft:#7ED9B4;
+    --teal:#0D9488;
+    --teal-dark:#0B5F53;
+    --brick:#B23A48;
+    --sage:#0B7A5C;
+    --line:#DCEDE5;
+    --ink-soft:#628075;
+    --hero:#0E9F6E;
+    /* Per-card washes for the bento tiles, each with the deeper tone used by that tile's icon
+       badge (b*) and the ink that reads on it (i*). */
+    --t1:#E5F5EE; --b1:#D0EBDF; --i1:#0B7A5C;
+    --t2:#F3F8E9; --b2:#E5F0D2; --i2:#5E7A26;
+    --t3:#E7F3F5; --b3:#D3E9ED; --i3:#1E7383;
+    --t4:#FDEEEE; --b4:#F8DADA; --i4:#B23A48;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;min-height:100%;}
@@ -55,12 +67,18 @@
     box-shadow:0 0 40px rgba(0,0,0,.35);
   }
   /* ---------- top bar ---------- */
+  /* The bar is solid where its content sits and then dissolves into the page ground through a
+     dedicated strip below it (.topbar-fade) — a single gradient across the whole block put the
+     quick-action labels inside the fade, where they washed out against the light ground. */
   .topbar{
-    background:linear-gradient(160deg,var(--teal-dark),var(--teal) 70%);
-    color:var(--paper);
-    padding:calc(18px + env(safe-area-inset-top)) 20px 30px;
-    border-radius:0 0 26px 26px;
+    background:var(--hero);
+    color:#fff;
+    padding:calc(14px + env(safe-area-inset-top)) 18px 20px;
     flex-shrink:0;
+  }
+  .topbar-fade{
+    height:52px; flex-shrink:0;
+    background:linear-gradient(180deg, var(--hero), var(--paper));
   }
   .topbar .brand{
     display:flex; align-items:center; justify-content:space-between;
@@ -94,10 +112,27 @@
   .undo-redo-pill button:active:not(:disabled){background:rgba(255,255,255,.2);}
   .undo-redo-pill button:disabled{opacity:.3; cursor:default;}
 
-  .hero{display:flex; flex-direction:column; gap:3px;}
-  .hero .label{font-size:14.5px; opacity:.88; font-weight:600;}
-  .hero .amount{font-size:48px; font-weight:800; line-height:1.15; display:flex; align-items:baseline; gap:7px; margin-top:2px;}
-  .hero .amount small{font-size:18px; font-weight:600; opacity:.85;}
+  .hero{display:flex; flex-direction:column; gap:3px; align-items:center; text-align:center; margin-top:20px;}
+  .hero .label{font-size:13px; opacity:.82; font-weight:600;}
+  .hero .amount{font-size:48px; font-weight:800; line-height:1.12; display:flex; align-items:baseline; gap:6px; margin-top:1px; letter-spacing:-.015em;}
+  .hero .amount small{font-size:18px; font-weight:700; opacity:.78;}
+
+  /* Four circular actions sitting on the hero itself. They're reachable from every tab (the top
+     bar is shared chrome), which is what lets the home tab drop its two full-width "+ تسجيل حركة"
+     / "+ سلفة" ghost buttons entirely. */
+  .qa-row{display:flex; justify-content:center; gap:20px; margin-top:20px;}
+  .qa{
+    background:none; border:none; padding:0; cursor:pointer; font-family:'Cairo';
+    display:flex; flex-direction:column; align-items:center; gap:7px;
+  }
+  .qa .c{
+    width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.17); border:1px solid rgba(255,255,255,.24); color:#fff;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), background-color .15s ease;
+  }
+  .qa .c svg{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .qa:active .c{transform:scale(.88); background:rgba(255,255,255,.28);}
+  .qa .t{font-size:10.5px; font-weight:600; color:rgba(255,255,255,.84);}
   /* Spells out what the big number actually is (your real balance, right now, across every
      account) — added after the number's meaning changed from a budget projection to something
      literal, so it needs to read unambiguously without relying on the label question alone. */
@@ -116,12 +151,19 @@
      viewport bottom) with room to spare, so the last section on a tab (usually "التزامات الشهر")
      never peeks out from under them when scrolled all the way down. */
   .content{padding:16px 16px 160px; flex:1; animation:tabFadeIn .28s ease;}
+  /* Home has no floating button to clear, so it doesn't need the extra 160px of dead space. */
+  #tab-home{padding-bottom:92px;}
   @keyframes tabFadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
   .section-title{
     font-size:14px; font-weight:700; color:var(--ink);
     margin:18px 4px 10px; display:flex; align-items:center; justify-content:space-between;
   }
   .section-title .hint{font-size:11.5px; font-weight:500; color:var(--ink-soft);}
+  /* Quiet eyebrow label above a group of cards — deliberately small and muted so the big numbers
+     inside the cards are what the eye lands on first. Replaces the emoji-prefixed .section-title
+     on the home tab, where every heading used to compete with the values underneath it. */
+  .sec-lbl{font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:22px 6px 10px;}
+  .sec-lbl:first-child{margin-top:6px;}
 
   .flex-card{background:var(--ink); color:var(--paper); border-radius:20px; padding:18px 18px 16px;}
   .flex-top{display:flex; justify-content:space-between; align-items:flex-start;}
@@ -131,22 +173,26 @@
   .bar-track{height:10px; border-radius:999px; background:rgba(255,255,255,.14); margin-top:14px; overflow:hidden;}
   .bar-fill{height:100%; border-radius:999px; background:var(--gold-soft); transition:width .35s ease;}
 
-  .obl-list{background:#fff; border-radius:18px; overflow:hidden; border:1px solid var(--line);}
-  .obl-row{display:flex; justify-content:space-between; align-items:center; padding:13px 16px; border-bottom:1px solid var(--line); font-size:13.5px;}
-  .obl-row:last-child{border-bottom:none;}
+  /* Grouped list card: one card holding several rows, divided by hairlines that stop short of the
+     card's own edges, instead of each row carrying its own full-width border. Used everywhere a
+     list of label/value rows appears, so the same idiom reads across all tabs. */
+  .obl-list{background:#fff; border-radius:22px; overflow:hidden; border:none;}
+  .obl-row{display:flex; justify-content:space-between; align-items:center; padding:14px 16px; font-size:13.5px; position:relative;}
+  .obl-row + .obl-row::before{
+    content:""; position:absolute; top:0; inset-inline-start:16px; inset-inline-end:16px;
+    height:1px; background:var(--line);
+  }
   .obl-row .name{color:var(--ink); font-weight:600;}
   .obl-row .val{font-weight:700; color:var(--ink);}
   /* Shared by every "total" row in the app (account balances, obligations' recurring surplus,
-     the filtered-sum/grand-total rows in expenses and obligations) — a gold top border + bigger
-     teal value make these stand out from an ordinary row at a glance instead of blending in with
-     just a slightly different background. */
+     the filtered-sum/grand-total rows in expenses and obligations) — a tinted band and a bigger
+     value make these read as the row that sums the ones above it. */
   .obl-row.total{
-    background:linear-gradient(135deg, var(--paper-dim), #fff);
-    font-weight:800; padding:15px 16px;
-    border-top:2px solid var(--gold);
+    background:var(--b1); font-weight:800; padding:16px;
   }
-  .obl-row.total .name{font-size:13.5px;}
-  .obl-row.total .val{font-size:16.5px; color:var(--teal);}
+  .obl-row.total::before{display:none;}
+  .obl-row.total .name{font-size:13px;}
+  .obl-row.total .val{font-size:17px; color:var(--i1);}
   /* An inline "add" action sitting right inside a list of rows (e.g. "+ دخل إضافي جديد" directly
      under the "المرتب" row) instead of as a separate button below the whole card. */
   .obl-row-action{justify-content:center; cursor:pointer; transition:opacity .12s ease;}
@@ -166,23 +212,56 @@
   .stat-card .v{font-size:15px; font-weight:800; color:var(--ink);}
   .stat-card .v span{font-size:11px; font-weight:600; color:var(--ink-soft);}
 
-  /* "📌 نظرة سريعة" bento grid — a denser, more colorful info-card layout than .stat-grid above
-     (kept as-is since the Allocations tab still reuses it). Each card carries its own pastel tint
-     (from the app's own teal/gold/sage/brick palette, never the reference app's blue/purple) so the
-     section reads as a grid of distinct tiles rather than a plain list, the way the reference app's
-     analytics screen does. Two cards (budget/emergency) additionally show a small radial gauge. */
-  .bento-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
-  .bento-card{border-radius:16px; padding:12px; position:relative; overflow:hidden; min-height:76px;}
-  .bento-card.span2{grid-column:1 / -1;}
-  .b-head{display:flex; align-items:center; gap:6px; margin-bottom:6px;}
-  .b-icon{width:22px; height:22px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0;}
-  .b-title{font-size:10.5px; font-weight:700; color:var(--ink-soft);}
-  .b-value{font-size:14px; font-weight:800; color:var(--ink); line-height:1.35;}
-  .b-value span{font-size:10.5px; font-weight:600; color:var(--ink-soft);}
-  .b-caption{font-size:10px; font-weight:600; color:var(--ink-soft); margin-top:3px;}
-  .b-row{display:flex; align-items:center; gap:10px;}
-  .b-gauge{width:42px; height:42px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;}
-  .b-gauge-hole{width:31px; height:31px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:var(--ink);}
+  /* Bento tiles — big, airy, one wash per tile, with a circular line-icon badge. Sized so the
+     value is the loudest thing on the tile and the label the quietest: a 30px number against an
+     11.5px title, rather than the near-equal weights the old two-card "نظرة سريعة" row had, which
+     is exactly why that version didn't read as a change at all. */
+  .bento{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
+  .tile{border-radius:26px; padding:16px 15px 15px; background:var(--tile); min-width:0;}
+  .tile.wide{grid-column:1 / -1;}
+  .t-head{display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:13px;}
+  .t-head .tt{font-size:12px; font-weight:700; color:var(--ink); line-height:1.45; padding-top:4px;}
+  .t-bdg{
+    width:38px; height:38px; border-radius:50%; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--badge); color:var(--badge-ink);
+  }
+  .t-bdg svg{width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
+  .t-big{font-size:30px; font-weight:800; line-height:1.1; letter-spacing:-.01em; color:var(--ink);}
+  .t-big small{font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-inline-start:3px;}
+  .t-cap{font-size:10.5px; font-weight:600; color:var(--ink-soft); margin-top:8px; line-height:1.6;}
+  .t-row{display:flex; align-items:flex-end; justify-content:space-between; gap:10px;}
+  /* Radial gauge: a real nested hole element (not ::before) so its fill can be set to the tile's
+     own wash — background:inherit on a pseudo-element would inherit the conic-gradient itself. */
+  .t-ring{
+    width:76px; height:76px; border-radius:50%; margin:2px auto 0;
+    background:conic-gradient(var(--arc) calc(var(--p) * 3.6deg), var(--line) 0);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .t-ring .hole{
+    width:57px; height:57px; border-radius:50%; background:var(--tile);
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; font-weight:800; color:var(--ink);
+  }
+  .t-trk{height:9px; border-radius:999px; background:var(--line); overflow:hidden; margin-top:13px;}
+  .t-trk b{display:block; height:100%; border-radius:999px; background:var(--arc); transition:width .35s ease;}
+
+  /* Account rows: same grouped card as .obl-list, but each row leads with a rounded-square icon
+     tile, so the divider is inset past it. */
+  .acct-row{display:flex; align-items:center; gap:12px; padding:13px 14px; position:relative;}
+  .acct-row + .acct-row::before{
+    content:""; position:absolute; top:0; inset-inline-start:62px; inset-inline-end:0;
+    height:1px; background:var(--line);
+  }
+  .acct-sq{
+    width:36px; height:36px; border-radius:12px; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--sq); color:var(--sq-ink);
+  }
+  .acct-sq svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
+  .acct-name{flex:1; min-width:0; font-size:13.5px; font-weight:700; color:var(--ink);}
+  .acct-name span{display:block; font-size:10.5px; font-weight:600; color:var(--ink-soft); margin-top:2px;}
+  .acct-val{font-size:14.5px; font-weight:800;}
 
   .goal-card{background:#fff; border:1px solid var(--line); border-radius:18px; padding:16px;}
   .goal-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
@@ -268,7 +347,7 @@
   .toggle-row:last-child{border-bottom:none;}
   .switch{position:relative; width:44px; height:26px; flex-shrink:0;}
   .switch input{opacity:0; width:0; height:0;}
-  .slider{position:absolute; inset:0; background:#D9D0AE; border-radius:999px; cursor:pointer; transition:.2s;}
+  .slider{position:absolute; inset:0; background:var(--line); border-radius:999px; cursor:pointer; transition:.2s;}
   /* Resting ("off") position uses a logical inset so it auto-flips with dir: the knob sits at the
      "start" side (right in RTL, left in LTR) — inset-inline-start:3px means right:3px under RTL
      (matching the original design) and left:3px under LTR, instead of a hardcoded physical right
@@ -311,51 +390,26 @@
   .btn-danger{background:none; color:var(--brick); border:1px solid var(--brick);}
   .btn:active{transform:scale(.97); opacity:.85;}
 
-  /* Both FABs used to float much higher up the screen (bottom:96px/164px), anchored near the
-     right edge — reported as constantly covering real content (numbers/rows) while scrolling,
-     since that's well inside the actual content area, not just the bottom margin reserved for
-     them. Centering them over the bar's middle then made them dip low enough to sit directly on
-     top of (and hide) the two tab buttons that live there (measured: bottom:40px put their bottom
-     edge ~27px inside the bar's own 67px-tall content row) — bottom is now pinned clear of that
-     67px, with extra clearance so the pair reads as sitting on its own detached island (see
-     .tabbar::before) rather than merged into the bar. A fixed physical offset (not
-     inset-inline-end) centers them the same way in RTL/LTR since centering doesn't depend on
-     reading direction the way edge-anchoring did. */
-  .fab, .fab-voice{
+  /* One tab-aware "+" button, and only on the tabs that have no other way to add (expenses,
+     allocations, maintenance log, obligations). The pair-on-an-island is gone: the voice action
+     moved into the hero, so there's no second button left to pair with, and a lone circle needs no
+     backing card. bottom is pinned clear of the bar's own 67px row so it can never cover a tab
+     icon — the bug this arrangement caused twice before. */
+  .fab{
     position:fixed; bottom:calc(89px + env(safe-area-inset-bottom));
-    width:52px; height:52px; border-radius:50%;
+    left:50%; transform:translateX(-50%);
+    width:54px; height:54px; border-radius:50%;
     display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;
+    background:var(--gold); color:#fff; font-size:26px; font-weight:800;
+    box-shadow:0 10px 22px rgba(14,159,110,.45);
     z-index:21; transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
   }
-  .fab{
-    left:calc(50% + 27px); transform:translateX(-50%);
-    background:var(--gold); color:var(--ink); font-size:25px; font-weight:800;
-    box-shadow:0 8px 20px rgba(184,134,59,.45);
-  }
-  .fab:active{transform:translateX(-50%) scale(.88); box-shadow:0 4px 10px rgba(184,134,59,.5);}
-
-  .fab-voice{
-    left:calc(50% - 27px); transform:translateX(-50%);
-    background:var(--teal); color:#fff; font-size:20px;
-    box-shadow:0 8px 18px rgba(22,48,46,.4);
-  }
-  .fab-voice:active{transform:translateX(-50%) scale(.88);}
+  .fab:active{transform:translateX(-50%) scale(.88); box-shadow:0 4px 10px rgba(14,159,110,.5);}
 
   .tabbar{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
     background:#fff; border-top:1px solid var(--line); display:flex;
     padding:8px 8px calc(8px + env(safe-area-inset-bottom)); z-index:20;
-  }
-  /* A separate floating "island" behind the FAB pair — its own small white card, visibly detached
-     from the bar by a clear gap, instead of merging into the bar's own edge. Sized to sit fully
-     above the bar's 67px-tall content row (with room to spare) so it can never dip down and cover
-     a tab icon/label the way the FABs themselves used to. pointer-events:none since it's purely
-     decorative — nothing under it should ever fail to receive a tap. */
-  .tabbar::before{
-    content:""; position:absolute; top:-58px; left:50%; transform:translateX(-50%);
-    width:126px; height:44px; background:#fff; border-radius:22px;
-    box-shadow:0 8px 18px rgba(22,48,46,.16);
-    pointer-events:none;
   }
   .tabbtn{flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; cursor:pointer; color:var(--ink-soft); font-family:'Cairo'; transition:color .2s ease;}
   .tabbtn .ic{
@@ -363,13 +417,19 @@
     display:flex; align-items:center; justify-content:center;
     transition:background-color .25s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
   }
+  /* Line icons rather than emoji: emoji carry their own colors, so an "active" tab could never
+     actually look active — the label changed color while the glyph above it stayed put. */
+  .tabbtn .ic svg{
+    width:21px; height:21px; fill:none; stroke:currentColor;
+    stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;
+  }
   .tabbtn .lb{font-size:9.3px; font-weight:700; transition:transform .2s ease;}
   .tabbtn.active{color:var(--teal);}
-  .tabbtn.active .ic{background:rgba(31,111,107,.14); transform:scale(1.1);}
+  .tabbtn.active .ic{background:rgba(13,148,136,.14); transform:scale(1.1);}
   .tabbtn.active .lb{transform:translateY(-1px);}
   .tabbtn:active .ic{transform:scale(.85);}
 
-  .modal-bg{position:fixed; inset:0; background:rgba(22,48,46,.55); display:none; align-items:flex-end; justify-content:center; z-index:50;}
+  .modal-bg{position:fixed; inset:0; background:rgba(15,42,34,.55); display:none; align-items:flex-end; justify-content:center; z-index:50;}
   .modal-bg.show{display:flex;}
   .modal{background:var(--paper); width:100%; max-width:460px; border-radius:22px 22px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); animation:slideUp .25s ease; max-height:88vh; overflow-y:auto;}
   @keyframes slideUp{from{transform:translateY(30px); opacity:0} to{transform:translateY(0); opacity:1}}
@@ -461,38 +521,41 @@
       <div class="label" id="heroLabel" data-i18n="hero.label">معايا كام؟</div>
       <div class="amount" id="heroAmount">0 <small data-i18n="common.currency">ج</small></div>
       <div class="hero-sub" data-i18n="hero.subLabel">رصيدك الفعلي دلوقتي في كل حساباتك</div>
+      <div class="qa-row">
+        <button class="qa" id="qaExpense">
+          <span class="c"><svg viewBox="0 0 24 24"><path d="M12 5.2v13.6M5.2 12h13.6"/></svg></span>
+          <span class="t" data-i18n="home.qaExpense">مصروف</span>
+        </button>
+        <button class="qa" id="qaVoice">
+          <span class="c"><svg viewBox="0 0 24 24"><rect x="9.2" y="3" width="5.6" height="10.6" rx="2.8"/><path d="M5.4 11.8a6.6 6.6 0 0013.2 0M12 18.4V21"/></svg></span>
+          <span class="t" data-i18n="home.qaVoice">صوت</span>
+        </button>
+        <button class="qa" id="qaMove">
+          <span class="c"><svg viewBox="0 0 24 24"><path d="M4 8.4h13.2l-3.2-3.2M20 15.6H6.8l3.2 3.2"/></svg></span>
+          <span class="t" data-i18n="home.qaMove">حركة</span>
+        </button>
+        <button class="qa" id="qaAdvance">
+          <span class="c"><svg viewBox="0 0 24 24"><path d="M7.2 13.4V6.6a1.6 1.6 0 013.2 0v5.2m0-1.4a1.6 1.6 0 013.2 0v1.4m0-1a1.6 1.6 0 013.2 0v4.2a5 5 0 01-5 5h-1.6a5 5 0 01-5-5v-1.2"/></svg></span>
+          <span class="t" data-i18n="home.qaAdvance">سلفة</span>
+        </button>
+      </div>
     </div>
   </div>
+  <div class="topbar-fade"></div>
 
   <div id="pendingSmsWrap"></div>
 
   <div class="content" id="tab-home">
-    <div class="section-title" data-i18n="home.flexTitle">🎯 مرونة الشهر ده</div>
-    <div class="flex-card">
-      <div class="flex-top">
-        <div><div class="t1" data-i18n="home.theoreticalRemainingLabel">الفائض النظري المتبقي</div><div class="t2" id="theoreticalRemaining">0 ج</div></div>
-        <div style="text-align:left;">
-          <div class="phase-chip" id="phaseChip">—</div>
-        </div>
-      </div>
-      <div class="flex-top" style="margin-top:14px;">
-        <div><div class="t1" data-i18n="home.spentOf">اتصرف من أصل</div><div class="t2" id="flexSpent">0 ج</div></div>
-        <div style="text-align:left;">
-          <div class="t3" id="flexBudget">من 0 ج</div>
-        </div>
-      </div>
-      <div class="bar-track"><div class="bar-fill" id="flexBar" style="width:0%"></div></div>
-    </div>
+    <!-- The flex card, the accounts list and the old "نظرة سريعة" pair all live inside the bento
+         grid now; the two ghost buttons that used to sit here (تسجيل حركة / سلفة) moved up into
+         the hero's quick-action circles, which are reachable from every tab. -->
+    <div class="sec-lbl" data-i18n="home.monthGlanceTitle">نظرة على الشهر</div>
+    <div class="bento" id="bentoGrid"></div>
 
-    <div class="section-title"><span data-i18n="home.accountsTitle">💳 أرصدة الحسابات</span> <span class="hint" data-i18n="home.accountsHint">تفصيل رقم "معايا كام؟" فوق لكل حساب</span></div>
+    <div class="sec-lbl" data-i18n="home.accountsTitle2">حساباتك</div>
     <div class="obl-list" id="accountsList"></div>
-    <button class="btn btn-ghost" id="addMoveBtn" style="margin-top:8px;" data-i18n="home.addMove">+ تسجيل حركة (إيداع/سحب)</button>
-    <button class="btn btn-ghost" id="addAdvanceBtn" style="margin-top:8px;" data-i18n="home.addAdvance">+ سلفة/دفعة ائتمانية جديدة</button>
 
-    <div class="section-title" data-i18n="home.quickLookTitle">📌 نظرة سريعة</div>
-    <div class="bento-grid" id="bentoGrid"></div>
-
-    <div class="section-title" data-i18n="home.obligationsTitle">📊 التزامات الشهر</div>
+    <div class="sec-lbl" data-i18n="home.obligationsTitle2">التزامات الشهر</div>
     <div class="obl-list" id="oblList"></div>
   </div>
 
@@ -749,16 +812,17 @@
     </div>
   </div>
 
-  <button class="fab" id="fabAdd">+</button>
-  <button class="fab-voice" id="fabVoiceAdd" data-i18n-title="voice.fabTitle" title="أضف مصروف بالصوت">🎤</button>
+  <!-- Hidden to start with, since home is the tab that opens first and home's adds live in the
+       hero's own circles. The tab-switch handler shows/hides it from there on. -->
+  <button class="fab" id="fabAdd" style="display:none;">+</button>
 
   <div class="tabbar">
-    <button class="tabbtn active" data-tab="home"><span class="ic">🏠</span><span class="lb" data-i18n="nav.home">الرئيسية</span></button>
-    <button class="tabbtn" data-tab="expenses"><span class="ic">🧾</span><span class="lb" data-i18n="nav.expenses">المصاريف</span></button>
-    <button class="tabbtn" data-tab="allocations"><span class="ic">📦</span><span class="lb" data-i18n="nav.allocations">التوزيعات</span></button>
-    <button class="tabbtn" data-tab="obligations"><span class="ic">📋</span><span class="lb" data-i18n="nav.obligations">الالتزامات</span></button>
-    <button class="tabbtn" data-tab="maintenance"><span class="ic">🚗</span><span class="lb" data-i18n="nav.maintenance">السيارة</span></button>
-    <button class="tabbtn" data-tab="settings"><span class="ic">⚙️</span><span class="lb" data-i18n="nav.settings">الإعدادات</span></button>
+    <button class="tabbtn active" data-tab="home"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 11.2l8-6.2 8 6.2v7.6a2 2 0 01-2 2H6a2 2 0 01-2-2z"/></svg></span><span class="lb" data-i18n="nav.home">الرئيسية</span></button>
+    <button class="tabbtn" data-tab="expenses"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5.2" y="3.2" width="13.6" height="17.6" rx="2.4"/><path d="M8.8 8.4h6.4M8.8 12h6.4M8.8 15.6h3.4"/></svg></span><span class="lb" data-i18n="nav.expenses">المصاريف</span></button>
+    <button class="tabbtn" data-tab="allocations"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4"/></svg></span><span class="lb" data-i18n="nav.allocations">التوزيعات</span></button>
+    <button class="tabbtn" data-tab="obligations"><span class="ic"><svg viewBox="0 0 24 24"><path d="M8.6 7h11M8.6 12h11M8.6 17h11M4.6 7h.02M4.6 12h.02M4.6 17h.02"/></svg></span><span class="lb" data-i18n="nav.obligations">الالتزامات</span></button>
+    <button class="tabbtn" data-tab="maintenance"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3.4 14.4h17.2v3.8H3.4z"/><path d="M5.6 14.4l2-5.2h8.8l2 5.2"/><circle cx="7.6" cy="18.2" r="1.2"/><circle cx="16.4" cy="18.2" r="1.2"/></svg></span><span class="lb" data-i18n="nav.maintenance">السيارة</span></button>
+    <button class="tabbtn" data-tab="settings"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.4v2.2M12 18.4v2.2M4.9 7.6l1.9 1.1M17.2 15.3l1.9 1.1M4.9 16.4l1.9-1.1M17.2 8.7l1.9-1.1"/></svg></span><span class="lb" data-i18n="nav.settings">الإعدادات</span></button>
   </div>
 </div>
 
@@ -1125,7 +1189,11 @@ const I18N = {
     "home.addMove":"+ تسجيل حركة (إيداع/سحب)", "home.addAdvance":"+ سلفة/دفعة ائتمانية جديدة",
     "home.addExtraIncome":"+ دخل إضافي جديد", "home.quickLookTitle":"📌 نظرة سريعة",
     "home.topCatLabel":"أكتر فئة صرف", "home.avgDailyLabel":"متوسط يومي (مرونة)",
-    "home.budgetUsedLabel":"نسبة الميزانية المستخدمة", "home.emergencyFundLabel":"كاش الطوارئ",
+    "home.budgetUsedLabel":"الميزانية المستخدمة", "home.emergencyFundLabel":"كاش الطوارئ",
+    "home.monthGlanceTitle":"نظرة على الشهر", "home.accountsTitle2":"حساباتك", "home.obligationsTitle2":"التزامات الشهر",
+    "home.qaExpense":"مصروف", "home.qaVoice":"صوت", "home.qaMove":"حركة", "home.qaAdvance":"سلفة",
+    "home.flexTileLabel":"مرونة الشهر ده", "home.ofSpent":"من إجمالي", "home.noExpensesYet":"مفيش مصاريف الشهر ده",
+    "home.daysCounted":"على مدى {0} يوم", "home.movedIn":"إيداع", "home.movedOut":"سحب",
     "home.setGoalPrompt":"حدد هدف من الإعدادات", "home.upcomingLabel":"التزامات الشهر ده",
     "home.upcomingCountSuffix":"بند نشط", "home.recentMoveLabel":"آخر حركة",
     "home.obligationsTitle":"📊 التزامات الشهر",
@@ -1339,6 +1407,10 @@ const I18N = {
     "home.addExtraIncome":"+ New Extra Income", "home.quickLookTitle":"📌 Quick Look",
     "home.topCatLabel":"Top Spend Category", "home.avgDailyLabel":"Daily Avg (Flex)",
     "home.budgetUsedLabel":"Budget Used", "home.emergencyFundLabel":"Emergency Cash",
+    "home.monthGlanceTitle":"This Month at a Glance", "home.accountsTitle2":"Your Accounts", "home.obligationsTitle2":"Obligations",
+    "home.qaExpense":"Expense", "home.qaVoice":"Voice", "home.qaMove":"Move", "home.qaAdvance":"Advance",
+    "home.flexTileLabel":"This Month's Flex", "home.ofSpent":"of", "home.noExpensesYet":"No expenses this month yet",
+    "home.daysCounted":"Over {0} days", "home.movedIn":"In", "home.movedOut":"Out",
     "home.setGoalPrompt":"Set a goal in Settings", "home.upcomingLabel":"This Month's Obligations",
     "home.upcomingCountSuffix":"active", "home.recentMoveLabel":"Latest Move",
     "home.obligationsTitle":"📊 This Month's Obligations",
@@ -2465,13 +2537,10 @@ function render(){
   // obligations) minus everything actually spent/allocated so far. This USED to be the hero
   // number, but it's a budget projection, not money that's actually anywhere — real deposits
   // and withdrawals (سلفة included) don't move it, only expenses/allocations logged this month
-  // do. Reported as confusing precisely because of that mismatch, so it now lives here, grouped
-  // with the rest of the theoretical monthly picture (this card + "التزامات الشهر" below it),
-  // and the hero above is the actual account total instead — see totalBalance below.
+  // do. Reported as confusing precisely because of that mismatch, so it's shown as a caption on
+  // the "مرونة الشهر ده" bento tile rather than as a headline number, and the hero above is the
+  // actual account total instead — see totalBalance below.
   const theoreticalRemaining = m.recurringSurplus - spent - allocSpent;
-  document.getElementById("theoreticalRemaining").textContent = fmt(theoreticalRemaining) + " " + t("common.currency");
-  document.getElementById("theoreticalRemaining").style.color = theoreticalRemaining<0 ? "var(--brick)" : "";
-  document.getElementById("phaseChip").textContent = phaseLabel(m.phase);
 
   // "معايا كام؟" (the hero) — literally what's actually in your accounts right now: the same
   // running total as "أرصدة الحسابات" → "الإجمالي" below (computeAllAccountBalances is
@@ -2508,16 +2577,11 @@ function render(){
   });
 
   const pct = m.flex>0 ? Math.min(100,(spent/m.flex)*100) : (spent>0?100:0);
-  document.getElementById("flexSpent").textContent = fmt(spent) + " " + t("common.currency");
-  document.getElementById("flexBudget").textContent = t("home.outOf") + " " + fmt(m.flex) + " " + t("common.currency") + (m.flexIsOverridden ? t("common.overriddenSuffix") : "");
-  document.getElementById("flexBar").style.width = pct+"%";
-  document.getElementById("flexBar").style.background = spent > m.flex ? "var(--brick)" : "var(--gold-soft)";
 
-  // quick stats — "📌 نظرة سريعة" bento grid. Each tile reuses data already computed elsewhere in
-  // render() (topCatEntry/spent/daysSoFar, theoreticalRemaining/m.recurringSurplus/pct/phase,
-  // emergBal/emergGoal) instead of recomputing it, plus two lightweight new reads
-  // (state.items for the active-obligations count, state.accountMoves for the latest move) that
-  // weren't wired into the Home tab before.
+  // "نظرة على الشهر" bento grid — the month's picture as five tiles instead of a dark flex card plus a
+  // row of small stat cards. Everything here reuses values already computed above in render()
+  // (spent/pct/m.flex/theoreticalRemaining/m.phase/m.obligations) plus emergBal/emergGoal and
+  // state.items, so there's no second source of truth for any of these numbers.
   const catTotals = {};
   monthExpenses.forEach(e=>{ catTotals[e.cat] = (catTotals[e.cat]||0) + Number(e.amount); });
   const topCatEntry = Object.entries(catTotals).sort((a,b)=>b[1]-a[1])[0];
@@ -2534,55 +2598,42 @@ function render(){
   const emergPct = emergGoal>0 ? Math.min(100, Math.round((emergBal/emergGoal)*100)) : 0;
 
   const activeItemsThisMonth = state.items.filter(it=>itemActiveForMonth(it, curMonthKey));
-  const lastMove = state.accountMoves.length ? [...state.accountMoves].sort((a,b)=>b.date.localeCompare(a.date))[0] : null;
-  let lastMoveValue = "—", lastMoveCaption = "";
-  if(lastMove){
-    const isDeposit = lastMove.type!=="withdraw";
-    const d = new Date(lastMove.date);
-    const monthNames = state.settings.lang==="en" ? MONTH_NAMES_EN : MONTH_NAMES;
-    lastMoveValue = (isDeposit?"⬆️ ":"⬇️ ") + fmt(lastMove.amount) + " " + t("common.currency");
-    lastMoveCaption = (lastMove.source||"—") + " · " + d.getDate()+" "+monthNames[d.getMonth()].slice(0,3);
-  }
 
-  const gauge = (pctVal, color)=> `<div class="b-gauge" style="background:conic-gradient(${color} ${pctVal*3.6}deg, var(--line) 0)"><div class="b-gauge-hole" style="background:#fff">${pctVal}%</div></div>`;
-  document.getElementById("bentoGrid").innerHTML = `
-    <div class="bento-card" style="background:#E3F1EF;">
-      <div class="b-head"><div class="b-icon" style="background:var(--teal); color:#fff;">🏷️</div><div class="b-title">${t("home.topCatLabel")}</div></div>
-      <div class="b-value">${topCatText}</div>
-      ${topCatAmt?`<div class="b-caption">${topCatAmt}</div>`:""}
-    </div>
-    <div class="bento-card" style="background:#FBF1DD;">
-      <div class="b-head"><div class="b-icon" style="background:var(--gold); color:var(--ink);">📆</div><div class="b-title">${t("home.avgDailyLabel")}</div></div>
-      <div class="b-value">${fmt(avgDaily)} <span>${t("common.perDay")}</span></div>
-    </div>
-    <div class="bento-card" style="background:#EAF3EA;">
-      <div class="b-row">
-        ${gauge(Math.round(pct), "var(--sage)")}
-        <div>
-          <div class="b-title" style="margin-bottom:2px;">${t("home.budgetUsedLabel")}</div>
-          <div class="b-caption">${phaseLabel(m.phase)}</div>
-        </div>
-      </div>
-    </div>
-    <div class="bento-card" style="background:#F7E7E1;">
-      <div class="b-row">
-        ${gauge(emergPct, "var(--brick)")}
-        <div>
-          <div class="b-title" style="margin-bottom:2px;">${t("home.emergencyFundLabel")}</div>
-          <div class="b-caption">${emergGoal>0 ? fmt(emergBal)+" / "+fmt(emergGoal) : t("home.setGoalPrompt")}</div>
-        </div>
-      </div>
-    </div>
-    <div class="bento-card span2" style="background:var(--paper-dim);">
-      <div class="b-head"><div class="b-icon" style="background:var(--ink); color:#fff;">📋</div><div class="b-title">${t("home.upcomingLabel")}</div></div>
-      <div class="b-value">${activeItemsThisMonth.length} <span>${t("home.upcomingCountSuffix")}</span> — ${fmt(m.obligations)} ${t("common.currency")}</div>
-    </div>
-    <div class="bento-card span2" style="background:#fff; border:1px solid var(--line);">
-      <div class="b-head"><div class="b-icon" style="background:var(--paper-dim); color:var(--ink);">📜</div><div class="b-title">${t("home.recentMoveLabel")}</div></div>
-      <div class="b-value">${lastMoveValue}</div>
-      ${lastMoveCaption?`<div class="b-caption">${lastMoveCaption}</div>`:""}
-    </div>
-  `;
+  // Each tile picks one of the four washes declared in :root (tint + its badge tone + the ink that
+  // reads on that badge), so a palette change stays a one-place edit.
+  const tile = ({n, icon, title, body, wide}) => `
+    <div class="tile${wide?" wide":""}" style="--tile:var(--t${n}); --badge:var(--b${n}); --badge-ink:var(--i${n}); --arc:var(--i${n});">
+      <div class="t-head"><div class="tt">${title}</div><div class="t-bdg">${icon}</div></div>
+      ${body}
+    </div>`;
+  const ring = (pctVal) => `<div class="t-ring" style="--p:${pctVal}"><div class="hole">${pctVal}%</div></div>`;
+  const ICONS = {
+    pie:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><path d="M12 3.8V12h8.2"/></svg>',
+    shield:'<svg viewBox="0 0 24 24"><path d="M12 3.2l7 2.9v5.6c0 4-2.9 6.6-7 9.1-4.1-2.5-7-5.1-7-9.1V6.1z"/></svg>',
+    tag:'<svg viewBox="0 0 24 24"><path d="M4.2 13.2l8.6-8.6 7 7-8.6 8.6z"/><circle cx="9.1" cy="8.3" r="1.3"/></svg>',
+    cal:'<svg viewBox="0 0 24 24"><rect x="4" y="5.2" width="16" height="14.8" rx="3.2"/><path d="M4 10.2h16M8.8 3v4M15.2 3v4"/></svg>',
+    flex:'<svg viewBox="0 0 24 24"><path d="M3.6 16.4c4.2 0 5.2-8.4 9.4-8.4 3.4 0 3.4 4.6 6.6 4.6"/><circle cx="19.8" cy="12.4" r="1.5"/></svg>',
+  };
+  const flexOver = spent > m.flex;
+  document.getElementById("bentoGrid").innerHTML =
+    tile({ n:1, icon:ICONS.pie, title:t("home.budgetUsedLabel"),
+      body: ring(Math.round(pct)) + `<div class="t-cap" style="text-align:center">${phaseLabel(m.phase)}</div>` }) +
+    tile({ n:2, icon:ICONS.shield, title:t("home.emergencyFundLabel"),
+      body: ring(emergPct) + `<div class="t-cap" style="text-align:center">${
+        emergGoal>0 ? fmt(emergBal)+" / "+fmt(emergGoal)+" "+t("common.currency") : t("home.setGoalPrompt")}</div>` }) +
+    tile({ n:3, icon:ICONS.tag, title:t("home.topCatLabel"),
+      body: `<div class="t-big">${topCatText}</div>` +
+            `<div class="t-cap">${topCatAmt ? topCatAmt+" "+t("home.ofSpent")+" "+fmt(spent) : t("home.noExpensesYet")}</div>` }) +
+    tile({ n:4, icon:ICONS.cal, title:t("home.avgDailyLabel"),
+      body: `<div class="t-big">${fmt(avgDaily)}<small>${t("common.perDay")}</small></div>` +
+            `<div class="t-cap">${tf("home.daysCounted", daysSoFar)}</div>` }) +
+    tile({ n:1, icon:ICONS.flex, title:t("home.flexTileLabel"), wide:true,
+      body: `<div class="t-row">
+               <div class="t-big">${fmt(spent)}<small>${t("home.outOf")} ${fmt(m.flex)} ${t("common.currency")}${m.flexIsOverridden ? t("common.overriddenSuffix") : ""}</small></div>
+               <div class="t-cap" style="margin:0; white-space:nowrap">${t("home.theoreticalRemainingLabel")}:
+                 <b style="color:${theoreticalRemaining<0?"var(--brick)":"var(--i1)"}">${fmt(theoreticalRemaining)} ${t("common.currency")}</b></div>
+             </div>
+             <div class="t-trk"${flexOver?' style="--arc:var(--brick)"':""}><b style="width:${pct}%"></b></div>` });
 
   renderCategoryBars(monthExpenses);
   renderExpenses();
@@ -3174,9 +3225,30 @@ function renderAccounts(){
     return;
   }
   const total = balances.reduce((s,b)=>s+b.balance, 0);
-  el.innerHTML = balances.map(b=>
-    `<div class="obl-row"><span class="name">${b.name}${b.legacy?' <span style="font-size:10px; color:var(--ink-soft); font-weight:600;">('+t("home.legacySource")+')</span>':''}</span><span class="val" style="color:${b.balance<0?'var(--brick)':'var(--sage)'}">${fmt(b.balance)} ${t("common.currency")}</span></div>`
-  ).join("") + `<div class="obl-row total"><span class="name">${t("common.total")}</span><span class="val" style="color:${total<0?'var(--brick)':'var(--sage)'}">${fmt(total)} ${t("common.currency")}</span></div>`;
+  // Each account leads with a rounded-square icon tile and carries its own last movement as a
+  // sub-label, so the card answers "what's in it" and "what moved last" in one row instead of
+  // sending you to "📜 حركات الحسابات" for the second half.
+  const WALLET = '<svg viewBox="0 0 24 24"><rect x="3.2" y="6" width="17.6" height="13" rx="3.6"/><path d="M15.8 12.5h2.6"/></svg>';
+  const CARD = '<svg viewBox="0 0 24 24"><rect x="3.2" y="6.2" width="17.6" height="12" rx="3"/><path d="M3.2 10.4h17.6"/></svg>';
+  const monthNames = state.settings.lang==="en" ? MONTH_NAMES_EN : MONTH_NAMES;
+  el.innerHTML = balances.map((b,i)=>{
+    const neg = b.balance < 0;
+    const last = state.accountMoves
+      .filter(mv=>mv.source===b.name)
+      .sort((x,y)=>y.date.localeCompare(x.date))[0];
+    let sub = b.legacy ? t("home.legacySource") : "";
+    if(last){
+      const d = new Date(last.date);
+      sub = (last.type==="withdraw" ? t("home.movedOut") : t("home.movedIn")) + " " + fmt(last.amount) +
+            " · " + d.getDate() + " " + monthNames[d.getMonth()].slice(0,3) + (b.legacy ? " · "+t("home.legacySource") : "");
+    }
+    const wash = neg ? 4 : (i % 2 === 0 ? 1 : 3);
+    return `<div class="acct-row" style="--sq:var(--b${wash}); --sq-ink:var(--i${wash})">
+      <span class="acct-sq">${neg ? CARD : WALLET}</span>
+      <span class="acct-name">${b.name}${sub?`<span>${sub}</span>`:""}</span>
+      <span class="acct-val" style="color:${neg?'var(--brick)':'var(--sage)'}">${fmt(b.balance)} ${t("common.currency")}</span>
+    </div>`;
+  }).join("") + `<div class="obl-row total"><span class="name">${t("common.total")}</span><span class="val" style="color:${total<0?'var(--brick)':'var(--i1)'}">${fmt(total)} ${t("common.currency")}</span></div>`;
 }
 
 function renderAccountMoves(){
@@ -3294,8 +3366,9 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
     document.getElementById("tab-obligations").style.display = activeTab==="obligations" ? "block":"none";
     document.getElementById("tab-maintenance").style.display = activeTab==="maintenance" ? "block":"none";
     document.getElementById("tab-settings").style.display = activeTab==="settings" ? "block":"none";
-    document.getElementById("fabAdd").style.display = activeTab==="settings" ? "none":"flex";
-    document.getElementById("fabVoiceAdd").style.display = activeTab==="settings" ? "none":"flex";
+    // Home needs no floating button: its adds (مصروف/صوت/حركة/سلفة) are the hero's own circles,
+    // and settings has nothing to add. Every other tab still needs it as its only add path.
+    document.getElementById("fabAdd").style.display = (activeTab==="settings"||activeTab==="home") ? "none":"flex";
     if(activeTab==="allocations") renderAllocations();
     if(activeTab==="maintenance"){ renderMaintenance(); renderCarBudget(); }
     window.scrollTo(0, 0); // always start each tab from the top, never keep the previous tab's scroll position
@@ -3721,9 +3794,13 @@ document.getElementById("fabAdd").onclick = ()=>{
   else if(activeTab==="obligations") addNewObligationItem();
   else openModal(null);
 };
-// Always adds an expense specifically (regardless of the active tab) — voice input is scoped to
-// expenses only for now, unlike fabAdd which is tab-aware.
-document.getElementById("fabVoiceAdd").onclick = ()=>{ startVoiceExpenseInput(); };
+// Hero quick actions. The top bar is shared chrome across every tab, so these four reach the same
+// actions from anywhere — which is what let the home tab drop its two full-width ghost buttons.
+// Unlike fabAdd these are not tab-aware: each one does exactly what its label says.
+document.getElementById("qaExpense").onclick = ()=>openModal(null);
+document.getElementById("qaVoice").onclick = ()=>startVoiceExpenseInput();
+document.getElementById("qaMove").onclick = openAccountModal;
+document.getElementById("qaAdvance").onclick = ()=>openAdvanceModal("advance");
 document.getElementById("closeModal").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
 document.getElementById("cancelAdd").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
 document.querySelectorAll(".calcBtn").forEach(b=>{
@@ -3884,7 +3961,6 @@ function openAccountModal(){
   });
   accountModalBg.classList.add("show");
 }
-document.getElementById("addMoveBtn").onclick = openAccountModal;
 document.getElementById("closeAccountModal").onclick = ()=>accountModalBg.classList.remove("show");
 document.getElementById("cancelAccountAdd").onclick = ()=>accountModalBg.classList.remove("show");
 document.getElementById("saveAccountAdd").onclick = async ()=>{
@@ -3959,7 +4035,6 @@ function openAdvanceModal(mode){
   });
   advanceModalBg.classList.add("show");
 }
-document.getElementById("addAdvanceBtn").onclick = ()=>openAdvanceModal("advance");
 // "+ دخل إضافي جديد" itself is rendered inside #oblList (right under "المرتب") and rewired on
 // every render() call above, since innerHTML replacement there drops any previously-bound handler.
 document.getElementById("closeAdvanceModal").onclick = ()=>advanceModalBg.classList.remove("show");
@@ -4299,7 +4374,7 @@ function setupNativeApp(){
   if(!isNativeApp()) return;
   try{
     const { StatusBar } = window.Capacitor.Plugins;
-    StatusBar.setBackgroundColor({ color: "#16302E" });
+    StatusBar.setBackgroundColor({ color: "#0E9F6E" });
     StatusBar.setStyle({ style: "DARK" });
   }catch(e){}
 
