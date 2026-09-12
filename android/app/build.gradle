@@ -55,6 +55,7 @@ dependencies {
     implementation "androidx.biometric:biometric:1.1.0" // BiometricAuthPlugin (app-lock)
     implementation "androidx.activity:activity:$androidxActivityVersion" // GoogleAuthPlugin's ActivityResult API
     implementation "com.google.android.gms:play-services-auth:21.2.0" // GoogleAuthPlugin (sign-in + Drive appdata token)
+    implementation "com.android.billingclient:billing:7.1.1" // BillingPlugin (Pro subscription)
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')

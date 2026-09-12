@@ -370,6 +370,52 @@
   .set-panel[hidden]{display:none;}
   .set-panel .field input, .set-panel .field select{background:#fff;}
   .set-panel > p{font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;}
+  /* ---------- Pro ---------- */
+  /* The one dark surface in a light app: the upgrade card is meant to read as a different kind of
+     thing from every settings row around it. */
+  .pro-card{
+    background:linear-gradient(150deg, #10362C, #0B231C);
+    border-radius:22px; padding:18px; color:#fff; margin-bottom:14px;
+  }
+  .pro-card.is-pro{background:linear-gradient(150deg, #0E9F6E, #0A6F4E);}
+  .pro-badge{
+    display:inline-block; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.24);
+    border-radius:999px; padding:4px 11px; font-size:10.5px; font-weight:800; margin-bottom:10px;
+  }
+  .pro-title{font-size:16px; font-weight:800; line-height:1.5;}
+  .pro-sub{font-size:11.5px; font-weight:600; opacity:.82; margin-top:6px; line-height:1.7;}
+  .pro-btn{
+    display:block; width:100%; margin-top:14px; padding:12px; border:none; border-radius:999px;
+    background:#fff; color:#0B231C; font-family:'Cairo'; font-size:13px; font-weight:800; cursor:pointer;
+  }
+  .pro-btn.ghost{background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.28);}
+  .pro-btn:active{transform:scale(.98);}
+  .pro-list{list-style:none; margin:16px 0 0; padding:0; display:grid; gap:11px;}
+  .pro-list li{display:grid; grid-template-columns:26px 1fr; gap:10px; align-items:start; font-size:12.5px; line-height:1.65;}
+  .pro-list .ic{
+    width:26px; height:26px; border-radius:9px; background:var(--b1); color:var(--i1);
+    display:flex; align-items:center; justify-content:center; font-size:13px;
+  }
+  .pro-list b{display:block; font-weight:800; color:var(--ink); font-size:12.5px;}
+  .pro-list span{color:var(--ink-soft); font-weight:600; font-size:11px;}
+  .pro-price{
+    text-align:center; font-size:26px; font-weight:800; color:var(--ink); margin:18px 0 2px;
+  }
+  .pro-price-sub{text-align:center; font-size:11px; color:var(--ink-soft); font-weight:600;}
+  .pro-why{
+    background:var(--t2); border-radius:14px; padding:11px 13px; font-size:11.5px;
+    font-weight:700; color:var(--ink); line-height:1.65; margin-bottom:4px;
+  }
+  .pro-unavailable{
+    background:var(--t4); border-radius:14px; padding:12px 14px; font-size:11.5px;
+    color:var(--i4); font-weight:600; line-height:1.75; margin-top:14px;
+  }
+  /* A gated row still shows what it is — it just wears a lock instead of its control. */
+  .pro-lock{
+    background:var(--b2); color:var(--i2); border-radius:999px; padding:5px 10px;
+    font-size:10px; font-weight:800; white-space:nowrap;
+  }
+
   .set-danger{
     display:block; width:100%; background:none; border:none; margin:18px 0 0;
     font-family:'Cairo'; font-size:12.5px; font-weight:700; color:var(--brick);
@@ -774,6 +820,8 @@
          their row; anything with a list or a note behind it opens in place, so the whole screen
          stays one scroll instead of five accordions of bordered cards each with its own heading. -->
 
+    <div class="pro-card" id="proCard"></div>
+
     <div class="sec-lbl" data-i18n="settings.groupMoney">فلوسك</div>
     <div class="set-group">
       <div class="set-row" data-static style="--sq:var(--b1)">
@@ -1160,6 +1208,29 @@
   </div>
 </div>
 
+<div class="modal-bg" id="paywallModalBg">
+  <div class="modal">
+    <button class="close-x" id="closePaywall">✕</button>
+    <h2 data-i18n="pro.modalTitle">🌟 النسخة الكاملة</h2>
+    <div class="pro-why" id="paywallWhy" style="display:none;"></div>
+    <ul class="pro-list">
+      <li><span class="ic">🏦</span><span><b data-i18n="pro.feat.smsTitle">كشف المصاريف من رسايل البنك</b><span data-i18n="pro.feat.smsSub">التطبيق يقرأ رسالة البنك ويقترح المصروف جاهز — انت بس تأكّد.</span></span></li>
+      <li><span class="ic">🎤</span><span><b data-i18n="pro.feat.voiceTitle">الإضافة بالصوت</b><span data-i18n="pro.feat.voiceSub">قول "صرفت مية جنيه أكل" والتطبيق يسجّلها.</span></span></li>
+      <li><span class="ic">🧩</span><span><b data-i18n="pro.feat.widgetTitle">ويدجت الشاشة الرئيسية</b><span data-i18n="pro.feat.widgetSub">سجّل مصروف من شاشة موبايلك من غير ما تفتح التطبيق.</span></span></li>
+      <li><span class="ic">📊</span><span><b data-i18n="pro.feat.reportsTitle">تقارير الإكسيل والتصدير</b><span data-i18n="pro.feat.reportsSub">تقرير شهري كامل بكل التفاصيل + تصدير CSV.</span></span></li>
+      <li><span class="ic">☁️</span><span><b data-i18n="pro.feat.cloudTitle">نسخة احتياطية سحابية</b><span data-i18n="pro.feat.cloudSub">بياناتك محفوظة على جوجل درايف بتاعك، وترجّعها على أي جهاز.</span></span></li>
+    </ul>
+    <div class="pro-price" id="paywallPrice">50 ج</div>
+    <div class="pro-price-sub" data-i18n="pro.perMonth">شهريًا · تقدر تلغي في أي وقت</div>
+    <button class="btn btn-primary" id="paywallBuyBtn" style="margin-top:16px;" data-i18n="pro.buyBtn">اشترك دلوقتي</button>
+    <div class="pro-unavailable" id="paywallUnavailable" style="display:none;"></div>
+    <p style="font-size:10.5px; color:var(--ink-soft); margin:12px 0 0; line-height:1.7;" data-i18n="pro.freeNote">
+      كل حاجة تانية في التطبيق مجانية بالكامل: تسجيل المصاريف، الالتزامات، الحسابات، التوزيعات،
+      والصيانة — والاشتراك بيفتح الأتمتة والتقارير والنسخة السحابية بس.
+    </p>
+  </div>
+</div>
+
 <div class="modal-bg" id="advanceModalBg">
   <div class="modal">
     <button class="close-x" id="closeAdvanceModal">✕</button>
@@ -1403,6 +1474,33 @@ const I18N = {
     "settings.lockNote":"لو مفعّلة، هتحتاج بصمتك أو رمز قفل شاشة موبايلك كل ما تفتح التطبيق أو ترجعله من الخلفية. محتاج جهازك يكون فيه بصمة/وجه/قفل شاشة متفعّل الأول.",
     "settings.carTitle":"🚗 العربية", "settings.carToggle":"تتبع صيانة العربية",
     "settings.resetBtn":"تصفير كل البيانات",
+    "pro.modalTitle":"🌟 النسخة الكاملة", "pro.badge":"النسخة الكاملة", "pro.badgeActive":"مشترك ✓",
+    "pro.pitchTitle":"افتح الأتمتة والتقارير والنسخة السحابية",
+    "pro.pitchSub":"{0} شهريًا — وكل باقي التطبيق يفضل مجاني زي ما هو.",
+    "pro.seeBtn":"شوف اللي هتاخده", "pro.buyBtn":"اشترك دلوقتي", "pro.opening":"جاري فتح جوجل بلاي...",
+    "pro.activeTitle":"اشتراكك شغال 🎉", "pro.activeSub":"كل مزايا النسخة الكاملة مفتوحة على الجهاز ده.",
+    "pro.manageBtn":"إدارة الاشتراك / إلغاء",
+    "pro.devUnlockNote":"مفتوحة بوضع التجربة (مش اشتراك حقيقي) — دوس مطوّل على رقم الإصدار تاني عشان تقفلها.",
+    "pro.perMonth":"شهريًا · تقدر تلغي في أي وقت", "pro.fallbackPrice":"50 ج",
+    "pro.feat.smsTitle":"كشف المصاريف من رسايل البنك",
+    "pro.feat.smsSub":"التطبيق يقرأ رسالة البنك ويقترح المصروف جاهز — انت بس تأكّد.",
+    "pro.feat.voiceTitle":"الإضافة بالصوت",
+    "pro.feat.voiceSub":"قول \"صرفت مية جنيه أكل\" والتطبيق يسجّلها.",
+    "pro.feat.widgetTitle":"ويدجت الشاشة الرئيسية",
+    "pro.feat.widgetSub":"سجّل مصروف من شاشة موبايلك من غير ما تفتح التطبيق.",
+    "pro.feat.reportsTitle":"تقارير الإكسيل والتصدير",
+    "pro.feat.reportsSub":"تقرير شهري كامل بكل التفاصيل + تصدير CSV.",
+    "pro.feat.cloudTitle":"نسخة احتياطية سحابية",
+    "pro.feat.cloudSub":"بياناتك محفوظة على جوجل درايف بتاعك، وترجّعها على أي جهاز.",
+    "pro.why.automation":"الميزة دي جزء من الأتمتة في النسخة الكاملة.",
+    "pro.why.reports":"التقارير والتصدير جزء من النسخة الكاملة.",
+    "pro.why.cloud":"النسخة الاحتياطية السحابية جزء من النسخة الكاملة.",
+    "pro.unavailableNative":"الاشتراك بيتم من خلال Google Play، والنسخة دي اتثبتت من برّه المتجر — نزّل التطبيق من Google Play عشان تقدر تشترك.",
+    "pro.unavailableWeb":"الاشتراك متاح في نسخة الأندرويد من Google Play. النسخة دي (الويب/الآيفون) بتشتغل بالمزايا المجانية.",
+    "pro.freeNote":"كل حاجة تانية في التطبيق مجانية بالكامل: تسجيل المصاريف، الالتزامات، الحسابات، التوزيعات، والصيانة — والاشتراك بيفتح الأتمتة والتقارير والنسخة السحابية بس.",
+    "toast.proActivated":"تم تفعيل النسخة الكاملة 🎉", "toast.proFailed":"متمّش الاشتراك — جرّب تاني",
+    "toast.devUnlockOn":"وضع التجربة اتفعّل (مزايا النسخة الكاملة مفتوحة)",
+    "toast.devUnlockOff":"وضع التجربة اتقفل",
     "nav.home":"الرئيسية", "nav.expenses":"المصاريف", "nav.allocations":"الاستثمار",
     "nav.obligations":"الالتزامات", "nav.maintenance":"السيارة", "nav.settings":"الإعدادات",
     "modal.alloc.title":"تسجيل توزيع فعلي", "modal.alloc.catLabel":"البند",
@@ -1640,6 +1738,33 @@ const I18N = {
     "settings.lockNote":"If enabled, you'll need your fingerprint or phone lock code every time you open the app or return to it from the background. Your device needs fingerprint/face/screen lock already set up.",
     "settings.carTitle":"🚗 Car", "settings.carToggle":"Track car maintenance",
     "settings.resetBtn":"Reset All Data",
+    "pro.modalTitle":"🌟 Full version", "pro.badge":"Full version", "pro.badgeActive":"Subscribed ✓",
+    "pro.pitchTitle":"Unlock automation, reports and cloud backup",
+    "pro.pitchSub":"{0} per month — everything else stays free.",
+    "pro.seeBtn":"See what you get", "pro.buyBtn":"Subscribe", "pro.opening":"Opening Google Play...",
+    "pro.activeTitle":"Your subscription is active 🎉", "pro.activeSub":"All full-version features are unlocked on this device.",
+    "pro.manageBtn":"Manage / cancel subscription",
+    "pro.devUnlockNote":"Unlocked in trial mode (not a real subscription) — long-press the version number again to turn it off.",
+    "pro.perMonth":"per month · cancel anytime", "pro.fallbackPrice":"EGP 50",
+    "pro.feat.smsTitle":"Bank SMS expense detection",
+    "pro.feat.smsSub":"The app reads the bank's message and proposes the expense — you just confirm.",
+    "pro.feat.voiceTitle":"Add by voice",
+    "pro.feat.voiceSub":"Say \"spent a hundred on food\" and it's logged.",
+    "pro.feat.widgetTitle":"Home screen widget",
+    "pro.feat.widgetSub":"Log an expense from your phone's home screen without opening the app.",
+    "pro.feat.reportsTitle":"Excel reports and export",
+    "pro.feat.reportsSub":"A full monthly report with every detail, plus CSV export.",
+    "pro.feat.cloudTitle":"Cloud backup",
+    "pro.feat.cloudSub":"Your data backed up to your own Google Drive, restorable on any device.",
+    "pro.why.automation":"This feature is part of the full version's automation.",
+    "pro.why.reports":"Reports and export are part of the full version.",
+    "pro.why.cloud":"Cloud backup is part of the full version.",
+    "pro.unavailableNative":"Subscriptions go through Google Play, and this copy was installed from outside the store — install the app from Google Play to subscribe.",
+    "pro.unavailableWeb":"Subscriptions are available in the Android version on Google Play. This version runs with the free features.",
+    "pro.freeNote":"Everything else in the app is completely free: expenses, obligations, accounts, allocations and maintenance — the subscription only unlocks automation, reports and cloud backup.",
+    "toast.proActivated":"Full version activated 🎉", "toast.proFailed":"Subscription didn't go through — try again",
+    "toast.devUnlockOn":"Trial mode on (full-version features unlocked)",
+    "toast.devUnlockOff":"Trial mode off",
     "nav.home":"Home", "nav.expenses":"Expenses", "nav.allocations":"Investing",
     "nav.obligations":"Obligations", "nav.maintenance":"Car", "nav.settings":"Settings",
     "modal.alloc.title":"Log an Actual Allocation", "modal.alloc.catLabel":"Category",
@@ -2115,12 +2240,15 @@ async function checkPendingSmsTransactions(){
 // Returns true whenever this function has already handled the lock for this launch — callers use
 // it to skip their own tryUnlock() call.
 async function checkPendingQuickAdd(){
+  // The widget and the PWA shortcut both land here. Gating at this single point covers both
+  // without the native side needing to know anything about the subscription.
   if(!isNativeApp()) return false;
   try{
     const { QuickAdd } = window.Capacitor.Plugins;
     const res = await QuickAdd.getPendingAction();
     if(!res.mode) return false;
     await QuickAdd.clearPendingAction();
+    if(!requirePro("automation")) return true;
     hideLockOverlay();
     if(res.mode==="voice"){
       const recognized = await runQuickAddVoice();
@@ -2301,6 +2429,121 @@ async function runQuickAddVoice(){
 
 // ---------- Google Sign-In + Drive backup (appDataFolder — a hidden per-app space, not the user's regular Drive) ----------
 let googleAccount = null; // {email, name, photoUrl} — not persisted; re-read from GoogleAuth.getCurrentAccount() on launch
+
+// ---------- Pro subscription ----------
+// Play is the only source of truth for whether the subscription is owned (see BillingPlugin), but
+// asking it is async and needs a Play connection, so the answer is cached here and in
+// localStorage. Every feature gate reads the cache; the cache is refreshed on launch and on every
+// return to the app. A gate must never block on the network — a paying user coming back from a
+// tunnel with no signal still gets their features.
+let proState = { isPro:false, price:null, available:false, checkedAt:null, devUnlock:false };
+const PRO_FEATURES = ["automation", "reports", "cloud"];
+function loadProState(){
+  try{
+    const raw = localStorage.getItem("proState");
+    if(raw) proState = { ...proState, ...JSON.parse(raw) };
+  }catch(e){}
+}
+function saveProState(){
+  try{ localStorage.setItem("proState", JSON.stringify(proState)); }catch(e){}
+}
+// devUnlock is the app owner's own switch for testing the paid features on a build that can't talk
+// to Play (a sideloaded APK, or the web version). It is deliberately hard to reach (long-press the
+// version line in Settings) and is NOT a licensing mechanism — see the note in BillingPlugin about
+// client-side gating being bypassable either way.
+function isPro(){ return !!(proState.isPro || proState.devUnlock); }
+function proPriceLabel(){ return proState.price || t("pro.fallbackPrice"); }
+
+async function refreshProStatus(){
+  if(!isNativeApp()) return;
+  try{
+    const { Billing } = window.Capacitor.Plugins;
+    if(!Billing) return;
+    const res = await Billing.getStatus();
+    proState.isPro = !!res.isPro;
+    proState.available = !!res.available;
+    proState.price = res.price || proState.price;
+    proState.checkedAt = Date.now();
+    saveProState();
+    renderProCard();
+  }catch(e){}
+}
+
+// The single gate every paid feature goes through: returns true when the feature may run, and
+// otherwise opens the paywall (explaining which feature was asked for) and returns false.
+function requirePro(feature){
+  if(isPro()) return true;
+  openPaywall(feature);
+  return false;
+}
+
+let paywallFeature = null;
+function openPaywall(feature){
+  paywallFeature = feature || null;
+  const why = document.getElementById("paywallWhy");
+  why.textContent = feature ? t("pro.why." + feature) : "";
+  why.style.display = feature ? "" : "none";
+  document.getElementById("paywallPrice").textContent = proPriceLabel();
+  // A build that can't reach Play (sideloaded APK, or the web/iPhone version) can't sell anything,
+  // so say that plainly instead of showing a button that does nothing.
+  const canBuy = isNativeApp() && proState.available;
+  document.getElementById("paywallBuyBtn").style.display = canBuy ? "" : "none";
+  document.getElementById("paywallUnavailable").style.display = canBuy ? "none" : "";
+  document.getElementById("paywallUnavailable").textContent =
+    isNativeApp() ? t("pro.unavailableNative") : t("pro.unavailableWeb");
+  document.getElementById("paywallModalBg").classList.add("show");
+}
+
+async function startProPurchase(){
+  const btn = document.getElementById("paywallBuyBtn");
+  btn.disabled = true;
+  btn.textContent = t("pro.opening");
+  try{
+    const res = await window.Capacitor.Plugins.Billing.purchase();
+    proState.isPro = !!res.isPro;
+    proState.available = !!res.available;
+    proState.price = res.price || proState.price;
+    proState.checkedAt = Date.now();
+    saveProState();
+    if(proState.isPro){
+      document.getElementById("paywallModalBg").classList.remove("show");
+      showToast(t("toast.proActivated"));
+      render();
+    } else if(!res.cancelled){
+      showToast(t("toast.proFailed"));
+    }
+  }catch(e){
+    showToast(t("toast.proFailed"));
+  }
+  btn.disabled = false;
+  btn.textContent = t("pro.buyBtn");
+  renderProCard();
+}
+
+// The Pro card in Settings — the one place that always states the current status, whether or not
+// anything is gated on this screen.
+function renderProCard(){
+  const el = document.getElementById("proCard");
+  if(!el) return;
+  if(isPro()){
+    el.className = "pro-card is-pro";
+    el.innerHTML = `
+      <div class="pro-badge">${t("pro.badgeActive")}</div>
+      <div class="pro-title">${t("pro.activeTitle")}</div>
+      <div class="pro-sub">${proState.devUnlock && !proState.isPro ? t("pro.devUnlockNote") : t("pro.activeSub")}</div>
+      ${proState.isPro ? `<button class="pro-btn ghost" id="proManageBtn">${t("pro.manageBtn")}</button>` : ""}`;
+    const manage = document.getElementById("proManageBtn");
+    if(manage) manage.onclick = ()=>{ try{ window.Capacitor.Plugins.Billing.openManage(); }catch(e){} };
+  } else {
+    el.className = "pro-card";
+    el.innerHTML = `
+      <div class="pro-badge">${t("pro.badge")}</div>
+      <div class="pro-title">${t("pro.pitchTitle")}</div>
+      <div class="pro-sub">${tf("pro.pitchSub", proPriceLabel())}</div>
+      <button class="pro-btn" id="proOpenBtn">${t("pro.seeBtn")}</button>`;
+    document.getElementById("proOpenBtn").onclick = ()=>openPaywall(null);
+  }
+}
 const DRIVE_BACKUP_FILENAME = "masarifi-backup.json";
 
 async function driveAccessToken(){
@@ -2363,11 +2606,13 @@ function renderGoogleAccountCard(){
       <button class="btn btn-ghost" id="googleRestoreBtn" style="margin-bottom:8px;">${t("google.restore")}</button>
       <button class="btn btn-ghost" id="googleSignOutBtn">${t("google.signOut")}</button>`;
     document.getElementById("googleBackupNowBtn").onclick = async ()=>{
+      if(!requirePro("cloud")) return;
       showToast(t("toast.uploading"));
       try{ await driveUploadBackup(); showToast(t("toast.driveUploadOk")); }
       catch(e){ showToast(t("toast.driveUploadFail")); }
     };
     document.getElementById("googleRestoreBtn").onclick = async ()=>{
+      if(!requirePro("cloud")) return;
       if(!confirm(t("confirm.driveRestore"))) return;
       try{
         const data = await driveRestoreBackup();
@@ -2385,6 +2630,7 @@ function renderGoogleAccountCard(){
     el.innerHTML = `<button class="btn btn-primary" id="googleSignInBtn">${t("google.signIn")}</button>
       <p id="googleSignInError" style="font-size:11.5px; color:#c0392b; margin:8px 0 0; line-height:1.7; display:none;"></p>`;
     document.getElementById("googleSignInBtn").onclick = async ()=>{
+      if(!requirePro("cloud")) return;
       const errEl = document.getElementById("googleSignInError");
       errEl.style.display = "none";
       try{
@@ -2426,6 +2672,7 @@ function showGoogleSignInError(msg){
 }
 
 async function loadState(){
+  loadProState();
   try{ const s = localStorage.getItem("settings"); if(s) state.settings = {...defaultSettings(), ...JSON.parse(s)}; }catch(e){}
   try{ const it = localStorage.getItem("items"); if(it) state.items = JSON.parse(it); }catch(e){}
   try{ const ex = localStorage.getItem("expenses"); if(ex) state.expenses = JSON.parse(ex); }catch(e){}
@@ -3003,6 +3250,7 @@ function renderAllocations(){
 
 function renderSettings(){
   renderGoogleAccountCard();
+  renderProCard();
   // Row summaries: each collapsed row says what's behind it, so the screen is readable without
   // opening anything (the reference's settings rows do the same with a value on the row).
   document.getElementById("sourcesCountLbl").textContent = tf("settings.sourcesCount", state.settings.sources.length);
@@ -3728,6 +3976,7 @@ document.getElementById("notifMaintEnabled").onchange = async (e)=>{ state.setti
 
 document.getElementById("smsAutoEnabled").onchange = async (e)=>{
   if(e.target.checked){
+    if(!requirePro("automation")){ e.target.checked = false; return; }
     const granted = await ensureSmsPermission();
     if(!granted){ e.target.checked = false; showToast(t("toast.needSmsPermission")); return; }
     await ensureNotifPermission(); // so the "new bank transaction" alert can actually show; SMS detection still works without it
@@ -3945,6 +4194,7 @@ document.getElementById("searchBox").oninput = (e)=>{ searchTerm = e.target.valu
 document.getElementById("itemsSearchBox").oninput = (e)=>{ itemsSearchTerm = e.target.value; render(); };
 
 document.getElementById("exportCsv").onclick = async ()=>{
+  if(!requirePro("reports")) return;
   const list = expensesForMonth(curMonthKey);
   if(list.length===0){ showToast(t("toast.nothingToExport")); return; }
   let csv = [t("common.date"),t("modal.expense.catLabel"),t("modal.sourceLabelShort"),t("csv.amount"),t("common.noteOptional")].join(",")+"\n";
@@ -4047,9 +4297,28 @@ document.getElementById("fabAdd").onclick = ()=>{
 // actions from anywhere — which is what let the home tab drop its two full-width ghost buttons.
 // Unlike fabAdd these are not tab-aware: each one does exactly what its label says.
 document.getElementById("qaExpense").onclick = ()=>openModal(null);
-document.getElementById("qaVoice").onclick = ()=>startVoiceExpenseInput();
+document.getElementById("qaVoice").onclick = ()=>{ if(requirePro("automation")) startVoiceExpenseInput(); };
 document.getElementById("qaMove").onclick = openAccountModal;
 document.getElementById("qaAdvance").onclick = ()=>openAdvanceModal("advance");
+document.getElementById("closePaywall").onclick = ()=>document.getElementById("paywallModalBg").classList.remove("show");
+document.getElementById("paywallBuyBtn").onclick = startProPurchase;
+// The owner's own way to try the paid features on a build Play can't talk to (sideloaded APK or
+// the web version). Long-press the version line in Settings. Not a licensing mechanism.
+(function(){
+  const ver = document.getElementById("appVersionLbl");
+  if(!ver) return;
+  let timer = null;
+  const start = ()=>{ timer = setTimeout(async ()=>{
+    proState.devUnlock = !proState.devUnlock;
+    saveProState();
+    showToast(proState.devUnlock ? t("toast.devUnlockOn") : t("toast.devUnlockOff"));
+    render();
+  }, 1200); };
+  const stop = ()=>{ if(timer){ clearTimeout(timer); timer = null; } };
+  ver.addEventListener("touchstart", start, {passive:true});
+  ver.addEventListener("mousedown", start);
+  ["touchend","touchmove","touchcancel","mouseup","mouseleave"].forEach(ev=>ver.addEventListener(ev, stop));
+})();
 document.getElementById("closeModal").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
 document.getElementById("cancelAdd").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
 document.querySelectorAll(".calcBtn").forEach(b=>{
@@ -4454,6 +4723,7 @@ function highlightRow(ws, r, colCount, fillRgb, fontRgb){
 
 // excel export
 document.getElementById("exportExcel").onclick = async ()=>{
+  if(!requirePro("reports")) return;
   if(typeof XLSX === "undefined"){ showToast("محتاج إنترنت لتحميل مكتبة الإكسيل أول مرة"); return; }
   const wb = XLSX.utils.book_new();
   const mk = curMonthKey; // the whole report is scoped to the month currently selected at the top
@@ -4645,6 +4915,7 @@ function setupNativeApp(){
       // versions/OEMs), not a real app switch. Treating it as one meant tryUnlock() re-firing
       // right after the user had just passed it, which is the "lock keeps reappearing" bug.
       if(relockTimer){ clearTimeout(relockTimer); relockTimer = null; }
+      refreshProStatus();
       checkPendingSmsTransactions();
       // checkPendingQuickAdd() fully owns the lock overlay when it finds something pending
       // (hides it, and either re-arms it itself or leaves the bypass up for an open modal) — see
@@ -4685,15 +4956,20 @@ function checkQuickAddUrlParam(){
   const add = params.get("add");
   if(!add) return false;
   history.replaceState(null, "", location.pathname);
+  if(add!=="voice" && add!=="text") return false;
+  if(!requirePro("automation")) return true;
   if(add==="voice") runQuickAddVoice(); // fire-and-forget — nothing downstream awaits this
-  else if(add==="text") openModal(null);
-  else return false;
+  else openModal(null);
   return true;
 }
 
 (async ()=>{
   await loadState();
   applyLanguage();
+  // Asked for before the first render rather than after it: render() touches several native
+  // plugins, and a throw in any one of them would otherwise skip everything below it — including
+  // the subscription check, which would silently lock a paying user out of what they paid for.
+  refreshProStatus();
   await syncLinkedItemWithdrawals();
   render();
   setupNativeApp();

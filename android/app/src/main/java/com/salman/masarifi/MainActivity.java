@@ -19,6 +19,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(GoogleAuthPlugin.class);
         registerPlugin(SpeechToTextPlugin.class);
         registerPlugin(QuickAddPlugin.class);
+        registerPlugin(BillingPlugin.class);
         super.onCreate(savedInstanceState);
         requestHighestRefreshRate();
         handleQuickAddIntent(getIntent());
