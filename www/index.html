@@ -293,7 +293,7 @@
      old row had (this-month switch, this-month amount, and the four actions) but demotes the
      destructive ones to text links, and adds a real repayment progress bar for any installment
      that knows its own start and end month. */
-  .oi{
+  .item-row-edit.oi{
     display:flex; gap:12px; padding:14px; align-items:flex-start; position:relative;
     border-bottom:none;
   }
@@ -553,20 +553,6 @@
   .del-x{background:none;border:none;color:var(--brick); font-size:15px; cursor:pointer; padding:4px; transition:transform .1s ease;}
   .del-x:active{transform:scale(.8);}
 
-  /* obligation item rows (الالتزامات) — stacked instead of one crammed flex line, so the name
-     gets the row's full width instead of being squeezed next to the amount/toggle/delete
-     controls (was getting visually cut off), and secondary details (edit/reset/delete links)
-     read as short lines instead of one long wrapping sentence. */
-  .item-row-edit.obl-row-edit{display:block; padding:12px 0; contain-intrinsic-size:0 92px;}
-  .oi-top{display:flex; align-items:center; gap:8px;}
-  .oi-top .oi-name{flex:1; min-width:0; border:none; background:none; font-family:'Cairo'; font-size:13px; font-weight:700; color:var(--ink); padding:2px 0;}
-  .oi-sub{display:flex; align-items:center; gap:8px; margin-top:6px;}
-  .oi-meta{flex:1; min-width:0; font-size:10.5px; color:var(--ink-soft); font-weight:500; line-height:1.5;}
-  .oi-notes{margin-top:5px; font-size:10.5px; color:var(--ink-soft); line-height:1.6;}
-  .oi-notes .itmResetAmountOverride, .oi-notes .itmResetActiveOverride{text-decoration:underline; cursor:pointer;}
-  .oi-actions{display:flex; gap:14px; margin-top:6px;}
-  .oi-actions span{font-size:10.5px; text-decoration:underline; cursor:pointer; color:var(--ink-soft);}
-  .oi-actions .itmDeleteForever{color:var(--brick);}
 
   .btn{display:block; width:100%; text-align:center; padding:13px; border-radius:999px; border:none; font-family:'Cairo'; font-weight:700; font-size:13.5px; cursor:pointer; transition:transform .12s ease, opacity .12s ease;}
   .btn-primary{background:var(--gold); color:#fff;}
@@ -615,7 +601,7 @@
 
   .modal-bg{position:fixed; inset:0; background:rgba(15,42,34,.55); display:none; align-items:flex-end; justify-content:center; z-index:50;}
   .modal-bg.show{display:flex;}
-  .modal{background:var(--paper); width:100%; max-width:460px; border-radius:26px 26px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); animation:slideUp .25s ease; max-height:88vh; overflow-y:auto;}
+  .modal{position:relative; background:var(--paper); width:100%; max-width:460px; border-radius:26px 26px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); animation:slideUp .25s ease; max-height:88vh; overflow-y:auto;}
   @keyframes slideUp{from{transform:translateY(30px); opacity:0} to{transform:translateY(0); opacity:1}}
   .modal h2{font-size:16px; margin:0 0 16px; color:var(--ink);}
   .chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
@@ -631,8 +617,16 @@
   .calc-row button:active{transform:scale(.92);}
   .modal-actions{display:flex; gap:10px; margin-top:16px;}
   .modal-actions .btn{flex:1;}
-  .close-x{position:absolute; top:14px; inset-inline-start:16px; background:none; border:none; font-size:18px; color:var(--ink-soft); cursor:pointer; transition:transform .1s ease;}
-  .close-x:active{transform:scale(.8);}
+  /* A real target, inside the sheet: 34px circle on a tinted ground so it reads as a button on
+     any sheet instead of a bare glyph. */
+  .close-x{
+    position:absolute; top:14px; inset-inline-start:14px; z-index:2;
+    width:34px; height:34px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--paper-dim); color:var(--ink); font-size:15px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .1s ease;
+  }
+  .close-x:active{transform:scale(.85);}
   .toast{
     position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--paper);
     padding:10px 18px; border-radius:999px; font-size:12.5px; font-weight:600; z-index:80; opacity:0; pointer-events:none; transition:.25s;
@@ -895,6 +889,36 @@
         <span class="set-txt"><span class="n" data-i18n="settings.emergGoalLabel">هدف كاش الطوارئ</span></span>
         <input type="number" id="inEmergGoal" class="set-num">
       </div>
+      <button class="set-row acc-header" data-acc="currency" style="--sq:var(--b2)">
+        <span class="set-sq">💱</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.currencyLabel">العملة</span><span class="s" data-i18n="settings.currencySub">تتغيّر في كل أرقام التطبيق والتقارير</span></span>
+        <span class="set-val" id="currencyStateLbl"></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body set-panel" id="acc-currency" hidden>
+        <div class="chip-row" id="currencyChips" style="margin:10px 0 0;"></div>
+        <div class="field" style="display:flex; gap:8px; margin:10px 0 0;">
+          <input type="text" id="customCurrencyInput" maxlength="6" data-i18n-placeholder="settings.currencyCustom" placeholder="رمز تاني (مثال: ر.س)" style="flex:1;">
+          <button class="btn btn-ghost" id="saveCurrencyBtn" style="width:auto; padding:10px 16px;" data-i18n="common.save">حفظ</button>
+        </div>
+      </div>
+      <button class="set-row acc-header" data-acc="phases" style="--sq:var(--b1)">
+        <span class="set-sq">📐</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.phasesLabel">حدود مراحل التوزيع</span><span class="s" data-i18n="settings.phasesSub">نسبة الفاضل من دخلك اللي بتفصل بين الضغط والانتقال والانطلاق</span></span>
+        <span class="set-val" id="phasesStateLbl"></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body set-panel" id="acc-phases" hidden>
+        <div class="field" style="margin-top:10px;">
+          <label data-i18n="settings.phasePressureLabel">لحد أي نسبة تعتبر نفسك في "ضغط"؟ (%)</label>
+          <input type="number" id="inPhasePressure" min="1" max="95">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label data-i18n="settings.phaseLaunchLabel">ومن أي نسبة تعتبر نفسك في "انطلاق"؟ (%)</label>
+          <input type="number" id="inPhaseLaunch" min="2" max="99">
+        </div>
+        <p id="phaseHelpLine"></p>
+      </div>
       <button class="set-row acc-header" data-acc="sources" style="--sq:var(--b3)">
         <span class="set-sq">💳</span>
         <span class="set-txt"><span class="n" data-i18n="settings.sourcesTitle">مصادر الصرف</span><span class="s" id="sourcesCountLbl"></span></span>
@@ -1073,7 +1097,7 @@
       <div class="chip-row" id="allocCatChips"></div>
     </div>
     <div class="field">
-      <label data-i18n="common.amountCurrency">المبلغ (ج)</label>
+      <label data-i18n="common.amountCurrency">المبلغ</label>
       <input type="number" id="aAmount" placeholder="مثال: 3000">
     </div>
     <div class="field">
@@ -1096,7 +1120,7 @@
     <button class="close-x" id="closeModal">✕</button>
     <h2 id="expenseModalTitle">مصروف جديد</h2>
     <div class="field">
-      <label data-i18n="modal.expense.amountLabel">المبلغ (ج) — تقدر تكتب عملية زي 50+30</label>
+      <label data-i18n="modal.expense.amountLabel">المبلغ — تقدر تكتب عملية زي 50+30</label>
       <input type="text" id="mAmount" placeholder="مثال: 150" inputmode="decimal">
       <div class="calc-row">
         <button type="button" class="calcBtn" data-op="+">+</button>
@@ -1133,7 +1157,7 @@
     <button class="close-x" id="closeFlexModal">✕</button>
     <h2 id="flexModalTitle">تعديل التوزيع</h2>
     <div class="field">
-      <label id="flexModalLabel">القيمة (ج)</label>
+      <label id="flexModalLabel">القيمة</label>
       <input type="number" id="fAmount" placeholder="مثال: 3000">
     </div>
     <p style="font-size:11.5px;color:var(--ink-soft);margin-top:-6px;" data-i18n="modal.flex.note">تقدر تحط أي رقم حتى لو كان الفائض كله — البندين التانيين هيفضلوا زي ما هما لحد ما تعدّلهم بنفسك.</p>
@@ -1153,7 +1177,7 @@
       <input type="number" id="maKm" placeholder="مثال: 20000">
     </div>
     <div class="field">
-      <label data-i18n="modal.maint.costLabel">التكلفة (ج)</label>
+      <label data-i18n="modal.maint.costLabel">التكلفة</label>
       <input type="number" id="maCost" placeholder="مثال: 5837">
     </div>
     <div class="field">
@@ -1196,7 +1220,7 @@
       <div class="chip-row" id="accountTypeChips"></div>
     </div>
     <div class="field">
-      <label data-i18n="common.amountCurrency">المبلغ (ج)</label>
+      <label data-i18n="common.amountCurrency">المبلغ</label>
       <input type="number" id="acAmount" placeholder="مثال: 5000">
     </div>
     <div class="field">
@@ -1227,7 +1251,7 @@
       <input type="text" id="itName" data-i18n-placeholder="modal.item.namePlaceholder" placeholder="مثال: قسط العربية">
     </div>
     <div class="field">
-      <label id="itAmountLabel">القيمة الشهرية (ج)</label>
+      <label id="itAmountLabel">القيمة الشهرية</label>
       <input type="number" id="itAmount" placeholder="مثال: 1500">
     </div>
     <div class="field">
@@ -1300,7 +1324,7 @@
       <div class="chip-row" id="advSourceChips"></div>
     </div>
     <div class="field">
-      <label id="advAmountLabel">قيمة السلفة (ج)</label>
+      <label id="advAmountLabel">قيمة السلفة</label>
       <input type="number" id="advAmount" placeholder="مثال: 14169">
     </div>
     <div class="field">
@@ -1313,7 +1337,7 @@
     </div>
     <div id="advRepaymentFields">
       <div class="field">
-        <label data-i18n="modal.advance.installmentLabel">قيمة القسط الشهري (ج)</label>
+        <label data-i18n="modal.advance.installmentLabel">قيمة القسط الشهري</label>
         <input type="number" id="advInstallment" placeholder="مثال: 1200">
       </div>
       <div class="field">
@@ -1407,6 +1431,12 @@ function defaultSettings(){
   return {
     salary: 0, emergBal: 0, emergGoal: 0, caps: {}, sources: ["كاش","فيزا","بطاقة بنكية","فودافون كاش"], allocOverrides: {},
     hasCar: true, customCats: [], lang: "ar",
+    // Empty means "use the language's default" (ج / EGP) — anyone outside Egypt sets their own.
+    currency: "",
+    // The phase thresholds as a PERCENTAGE OF INCOME, not fixed amounts: a surplus of 13,000 is
+    // a fortune on one salary and a rounding error on another, so absolute cut-offs only ever fit
+    // one person. Editable, since "comfortable" is personal.
+    phasePct: { pressure: 25, launch: 45 },
     notif: { daily:{enabled:false, time:"21:00"}, weeklyBackup:{enabled:false}, capAlert:{enabled:true}, maintDue:{enabled:true} },
     smsAuto: { enabled:false },
     biometricLock: { enabled:false },
@@ -1466,12 +1496,12 @@ const I18N = {
     "obligations.helpIntro":"المبالغ تحت خاصة بشهر", "obligations.helpIntroSuffix":"بس.",
     "obligations.knowMore":"إزاي التعديل الشهري بيشتغل؟",
     "obligations.summaryTitle":"التزامات", "obligations.listTitle":"البنود",
-    "obligations.ofIncome":"من دخل الشهر", "obligations.leftAfter":"فاضل بعد الالتزامات: {0} ج",
+    "obligations.ofIncome":"من دخل الشهر", "obligations.leftAfter":"فاضل بعد الالتزامات: {0} {cur}",
     "obligations.noneThisMonth":"مفيش التزامات نشطة الشهر ده",
     "obligations.groupCount":"{0} بند", "obligations.thisMonthOnly":"الشهر ده",
-    "obligations.paidOf":"مدفوع {0} من {1}", "obligations.leftToPay":"فاضل {0} قسط · {1} ج",
+    "obligations.paidOf":"مدفوع {0} من {1}", "obligations.leftToPay":"فاضل {0} قسط · {1} {cur}",
     "obligations.finished":"خلصت ✓",
-    "obligations.payoutDue":"بتقبض {0} ج في {1}", "obligations.payoutGot":"قبضت {0} ج في {1}",
+    "obligations.payoutDue":"بتقبض {0} {cur} في {1}", "obligations.payoutGot":"قبضت {0} {cur} في {1}",
     "obligations.helpFull":`تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
           فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
           اللي انت فيه بس. زرار ✕ بيشيل البند من الشهر ده بس (زي ما توقفه بالظبط). زرار ⏸️/▶️ بيشغّل
@@ -1537,7 +1567,7 @@ const I18N = {
     "pro.activeTitle":"اشتراكك شغال 🎉", "pro.activeSub":"كل مزايا النسخة الكاملة مفتوحة على الجهاز ده.",
     "pro.manageBtn":"إدارة الاشتراك / إلغاء",
     "pro.devUnlockNote":"مفتوحة بوضع التجربة (مش اشتراك حقيقي) — دوس مطوّل على رقم الإصدار تاني عشان تقفلها.",
-    "pro.perMonth":"شهريًا · تقدر تلغي في أي وقت", "pro.fallbackPrice":"50 ج",
+    "pro.perMonth":"شهريًا · تقدر تلغي في أي وقت", "pro.fallbackPrice":"50 {cur}",
     "pro.feat.smsTitle":"كشف المصاريف من رسايل البنك",
     "pro.feat.smsSub":"التطبيق يقرأ رسالة البنك ويقترح المصروف جاهز — انت بس تأكّد.",
     "pro.feat.voiceTitle":"الإضافة بالصوت",
@@ -1557,6 +1587,15 @@ const I18N = {
     "toast.proActivated":"تم تفعيل النسخة الكاملة 🎉", "toast.proFailed":"متمّش الاشتراك — جرّب تاني",
     "toast.devUnlockOn":"وضع التجربة اتفعّل (مزايا النسخة الكاملة مفتوحة)",
     "toast.devUnlockOff":"وضع التجربة اتقفل",
+    "settings.currencyLabel":"العملة", "settings.currencySub":"تتغيّر في كل أرقام التطبيق والتقارير",
+    "settings.currencyCustom":"رمز تاني (مثال: ر.س)",
+    "settings.phasesLabel":"حدود مراحل التوزيع",
+    "settings.phasesSub":"نسبة الفاضل من دخلك اللي بتفصل بين الضغط والانتقال والانطلاق",
+    "settings.phasePressureLabel":"لحد أي نسبة تعتبر نفسك في \"ضغط\"؟ (%)",
+    "settings.phaseLaunchLabel":"ومن أي نسبة تعتبر نفسك في \"انطلاق\"؟ (%)",
+    "settings.phaseHelpWithIncome":"بدخلك الحالي: أقل من {0} = ضغط · أكتر من {1} = انطلاق ({2})",
+    "settings.phaseHelpNoIncome":"حدّد مرتبك فوق الأول عشان نحوّل النسب دي لأرقام.",
+    "toast.currencySaved":"العملة بقت {0}",
     "settings.groupAccount":"حسابك", "settings.planFree":"مجاني", "settings.planPro":"مشترك ✓",
     "settings.accountSignIn":"سجّل دخولك بجوجل", "settings.accountSignInSub":"عشان تحفظ بياناتك على درايف وترجّعها على أي جهاز",
     "settings.accountSignedIn":"حساب جوجل",
@@ -1568,22 +1607,24 @@ const I18N = {
     "allocations.introMore":"النسب بتتحدد إزاي؟ وإيه اللي لازم أعمله أنا؟",
     "allocations.introPhases":"التطبيق بيشوف الفائض المتكرر بتاعك (المرتب + أي دخل إضافي − كل التزاماتك) وبيحدّد مرحلتك، وكل مرحلة ليها نسب مختلفة:",
     "allocations.introActions":"الأرقام دي <b>اقتراح</b>، مش تحويل بيحصل لوحده. انت اللي بتحوّل الفلوس فعليًا (لحساب التوفير، لشهادة، لكاش في الدرج...) وبعدين تسجّلها هنا بزرار \"+\" عشان التطبيق يعرف إنك نفّذت. تقدر كمان تدوس على أي كارت من التلاتة وتغيّر رقمه للشهر ده بس لو ظروفك اختلفت.",
-    "allocations.phaseRangeDeficit":"(الفائض بالسالب)", "allocations.phaseSplitDeficit":"مفيش توزيع",
-    "allocations.phaseRangePressure":"(أقل من 13,000)", "allocations.phaseRangeTransition":"(13,000 – 17,000)",
-    "allocations.phaseRangeLaunch":"(أكتر من 17,000)",
+    "allocations.phaseRangeDeficit":"الفائض بالسالب", "allocations.phaseSplitDeficit":"مفيش توزيع",
+    "allocations.phaseRangeUnder":"الفاضل أقل من {0}% من دخلك",
+    "allocations.phaseRangeBetween":"الفاضل بين {0}% و{1}% من دخلك",
+    "allocations.phaseRangeOver":"الفاضل أكتر من {0}% من دخلك",
     "allocations.phaseOrder":"الترتيب: طوارئ / استثمار / مرونة",
+    "allocations.phaseYourIncome":"دخلك {0} {1} والفاضل منه {2}%",
     "nav.home":"الرئيسية", "nav.expenses":"المصاريف", "nav.allocations":"الاستثمار",
     "nav.obligations":"الالتزامات", "nav.maintenance":"السيارة", "nav.settings":"الإعدادات",
     "modal.alloc.title":"تسجيل توزيع فعلي", "modal.alloc.catLabel":"البند",
-    "common.amountCurrency":"المبلغ (ج)", "common.noteOptional":"ملاحظة (اختياري)",
+    "common.amountCurrency":"المبلغ ({cur})", "common.noteOptional":"ملاحظة (اختياري)",
     "modal.alloc.notePlaceholder":"مثال: شريت أسهم ADIB", "common.date":"التاريخ", "common.cancel":"إلغاء",
-    "modal.expense.amountLabel":"المبلغ (ج) — تقدر تكتب عملية زي 50+30", "modal.expense.clear":"مسح",
+    "modal.expense.amountLabel":"المبلغ ({cur}) — تقدر تكتب عملية زي 50+30", "modal.expense.clear":"مسح",
     "modal.expense.catLabel":"النوع", "modal.sourceLabel":"المصدر (هيتخصم منين)",
     "modal.expense.notePlaceholder":"مثال: غدا مع الأصحاب", "modal.expense.save":"حفظ المصروف",
     "modal.flex.note":"تقدر تحط أي رقم حتى لو كان الفائض كله — البندين التانيين هيفضلوا زي ما هما لحد ما تعدّلهم بنفسك.",
     "modal.flex.autoBtn":"رجوع للحساب التلقائي",
     "modal.maint.title":"تسجيل صيانة", "modal.maint.kmLabel":"الكيلومترات وقت الصيانة",
-    "modal.maint.costLabel":"التكلفة (ج)", "modal.maint.itemsLabel":"اللي اتعمل",
+    "modal.maint.costLabel":"التكلفة ({cur})", "modal.maint.itemsLabel":"اللي اتعمل",
     "modal.maint.notePlaceholder":"مثال: توكيل مدينة نصر", "modal.maint.linkExpense":"سجّلها كمان كمصروف الشهر (فئة عربية)",
     "modal.account.title":"تسجيل حركة على حساب", "modal.account.accountLabel":"الحساب",
     "modal.account.typeLabel":"نوع الحركة", "modal.account.notePlaceholder":"مثال: تحويل المرتب",
@@ -1597,8 +1638,8 @@ const I18N = {
         وبعده بس — مش رجعي على شهور فاتت.`,
     "modal.advance.title":"سلفة/دفعة ائتمانية جديدة", "modal.advance.nameLabel":"اسم السلفة",
     "modal.advance.namePlaceholder":"مثال: سلفة تراخيص العربية",
-    "modal.advance.sourceLabel":"هتتحط في حساب/كارت إيه؟", "modal.advance.amountLabel":"قيمة السلفة (ج)",
-    "modal.advance.hasRepaymentLabel":"هتتسدد بقسط شهري؟", "modal.advance.installmentLabel":"قيمة القسط الشهري (ج)",
+    "modal.advance.sourceLabel":"هتتحط في حساب/كارت إيه؟", "modal.advance.amountLabel":"قيمة السلفة ({cur})",
+    "modal.advance.hasRepaymentLabel":"هتتسدد بقسط شهري؟", "modal.advance.installmentLabel":"قيمة القسط الشهري ({cur})",
     "modal.advance.monthsLabel":"هتتسدد على كام شهر؟", "modal.advance.repayStartLabel":"هيبدأ الخصم شهر إيه؟",
     "modal.advance.note":`السلفة بتتسجّل كإيداع حقيقي في الحساب اللي اخترته (مش زيادة في «المرتب
         الشهري»)، وبتتحسب كدخل إضافي للشهر ده بس في "الفائض النظري المتبقي". قسط السداد بيتحسب
@@ -1606,7 +1647,7 @@ const I18N = {
         تبويب الالتزامات.`,
     "advance.depositNote":"سلفة: {0}", "advance.repaymentItemName":"سداد {0}",
     "modal.income.title":"دخل إضافي جديد", "modal.income.nameLabel":"مصدر الدخل",
-    "modal.income.namePlaceholder":"مثال: مكافأة من الشغل", "modal.income.amountLabel":"قيمة الدخل (ج)",
+    "modal.income.namePlaceholder":"مثال: مكافأة من الشغل", "modal.income.amountLabel":"قيمة الدخل ({cur})",
     "modal.income.note":`الدخل بيتسجّل كإيداع حقيقي في الحساب اللي اخترته (مش زيادة في «المرتب
         الشهري»)، وبيتحسب كدخل إضافي لشهر الاستلام بس في "الفائض النظري المتبقي" —
         مافيش قسط سداد لأنه مش سلفة، ده دخل بتاعك خالص.`,
@@ -1642,7 +1683,7 @@ const I18N = {
     "phase.transition":"🟡 مرحلة الانتقال", "phase.launch":"🟢 مرحلة الانطلاق",
     "obl.salary":"المرتب", "obl.extraIncome":"دخل إضافي (قبضة جمعية/سلفة)", "obl.installments":"أقساط",
     "obl.fixed":"مصروفات ثابتة", "obl.gam3iyas":"جمعيات", "obl.recurringSurplus":"الفائض الشهري المتكرر",
-    "common.overriddenSuffix":" (معدّلة)", "home.outOf":"من", "common.perDay":"ج/يوم",
+    "common.overriddenSuffix":" (معدّلة)", "home.outOf":"من", "common.perDay":"{cur}/يوم",
     "expenses.emptyMonth":"لسه مفيش مصاريف الشهر ده", "common.all":"الكل",
     "expenses.noSource":"🚫 بدون مصدر", "expenses.filteredSumLabel":"الإجمالي ({0} عملية)",
     "expenses.emptyList":"لسه مفيش مصاريف تطابق البحث.<br>دوس على زرار + وسجّل مصروف.",
@@ -1693,7 +1734,7 @@ const I18N = {
     "toast.lockEnabled":"اتفعلت الحماية بالبصمة ✅", "toast.lockDisabled":"اتقفلت الحماية بالبصمة",
     "toast.needNotifPermission":"محتاجين إذن الإشعارات الأول", "toast.needSmsPermission":"محتاجين إذن قراءة الرسائل عشان الميزة دي تشتغل",
     "toast.bankSendersSaved":"اتحفظت البنوك المتابَعة ✅", "toast.categoryAdded":"اتضافت فئة {0} {1} ✅",
-    "modal.item.gam3iyaAmountLabel":"قيمتك الشهرية في الجمعية (ج)", "modal.item.amountLabel":"القيمة الشهرية (ج)",
+    "modal.item.gam3iyaAmountLabel":"قيمتك الشهرية في الجمعية ({cur})", "modal.item.amountLabel":"القيمة الشهرية ({cur})",
     "modal.item.editTitle":"تعديل بند الالتزام", "modal.item.newTitle":"بند التزام جديد", "modal.item.noAutoDeduct":"بدون خصم تلقائي",
     "toast.enterItemName":"اكتب اسم البند", "toast.enterValidMonthlyAmount":"اكتب قيمة شهرية صحيحة",
     "toast.endBeforeStart":"شهر النهاية لازم يكون بعد شهر البداية",
@@ -1705,8 +1746,8 @@ const I18N = {
     "toast.backupImported":"اتستوردت النسخة الاحتياطية ✅", "toast.badFile":"الملف مش سليم، جرب تاني",
     "confirm.resetAll":"متأكد؟ هيتصفر كل حاجة (المصاريف، الالتزامات، الصيانة، أرصدة الحسابات، الإعدادات) ويرجع التطبيق زي أول مرة تفتحه.",
     "toast.dataReset":"اتصفرت البيانات", "toast.nothingToExport":"مفيش مصاريف تتصدّر",
-    "modal.sourceLabelShort":"المصدر", "csv.amount":"المبلغ", "csv.filenamePrefix":"مصاريف",
-    "modal.flex.editTitle":"تعديل {0}", "modal.flex.valueLabel":"قيمة {0} لشهر {1} (ج)",
+    "modal.sourceLabelShort":"المصدر", "csv.amount":"المبلغ ({cur})", "csv.filenamePrefix":"مصاريف",
+    "modal.flex.editTitle":"تعديل {0}", "modal.flex.valueLabel":"قيمة {0} لشهر {1} ({cur})",
     "toast.flexAutoRestored":"رجعنا للحساب التلقائي", "toast.enterValidNumber":"اكتب رقم صحيح",
     "toast.flexUpdated":"اتحدّث {0} ✅", "toast.categoryExists":"الفئة دي موجودة أصلاً",
     "prompt.newCategoryName":"اسم الفئة الجديدة:", "prompt.newCategoryIcon":"إيموجي للفئة (اختياري):",
@@ -1741,12 +1782,12 @@ const I18N = {
     "obligations.helpIntro":"Amounts below are specific to", "obligations.helpIntroSuffix":"only.",
     "obligations.knowMore":"How do monthly edits work?",
     "obligations.summaryTitle":"Obligations", "obligations.listTitle":"Items",
-    "obligations.ofIncome":"of this month's income", "obligations.leftAfter":"Left after obligations: {0} EGP",
+    "obligations.ofIncome":"of this month's income", "obligations.leftAfter":"Left after obligations: {0} {cur}",
     "obligations.noneThisMonth":"No active obligations this month",
     "obligations.groupCount":"{0} items", "obligations.thisMonthOnly":"this month",
-    "obligations.paidOf":"Paid {0} of {1}", "obligations.leftToPay":"{0} left · {1} EGP",
+    "obligations.paidOf":"Paid {0} of {1}", "obligations.leftToPay":"{0} left · {1} {cur}",
     "obligations.finished":"Finished ✓",
-    "obligations.payoutDue":"Collect {0} EGP in {1}", "obligations.payoutGot":"Collected {0} EGP in {1}",
+    "obligations.payoutDue":"Collect {0} {cur} in {1}", "obligations.payoutGot":"Collected {0} {cur} in {1}",
     "obligations.helpFull":`Editing an item's amount or turning it on/off while viewing a specific month doesn't
           affect other months. The first time you set an amount for a new item it becomes its
           regular value for every month, and any edit after that stays specific to the month
@@ -1836,6 +1877,15 @@ const I18N = {
     "toast.proActivated":"Full version activated 🎉", "toast.proFailed":"Subscription didn't go through — try again",
     "toast.devUnlockOn":"Trial mode on (full-version features unlocked)",
     "toast.devUnlockOff":"Trial mode off",
+    "settings.currencyLabel":"Currency", "settings.currencySub":"Applies to every number in the app and its reports",
+    "settings.currencyCustom":"Another symbol (e.g. SAR)",
+    "settings.phasesLabel":"Allocation phase thresholds",
+    "settings.phasesSub":"The share of your income left over that separates pressure, transition and launch",
+    "settings.phasePressureLabel":"Below what share do you count as \"under pressure\"? (%)",
+    "settings.phaseLaunchLabel":"And from what share do you count as \"launched\"? (%)",
+    "settings.phaseHelpWithIncome":"At your current income: under {0} = pressure · over {1} = launch ({2})",
+    "settings.phaseHelpNoIncome":"Set your salary above first, so these shares can be shown as amounts.",
+    "toast.currencySaved":"Currency set to {0}",
     "settings.groupAccount":"Your account", "settings.planFree":"Free", "settings.planPro":"Subscribed ✓",
     "settings.accountSignIn":"Sign in with Google", "settings.accountSignInSub":"To back your data up to Drive and restore it on any device",
     "settings.accountSignedIn":"Google account",
@@ -1847,22 +1897,24 @@ const I18N = {
     "allocations.introMore":"How are the shares decided, and what do I actually do?",
     "allocations.introPhases":"The app looks at your recurring surplus (salary + any extra income − all your obligations), works out your phase, and each phase has its own split:",
     "allocations.introActions":"These numbers are a <b>suggestion</b>, not a transfer that happens by itself. You move the money for real (to savings, a certificate, cash in a drawer...) and then log it here with \"+\" so the app knows you did. You can also tap any of the three cards to change its number for this month only.",
-    "allocations.phaseRangeDeficit":"(surplus below zero)", "allocations.phaseSplitDeficit":"no split",
-    "allocations.phaseRangePressure":"(under 13,000)", "allocations.phaseRangeTransition":"(13,000 – 17,000)",
-    "allocations.phaseRangeLaunch":"(over 17,000)",
+    "allocations.phaseRangeDeficit":"surplus below zero", "allocations.phaseSplitDeficit":"no split",
+    "allocations.phaseRangeUnder":"what's left is under {0}% of your income",
+    "allocations.phaseRangeBetween":"what's left is between {0}% and {1}% of your income",
+    "allocations.phaseRangeOver":"what's left is over {0}% of your income",
     "allocations.phaseOrder":"Order: emergency / investing / flex",
+    "allocations.phaseYourIncome":"your income is {0} {1} and {2}% of it is left",
     "nav.home":"Home", "nav.expenses":"Expenses", "nav.allocations":"Investing",
     "nav.obligations":"Obligations", "nav.maintenance":"Car", "nav.settings":"Settings",
     "modal.alloc.title":"Log an Actual Allocation", "modal.alloc.catLabel":"Category",
-    "common.amountCurrency":"Amount (EGP)", "common.noteOptional":"Note (optional)",
+    "common.amountCurrency":"Amount ({cur})", "common.noteOptional":"Note (optional)",
     "modal.alloc.notePlaceholder":"e.g. Bought ADIB stock", "common.date":"Date", "common.cancel":"Cancel",
-    "modal.expense.amountLabel":"Amount (EGP) — you can type an operation like 50+30", "modal.expense.clear":"Clear",
+    "modal.expense.amountLabel":"Amount ({cur}) — you can type an operation like 50+30", "modal.expense.clear":"Clear",
     "modal.expense.catLabel":"Category", "modal.sourceLabel":"Source (where it's deducted from)",
     "modal.expense.notePlaceholder":"e.g. Lunch with friends", "modal.expense.save":"Save Expense",
     "modal.flex.note":"You can enter any number, even the whole surplus — the other two items stay as they are until you edit them yourself.",
     "modal.flex.autoBtn":"Back to Automatic Calculation",
     "modal.maint.title":"Log Maintenance", "modal.maint.kmLabel":"Odometer at time of maintenance",
-    "modal.maint.costLabel":"Cost (EGP)", "modal.maint.itemsLabel":"What was done",
+    "modal.maint.costLabel":"Cost ({cur})", "modal.maint.itemsLabel":"What was done",
     "modal.maint.notePlaceholder":"e.g. Nasr City dealership", "modal.maint.linkExpense":"Also log it as this month's expense (Car category)",
     "modal.account.title":"Log an Account Movement", "modal.account.accountLabel":"Account",
     "modal.account.typeLabel":"Movement Type", "modal.account.notePlaceholder":"e.g. Salary transfer",
@@ -1876,8 +1928,8 @@ const I18N = {
         current month onward — not retroactive for past months.`,
     "modal.advance.title":"New Advance/Credit Draw", "modal.advance.nameLabel":"Advance Name",
     "modal.advance.namePlaceholder":"e.g. Car License Advance",
-    "modal.advance.sourceLabel":"Which account/card will it land in?", "modal.advance.amountLabel":"Advance Amount (EGP)",
-    "modal.advance.hasRepaymentLabel":"Repaid via a monthly installment?", "modal.advance.installmentLabel":"Monthly Installment (EGP)",
+    "modal.advance.sourceLabel":"Which account/card will it land in?", "modal.advance.amountLabel":"Advance Amount ({cur})",
+    "modal.advance.hasRepaymentLabel":"Repaid via a monthly installment?", "modal.advance.installmentLabel":"Monthly Installment ({cur})",
     "modal.advance.monthsLabel":"Over how many months?", "modal.advance.repayStartLabel":"Which month does repayment start?",
     "modal.advance.note":`The advance is logged as a real deposit into the account you picked (not an increase to
         "Monthly Salary"), and counts as one-time extra income for the month it's received in the
@@ -1886,7 +1938,7 @@ const I18N = {
         later from the Obligations tab.`,
     "advance.depositNote":"Advance: {0}", "advance.repaymentItemName":"Repayment: {0}",
     "modal.income.title":"New Extra Income", "modal.income.nameLabel":"Income Source",
-    "modal.income.namePlaceholder":"e.g. Work Bonus", "modal.income.amountLabel":"Income Amount (EGP)",
+    "modal.income.namePlaceholder":"e.g. Work Bonus", "modal.income.amountLabel":"Income Amount ({cur})",
     "modal.income.note":`The income is logged as a real deposit into the account you picked (not an increase to
         "Monthly Salary"), and counts as one-time extra income for the month it's received in the
         "Theoretical Surplus Remaining" — no repayment, since it's not an advance, it's yours to keep.`,
@@ -1922,7 +1974,7 @@ const I18N = {
     "phase.transition":"🟡 Transition Phase", "phase.launch":"🟢 Launch Phase",
     "obl.salary":"Salary", "obl.extraIncome":"Extra Income (Gam3iya/Advance)", "obl.installments":"Installments",
     "obl.fixed":"Fixed Bills", "obl.gam3iyas":"Gam3iyas", "obl.recurringSurplus":"Recurring Monthly Surplus",
-    "common.overriddenSuffix":" (adjusted)", "home.outOf":"out of", "common.perDay":"EGP/day",
+    "common.overriddenSuffix":" (adjusted)", "home.outOf":"out of", "common.perDay":"{cur}/day",
     "expenses.emptyMonth":"No expenses yet this month", "common.all":"All",
     "expenses.noSource":"🚫 No source", "expenses.filteredSumLabel":"Total ({0} transactions)",
     "expenses.emptyList":"No expenses match the search.<br>Tap the + button and log one.",
@@ -1973,7 +2025,7 @@ const I18N = {
     "toast.lockEnabled":"Fingerprint protection enabled ✅", "toast.lockDisabled":"Fingerprint protection disabled",
     "toast.needNotifPermission":"Notification permission is needed first", "toast.needSmsPermission":"SMS read permission is needed for this feature to work",
     "toast.bankSendersSaved":"Watched banks saved ✅", "toast.categoryAdded":"Category {0} {1} added ✅",
-    "modal.item.gam3iyaAmountLabel":"Your monthly gam3iya share (EGP)", "modal.item.amountLabel":"Monthly amount (EGP)",
+    "modal.item.gam3iyaAmountLabel":"Your monthly gam3iya share (EGP)", "modal.item.amountLabel":"Monthly amount ({cur})",
     "modal.item.editTitle":"Edit Obligation Item", "modal.item.newTitle":"New Obligation Item", "modal.item.noAutoDeduct":"No auto-deduct",
     "toast.enterItemName":"Enter the item's name", "toast.enterValidMonthlyAmount":"Enter a valid monthly amount",
     "toast.endBeforeStart":"The end month must be after the start month",
@@ -1985,7 +2037,7 @@ const I18N = {
     "toast.backupImported":"Backup imported ✅", "toast.badFile":"That file isn't valid, try again",
     "confirm.resetAll":"Are you sure? Everything (expenses, obligations, maintenance, account balances, settings) will be reset and the app will go back to how it was the first time you opened it.",
     "toast.dataReset":"Data reset", "toast.nothingToExport":"No expenses to export",
-    "modal.sourceLabelShort":"Source", "csv.amount":"Amount", "csv.filenamePrefix":"expenses",
+    "modal.sourceLabelShort":"Source", "csv.amount":"Amount ({cur})", "csv.filenamePrefix":"expenses",
     "modal.flex.editTitle":"Edit {0}", "modal.flex.valueLabel":"{0} value for {1} (EGP)",
     "toast.flexAutoRestored":"Back to automatic calculation", "toast.enterValidNumber":"Enter a valid number",
     "toast.flexUpdated":"{0} updated ✅", "toast.categoryExists":"That category already exists",
@@ -1998,7 +2050,19 @@ const I18N = {
     "lock.unlockPromptTitle":"Unlock What's Left?", "lock.unlockPromptSubtitle":"Verify with your fingerprint or screen lock code",
   },
 };
-function t(key){ const d = I18N[state.settings.lang] || I18N.ar; return (key in d) ? d[key] : (I18N.ar[key] !== undefined ? I18N.ar[key] : key); }
+// The user's currency symbol. Deliberately does NOT call t() — t() substitutes this into strings,
+// so reading it back through t() would recurse.
+function cur(){
+  return (state.settings.currency || "").trim() || (state.settings.lang === "en" ? "EGP" : "ج");
+}
+// Any translated string may contain {cur} and get the user's own currency symbol — that way a
+// static label ("المبلغ ({cur})"), a toast and a table header all follow the setting without each
+// call site having to remember to pass it in.
+function t(key){
+  const d = I18N[state.settings.lang] || I18N.ar;
+  const raw = (key in d) ? d[key] : (I18N.ar[key] !== undefined ? I18N.ar[key] : key);
+  return (typeof raw === "string" && raw.indexOf("{cur}") !== -1) ? raw.replaceAll("{cur}", cur()) : raw;
+}
 // t() with {0},{1}... placeholders filled in — for the toast/confirm messages that interpolate a
 // name or number into an otherwise-fixed sentence.
 function tf(key, ...args){ return args.reduce((s,v,i)=> s.replaceAll("{"+i+"}", v), t(key)); }
@@ -2615,6 +2679,27 @@ async function startProPurchase(){
   renderProCard();
 }
 
+// A short list of the currencies most likely to be wanted, plus a free-text box for anything
+// else — the symbol is only ever displayed, never used for conversion, so any string works.
+const CURRENCY_PRESETS = ["ج","ر.س","د.إ","د.ك","ر.ق","د.ب","ر.ع","د.أ","د.ل","$","€","£"];
+function renderCurrencyChips(){
+  const el = document.getElementById("currencyChips");
+  if(!el) return;
+  const active = cur();
+  el.innerHTML = CURRENCY_PRESETS.map(c=>
+    `<button class="chip ${c===active?"sel":""}" data-cur="${c}">${c}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(ch=>{
+    ch.onclick = async ()=>{
+      state.settings.currency = ch.dataset.cur;
+      await saveSettings();
+      applyLanguage(); // static labels carry {cur}, so they need re-applying
+      render();
+    };
+  });
+  const custom = document.getElementById("customCurrencyInput");
+  if(custom && !CURRENCY_PRESETS.includes(active)) custom.value = active;
+}
+
 // Who is signed in, and on which plan — the first thing on the settings screen, the way an account
 // row is on any app's settings. Doubles as the sign-in entry point when nobody is signed in yet.
 function renderAccountRow(){
@@ -3032,10 +3117,21 @@ function computeMonth(monthKeyStr){
   // was shown as its own line in the obligations breakdown but never actually added to the total
   // underneath it, so "معايا كام؟" didn't move even the month you actually received the money.
   const recurringSurplus = salary + extraIncome - obligations;
+  // The phase is decided by what SHARE of your income survives your obligations, not by a fixed
+  // number of pounds. The old cut-offs (13,000 / 17,000) were absolute, so they described exactly
+  // one income: on a small salary nobody could ever leave "pressure", and on a large one everyone
+  // started at "launch" no matter how stretched they actually were. Both thresholds are editable
+  // in Settings, since where "comfortable" starts is personal.
+  const income = salary + extraIncome;
+  const pressurePct = Number(state.settings.phasePct?.pressure ?? 25) / 100;
+  const launchPct = Number(state.settings.phasePct?.launch ?? 45) / 100;
+  // With no income recorded at all there's no share to compute, so fall back to the sign of the
+  // surplus rather than dividing by zero.
+  const surplusRatio = income > 0 ? (recurringSurplus / income) : (recurringSurplus > 0 ? 1 : -1);
   let phase, pE, pI, pF;
   if(recurringSurplus < 0){ phase="عجز"; pE=0;pI=0;pF=0; }
-  else if(recurringSurplus < 13000){ phase="ضغط"; pE=.5;pI=.25;pF=.25; }
-  else if(recurringSurplus <= 17000){ phase="انتقال"; pE=.3;pI=.45;pF=.25; }
+  else if(surplusRatio < pressurePct){ phase="ضغط"; pE=.5;pI=.25;pF=.25; }
+  else if(surplusRatio <= launchPct){ phase="انتقال"; pE=.3;pI=.45;pF=.25; }
   else { phase="انطلاق"; pE=.1;pI=.6;pF=.3; }
   const base = Math.max(recurringSurplus,0);
   const autoVals = { emergency: base*pE, invest: base*pI, flex: base*pF };
@@ -3055,6 +3151,7 @@ function computeMonth(monthKeyStr){
     emergencyIsOverridden: isOverridden.emergency, investIsOverridden: isOverridden.invest, flexIsOverridden: isOverridden.flex,
     pE: pctOf(vals.emergency)/100, pI: pctOf(vals.invest)/100, pF: pctOf(vals.flex)/100,
     pEPct: pctOf(vals.emergency), pIPct: pctOf(vals.invest), pFPct: pctOf(vals.flex),
+    income, surplusRatio, pressurePct, launchPct,
     base
   };
 }
@@ -3100,7 +3197,7 @@ function render(){
   // month-independent by design, same as that section — your real balance doesn't change
   // depending on which month you're browsing).
   const totalBalance = computeAllAccountBalances().reduce((s,b)=>s+b.balance, 0);
-  document.getElementById("heroAmount").innerHTML = fmt(totalBalance) + " <small>"+t("common.currency")+"</small>";
+  document.getElementById("heroAmount").innerHTML = fmt(totalBalance) + " <small>"+cur()+"</small>";
   document.getElementById("heroAmount").style.color = totalBalance<0 ? "var(--brick)" : "";
   document.getElementById("heroLabel").textContent = t("hero.label");
 
@@ -3115,25 +3212,30 @@ function render(){
   rows.push(oblRow(t("obl.gam3iyas"), -m.byCat["جمعية"]));
   document.getElementById("oblList").innerHTML = rows.join("") +
     `<div class="obl-row total"><span class="name">${t("obl.recurringSurplus")}</span>
-       <span class="val" style="color:${m.recurringSurplus<0?'var(--brick)':'var(--sage)'}">${fmt(m.recurringSurplus)} ${t("common.currency")}</span></div>`;
+       <span class="val" style="color:${m.recurringSurplus<0?'var(--brick)':'var(--sage)'}">${fmt(m.recurringSurplus)} ${cur()}</span></div>`;
   document.getElementById("oblAddExtraIncomeRow").onclick = ()=>openAdvanceModal("income");
 
   // Spelled out from the very same thresholds computeMonth() branches on, so the explainer can
   // never drift away from what the app actually does.
   const phaseTable = document.getElementById("phaseTable");
   if(phaseTable){
+    // Each range is stated as a share of income (what the code actually branches on) and, when an
+    // income is recorded, also in money — the share alone is abstract, the pounds are not.
+    const prP = Math.round(m.pressurePct*100), laP = Math.round(m.launchPct*100);
+    const inMoney = (pct)=> m.income>0 ? " · " + fmt(m.income*pct) + " " + cur() : "";
     const rows = [
-      { key:"عجز",   range:t("allocations.phaseRangeDeficit"),    split:t("allocations.phaseSplitDeficit") },
-      { key:"ضغط",   range:t("allocations.phaseRangePressure"),   split:"50% / 25% / 25%" },
-      { key:"انتقال", range:t("allocations.phaseRangeTransition"), split:"30% / 45% / 25%" },
-      { key:"انطلاق", range:t("allocations.phaseRangeLaunch"),     split:"10% / 60% / 30%" },
+      { key:"عجز",   range:t("allocations.phaseRangeDeficit"), split:t("allocations.phaseSplitDeficit") },
+      { key:"ضغط",   range:tf("allocations.phaseRangeUnder", prP) + inMoney(m.pressurePct), split:"50% / 25% / 25%" },
+      { key:"انتقال", range:tf("allocations.phaseRangeBetween", prP, laP) + inMoney(m.launchPct), split:"30% / 45% / 25%" },
+      { key:"انطلاق", range:tf("allocations.phaseRangeOver", laP), split:"10% / 60% / 30%" },
     ];
     phaseTable.innerHTML = rows.map(r=>
       `<div class="obl-row phase-row${r.key===m.phase?" now":""}">
-         <span class="name">${phaseLabel(r.key)} <span style="font-weight:600; color:var(--ink-soft); font-size:10.5px;">${r.range}</span></span>
+         <span class="name">${phaseLabel(r.key)} <span style="font-weight:600; color:var(--ink-soft); font-size:10.5px;">(${r.range})</span></span>
          <span class="val">${r.split}</span>
        </div>`).join("") +
-      `<div class="obl-row" style="background:var(--t2)"><span class="name" style="font-size:10.5px; font-weight:700; color:var(--ink-soft);">${t("allocations.phaseOrder")}</span></div>`;
+      `<div class="obl-row" style="background:var(--t2)"><span class="name" style="font-size:10.5px; font-weight:700; color:var(--ink-soft);">${
+        t("allocations.phaseOrder")}${m.income>0 ? " · " + tf("allocations.phaseYourIncome", fmt(m.income), cur(), Math.round(m.surplusRatio*100)) : ""}</span></div>`;
   }
 
   document.getElementById("allocSuggestionMonthLbl").textContent = "— " + monthLabelOf(curMonthKey);
@@ -3157,7 +3259,7 @@ function render(){
   monthExpenses.forEach(e=>{ catTotals[e.cat] = (catTotals[e.cat]||0) + Number(e.amount); });
   const topCatEntry = Object.entries(catTotals).sort((a,b)=>b[1]-a[1])[0];
   const topCatText = topCatEntry ? catLabel(allCats().find(c=>c.k===topCatEntry[0])||{k:topCatEntry[0]}) : "—";
-  const topCatAmt = topCatEntry ? fmt(topCatEntry[1])+" "+t("common.currency") : "";
+  const topCatAmt = topCatEntry ? fmt(topCatEntry[1])+" "+cur() : "";
   const today = new Date();
   const [yy,mm] = curMonthKey.split("-").map(Number);
   const isCurrentRealMonth = (yy===today.getFullYear() && mm===today.getMonth()+1);
@@ -3191,7 +3293,7 @@ function render(){
       body: ring(Math.round(pct)) + `<div class="t-cap" style="text-align:center">${phaseLabel(m.phase)}</div>` }) +
     tile({ n:2, icon:ICONS.shield, title:t("home.emergencyFundLabel"),
       body: ring(emergPct) + `<div class="t-cap" style="text-align:center">${
-        emergGoal>0 ? fmt(emergBal)+" / "+fmt(emergGoal)+" "+t("common.currency") : t("home.setGoalPrompt")}</div>` }) +
+        emergGoal>0 ? fmt(emergBal)+" / "+fmt(emergGoal)+" "+cur() : t("home.setGoalPrompt")}</div>` }) +
     tile({ n:3, icon:ICONS.tag, title:t("home.topCatLabel"),
       body: `<div class="t-big">${topCatText}</div>` +
             `<div class="t-cap">${topCatAmt ? topCatAmt+" "+t("home.ofSpent")+" "+fmt(spent) : t("home.noExpensesYet")}</div>` }) +
@@ -3200,9 +3302,9 @@ function render(){
             `<div class="t-cap">${tf("home.daysCounted", daysSoFar)}</div>` }) +
     tile({ n:1, icon:ICONS.flex, title:t("home.flexTileLabel"), wide:true,
       body: `<div class="t-row">
-               <div class="t-big">${fmt(spent)}<small>${t("home.outOf")} ${fmt(m.flex)} ${t("common.currency")}${m.flexIsOverridden ? t("common.overriddenSuffix") : ""}</small></div>
+               <div class="t-big">${fmt(spent)}<small>${t("home.outOf")} ${fmt(m.flex)} ${cur()}${m.flexIsOverridden ? t("common.overriddenSuffix") : ""}</small></div>
                <div class="t-cap" style="margin:0; white-space:nowrap">${t("home.theoreticalRemainingLabel")}:
-                 <b style="color:${theoreticalRemaining<0?"var(--brick)":"var(--i1)"}">${fmt(theoreticalRemaining)} ${t("common.currency")}</b></div>
+                 <b style="color:${theoreticalRemaining<0?"var(--brick)":"var(--i1)"}">${fmt(theoreticalRemaining)} ${cur()}</b></div>
              </div>
              <div class="t-trk"${flexOver?' style="--arc:var(--brick)"':""}><b style="width:${pct}%"></b></div>` });
 
@@ -3231,7 +3333,7 @@ function phaseLabel(phase){
 function oblRow(name, val){
   const positive = val >= 0;
   return `<div class="obl-row"><span class="name">${name}</span>
-    <span class="val" style="color:${positive?'var(--sage)':'var(--ink)'}">${positive?'+':''}${fmt(val)} ${t("common.currency")}</span></div>`;
+    <span class="val" style="color:${positive?'var(--sage)':'var(--ink)'}">${positive?'+':''}${fmt(val)} ${cur()}</span></div>`;
 }
 
 function renderCategoryBars(monthExpenses){
@@ -3250,7 +3352,7 @@ function renderCategoryBars(monthExpenses){
     const entry = allCats().find(c=>c.k===cat) || {};
     const icon = entry.i || "📦";
     return `<div class="cat-bar-row">
-      <div class="cat-bar-top"><span class="cn">${icon} ${catLabel(entry.k?entry:{k:cat})}</span><span class="cv">${fmt(val)}${cap>0?" / "+fmt(cap):""} ${t("common.currency")}</span></div>
+      <div class="cat-bar-top"><span class="cn">${icon} ${catLabel(entry.k?entry:{k:cat})}</span><span class="cv">${fmt(val)}${cap>0?" / "+fmt(cap):""} ${cur()}</span></div>
       <div class="cat-bar-track"><div class="cat-bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
     </div>`;
   }).join("");
@@ -3299,7 +3401,7 @@ function renderExpenses(){
   if(list.length===0){ sumWrap.innerHTML = ""; }
   else {
     const filteredSum = list.reduce((s,e)=>s+Number(e.amount),0);
-    sumWrap.innerHTML = `<div class="obl-row total"><span class="name">${tf("expenses.filteredSumLabel", list.length)}</span><span class="val">${fmt(filteredSum)} ${t("common.currency")}</span></div>`;
+    sumWrap.innerHTML = `<div class="obl-row total"><span class="name">${tf("expenses.filteredSumLabel", list.length)}</span><span class="val">${fmt(filteredSum)} ${cur()}</span></div>`;
   }
 
   if(list.length===0){
@@ -3315,7 +3417,7 @@ function renderExpenses(){
     return `<div class="exp-row">
       <div class="exp-icon">${cat.i}</div>
       <div class="exp-mid"><div class="cat">${catLabel(cat.k?cat:{k:e.cat})}</div><div class="note">${e.note || t("common.noNote")}${e.source ? " · 💳 "+e.source : ""}</div></div>
-      <div class="exp-right"><div class="amt">${fmt(e.amount)} ${t("common.currency")}</div><div class="date">${dateStr}</div></div>
+      <div class="exp-right"><div class="amt">${fmt(e.amount)} ${cur()}</div><div class="date">${dateStr}</div></div>
       <button class="exp-edit" data-id="${e.id}">✏️</button>
       <button class="exp-del" data-id="${e.id}">🗑</button>
     </div>`;
@@ -3340,7 +3442,7 @@ function renderAllocations(){
   const totals = {"طوارئ":0,"استثمار":0,"مرونة":0};
   state.allocations.forEach(a=>{ totals[a.cat] = (totals[a.cat]||0) + Number(a.amount); });
   document.getElementById("allocStatGrid").innerHTML = ALLOC_CATS.map(c=>`
-    <div class="stat-card"><div class="k">${c.i} ${catLabel(c)} ${t("allocations.cumulativeSuffix")}</div><div class="v">${fmt(totals[c.k]||0)} <span>${t("common.currency")}</span></div></div>
+    <div class="stat-card"><div class="k">${c.i} ${catLabel(c)} ${t("allocations.cumulativeSuffix")}</div><div class="v">${fmt(totals[c.k]||0)} <span>${cur()}</span></div></div>
   `).join("");
 
   // monthly breakdown with running cumulative
@@ -3392,7 +3494,7 @@ function renderAllocations(){
       return `<div class="exp-row">
         <div class="exp-icon">${c.i}</div>
         <div class="exp-mid"><div class="cat">${c.k?catLabel(c):a.cat}</div><div class="note">${a.note || t("common.noNote")}</div></div>
-        <div class="exp-right"><div class="amt" style="color:var(--sage)">+${fmt(a.amount)} ${t("common.currency")}</div><div class="date">${dateStr}</div></div>
+        <div class="exp-right"><div class="amt" style="color:var(--sage)">+${fmt(a.amount)} ${cur()}</div><div class="date">${dateStr}</div></div>
         <button class="exp-del" data-id="${a.id}">🗑</button>
       </div>`;
     }).join("");
@@ -3416,6 +3518,16 @@ function renderSettings(){
   document.getElementById("movesCountLbl").textContent = tf("settings.movesCount", state.accountMoves.length);
   document.getElementById("catsCountLbl").textContent = tf("settings.catsCount", allCats().length);
   document.getElementById("langStateLbl").textContent = state.settings.lang==="en" ? "English" : "العربية";
+  document.getElementById("currencyStateLbl").textContent = cur();
+  const ph = state.settings.phasePct || { pressure:25, launch:45 };
+  document.getElementById("phasesStateLbl").textContent = ph.pressure + "% / " + ph.launch + "%";
+  document.getElementById("inPhasePressure").value = ph.pressure;
+  document.getElementById("inPhaseLaunch").value = ph.launch;
+  const mNow = computeMonth(curMonthKey);
+  document.getElementById("phaseHelpLine").textContent = mNow.income > 0
+    ? tf("settings.phaseHelpWithIncome", fmt(mNow.income*ph.pressure/100), fmt(mNow.income*ph.launch/100), cur())
+    : t("settings.phaseHelpNoIncome");
+  renderCurrencyChips();
   document.getElementById("appVersionLbl").textContent = APP_NAME_VERSION;
   document.getElementById("biometricLockEnabled").checked = state.settings.biometricLock.enabled;
   document.getElementById("inSalary").value = state.settings.salary;
@@ -3435,7 +3547,7 @@ function renderSettings(){
   document.getElementById("smsAutoEnabled").checked = state.settings.smsAuto.enabled;
 
   document.getElementById("sourcesEdit").innerHTML = state.settings.sources.map((s,idx)=>`
-    <div class="cap-row"><span class="cl">💳 ${s} <span style="font-weight:600; color:var(--ink-soft);">— ${fmt(computeAccountBalance(s))} ${t("common.currency")}</span></span><button class="del-x" data-idx="${idx}">✕</button></div>
+    <div class="cap-row"><span class="cl">💳 ${s} <span style="font-weight:600; color:var(--ink-soft);">— ${fmt(computeAccountBalance(s))} ${cur()}</span></span><button class="del-x" data-idx="${idx}">✕</button></div>
   `).join("");
   document.querySelectorAll("#sourcesEdit .del-x").forEach(btn=>{
     btn.onclick = async ()=>{
@@ -3505,7 +3617,7 @@ function renderSettings(){
     <div class="os-top">
       <div>
         <div class="os-lbl">${t("obligations.grandTotalLabel")}</div>
-        <div class="os-amt">${fmt(grandTotal)}<small>${t("common.currency")}</small></div>
+        <div class="os-amt">${fmt(grandTotal)}<small>${cur()}</small></div>
       </div>
       ${income>0 ? `<div class="os-share${sharePct>=60?" hot":""}">${sharePct}%<span>${t("obligations.ofIncome")}</span></div>` : ""}
     </div>
@@ -3631,7 +3743,7 @@ function renderSettings(){
   else if(visibleItems.length===0){ filteredSumWrap.innerHTML = ""; }
   else {
     const filteredSum = visibleItems.reduce((s,it)=>s+it._effAmount, 0);
-    filteredSumWrap.innerHTML = `<div class="obl-row total"><span class="name">${tf("obligations.filteredSumLabel", visibleItems.length)}</span><span class="val">${fmt(filteredSum)} ${t("common.currency")}</span></div>`;
+    filteredSumWrap.innerHTML = `<div class="obl-row total"><span class="name">${tf("obligations.filteredSumLabel", visibleItems.length)}</span><span class="val">${fmt(filteredSum)} ${cur()}</span></div>`;
   }
 
   // Grouped per kind, each group with its own count + subtotal eyebrow, so أقساط / ثابت / جمعيات
@@ -3642,7 +3754,7 @@ function renderSettings(){
     if(rows.length===0) return "";
     const sum = rows.reduce((a,it)=>a+it._effAmount, 0);
     return `<div class="sec-lbl" style="margin-top:16px;">${catLabel(c)} · ${
-      tf("obligations.groupCount", rows.length)} — <b>${fmt(sum)} ${t("common.currency")}</b></div>
+      tf("obligations.groupCount", rows.length)} — <b>${fmt(sum)} ${cur()}</b></div>
       <div class="obl-list">${rows.map(itemRowHtml).join("")}</div>`;
   }).join("") || `<div class="empty-state"><div class="big">📋</div><p>${t("obligations.noneThisMonth")}</p></div>`;
   appendCollapseToggle(el, "items", visibleItems.length, render);
@@ -3764,8 +3876,8 @@ function renderCarBudget(){
   const over = budget>0 && spent>budget;
   el.innerHTML = `
     <div class="flex-top">
-      <div><div class="t1">${t("home.spentOf")}</div><div class="t2">${fmt(spent)} ${t("common.currency")}</div></div>
-      <div style="text-align:left;"><div class="t3">${budget>0 ? t("home.outOf")+" "+fmt(budget)+" "+t("common.currency") : t("maintenance.noBudget")}</div></div>
+      <div><div class="t1">${t("home.spentOf")}</div><div class="t2">${fmt(spent)} ${cur()}</div></div>
+      <div style="text-align:left;"><div class="t3">${budget>0 ? t("home.outOf")+" "+fmt(budget)+" "+cur() : t("maintenance.noBudget")}</div></div>
     </div>
     <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${over ? "var(--brick)" : "var(--gold-soft)"}"></div></div>
     <div style="margin-top:12px; display:flex; gap:8px;">
@@ -3799,7 +3911,7 @@ function renderMaintenance(){
     nextCard.innerHTML = `
       <div class="flex-top">
         <div><div class="t1">${t("maintenance.dueAt")}</div><div class="t2">${fmt(next.km)} ${t("common.km")}</div></div>
-        <div style="text-align:left;"><div class="t3">${t("maintenance.expectedPrice")}</div><div class="t2" style="font-size:16px;">${fmt(next.price)} ${t("common.currency")}</div></div>
+        <div style="text-align:left;"><div class="t3">${t("maintenance.expectedPrice")}</div><div class="t2" style="font-size:16px;">${fmt(next.price)} ${cur()}</div></div>
       </div>
       <div style="margin-top:10px; font-size:12px; opacity:.8;">${tf("maintenance.remainingKm", fmt(remaining))}</div>`;
   } else {
@@ -3852,7 +3964,7 @@ function renderMaintenance(){
       return `<div class="exp-row">
         <div class="exp-icon">🔧</div>
         <div class="exp-mid"><div class="cat">${fmt(m.km)} ${t("common.km")}</div><div class="note">${detail}</div></div>
-        <div class="exp-right"><div class="amt">${fmt(m.cost)} ${t("common.currency")}</div><div class="date">${dateStr}</div></div>
+        <div class="exp-right"><div class="amt">${fmt(m.cost)} ${cur()}</div><div class="date">${dateStr}</div></div>
         <button class="exp-del" data-id="${m.id}">🗑</button>
       </div>`;
     }).join("");
@@ -3901,9 +4013,9 @@ function renderAccounts(){
     return `<div class="acct-row" style="--sq:var(--b${wash}); --sq-ink:var(--i${wash})">
       <span class="acct-sq">${neg ? CARD : WALLET}</span>
       <span class="acct-name">${b.name}${sub?`<span>${sub}</span>`:""}</span>
-      <span class="acct-val" style="color:${neg?'var(--brick)':'var(--sage)'}">${fmt(b.balance)} ${t("common.currency")}</span>
+      <span class="acct-val" style="color:${neg?'var(--brick)':'var(--sage)'}">${fmt(b.balance)} ${cur()}</span>
     </div>`;
-  }).join("") + `<div class="obl-row total"><span class="name">${t("common.total")}</span><span class="val" style="color:${total<0?'var(--brick)':'var(--i1)'}">${fmt(total)} ${t("common.currency")}</span></div>`;
+  }).join("") + `<div class="obl-row total"><span class="name">${t("common.total")}</span><span class="val" style="color:${total<0?'var(--brick)':'var(--i1)'}">${fmt(total)} ${cur()}</span></div>`;
 }
 
 function renderAccountMoves(){
@@ -3923,7 +4035,7 @@ function renderAccountMoves(){
     return `<div class="exp-row">
       <div class="exp-icon">${isDeposit?"⬆️":"⬇️"}</div>
       <div class="exp-mid"><div class="cat">${m.source}</div><div class="note">${m.note || (isDeposit?t("modal.account.deposit"):t("modal.account.withdraw"))}</div></div>
-      <div class="exp-right"><div class="amt" style="color:${isDeposit?'var(--sage)':'var(--brick)'}">${isDeposit?"+":"-"}${fmt(m.amount)} ${t("common.currency")}</div><div class="date">${dateStr}</div></div>
+      <div class="exp-right"><div class="amt" style="color:${isDeposit?'var(--sage)':'var(--brick)'}">${isDeposit?"+":"-"}${fmt(m.amount)} ${cur()}</div><div class="date">${dateStr}</div></div>
       <button class="exp-del" data-id="${m.id}">🗑</button>
     </div>`;
   }).join("");
@@ -3954,7 +4066,7 @@ function renderPendingSms(){
     <div class="sb-title">🏦 ${tf("sms.bannerTitle", pendingSms.length)}</div>
     ${pendingSms.map(s=>`
       <div class="sms-item" data-id="${s.id}">
-        <div class="si-top"><span class="si-amt">${s.isCredit?"⬆️ ":""}${s.amount!=null ? fmt(s.amount)+" "+t("common.currency") : t("sms.unclearAmount")}</span><span class="si-src">${s.sender}${s.merchant ? " · "+s.merchant : ""}</span></div>
+        <div class="si-top"><span class="si-amt">${s.isCredit?"⬆️ ":""}${s.amount!=null ? fmt(s.amount)+" "+cur() : t("sms.unclearAmount")}</span><span class="si-src">${s.sender}${s.merchant ? " · "+s.merchant : ""}</span></div>
         <div class="si-body">${(s.rawBody||"").slice(0,140)}</div>
         <div class="si-actions">
           <button class="si-add" data-id="${s.id}">✅ ${s.amount!=null ? t(s.isCredit?"sms.addAsDeposit":"sms.addAsExpense") : t("sms.openManual")}</button>
@@ -4090,6 +4202,28 @@ document.getElementById("inEmergBal").onchange = async (e)=>{ state.settings.eme
 document.getElementById("inEmergGoal").onchange = async (e)=>{ state.settings.emergGoal = Number(e.target.value)||0; await saveSettings(); render(); };
 
 document.getElementById("inHasCar").onchange = async (e)=>{ state.settings.hasCar = e.target.checked; await saveSettings(); render(); };
+
+document.getElementById("saveCurrencyBtn").onclick = async ()=>{
+  const v = document.getElementById("customCurrencyInput").value.trim();
+  if(!v) return;
+  state.settings.currency = v;
+  await saveSettings();
+  applyLanguage();
+  render();
+  showToast(tf("toast.currencySaved", v));
+};
+// Both thresholds are shares of income, and they have to stay in order — a "pressure" ceiling
+// above the "launch" floor would leave the middle phase impossible to reach.
+async function savePhasePct(){
+  const pressure = Math.min(95, Math.max(1, Number(document.getElementById("inPhasePressure").value)||25));
+  let launch = Math.min(99, Math.max(2, Number(document.getElementById("inPhaseLaunch").value)||45));
+  if(launch <= pressure) launch = Math.min(99, pressure + 1);
+  state.settings.phasePct = { pressure, launch };
+  await saveSettings();
+  render();
+}
+document.getElementById("inPhasePressure").onchange = savePhasePct;
+document.getElementById("inPhaseLaunch").onchange = savePhasePct;
 
 document.getElementById("biometricLockEnabled").onchange = async (e)=>{
   if(e.target.checked){
@@ -4460,6 +4594,11 @@ document.getElementById("qaVoice").onclick = ()=>{ if(requirePro("automation")) 
 document.getElementById("qaMove").onclick = openAccountModal;
 document.getElementById("qaAdvance").onclick = ()=>openAdvanceModal("advance");
 document.getElementById("closePaywall").onclick = ()=>document.getElementById("paywallModalBg").classList.remove("show");
+// Tapping the dimmed area outside the sheet closes it too. Only for the subscription sheet: doing
+// this to the expense/item forms would throw away half-typed input on a stray tap.
+document.getElementById("paywallModalBg").addEventListener("click", (e)=>{
+  if(e.target === document.getElementById("paywallModalBg")) document.getElementById("paywallModalBg").classList.remove("show");
+});
 document.getElementById("paywallBuyBtn").onclick = startProPurchase;
 // The owner's own way to try the paid features on a build Play can't talk to (sideloaded APK or
 // the web version). Long-press the version line in Settings. Not a licensing mechanism.
@@ -4924,10 +5063,17 @@ document.getElementById("exportExcel").onclick = async ()=>{
   ];
   addStyledSheet(wb, monthSummaryRows, {البند:"",القيمة:""}, "ملخص الشهر");
 
+  // Column names carry the currency, so they're computed once from the setting rather than
+  // written out a dozen times with "ج" baked in.
+  const COL_AMT = "المبلغ (" + cur() + ")";
+  const COL_COST = "التكلفة (" + cur() + ")";
+  const COL_BAL = "الرصيد الحالي (" + cur() + ")";
+  const COL_NET = "صافي الحركة هذا الشهر (" + cur() + ")";
+
   const expRows = state.expenses.filter(e=>e.date.slice(0,7)===mk).sort((a,b)=>a.date.localeCompare(b.date)).map(e=>({
-    التاريخ:e.date, الفئة:e.cat, المصدر:e.source||"", "المبلغ (ج)":e.amount, ملاحظة:e.note||""
+    التاريخ:e.date, الفئة:e.cat, المصدر:e.source||"", [COL_AMT]:e.amount, ملاحظة:e.note||""
   }));
-  addStyledSheet(wb, expRows, {التاريخ:"",الفئة:"",'المبلغ (ج)':"",ملاحظة:""}, "المصاريف", null, ["المبلغ (ج)"]);
+  addStyledSheet(wb, expRows, {التاريخ:"",الفئة:"",[COL_AMT]:"",ملاحظة:""}, "المصاريف", null, [COL_AMT]);
 
   // Obligations for this month only — each item's actual effective amount this month (base
   // value, or a manual correction if it has one).
@@ -4938,30 +5084,30 @@ document.getElementById("exportExcel").onclick = async ()=>{
     const amtOverridden = it.amountOverrides && it.amountOverrides[mk]!==undefined;
     const activeOverridden = it.activeOverrides && it.activeOverrides[mk]!==undefined;
     itemRows.push({
-      البند:it.name, "المبلغ (ج)":itemAmountForMonth(it, mk), النوع:it.cat,
+      البند:it.name, [COL_AMT]:itemAmountForMonth(it, mk), النوع:it.cat,
       "معدَّل لهذا الشهر؟": (amtOverridden || activeOverridden) ? "نعم" : "لا",
       الحالة: itemActiveForMonth(it, mk) ? "مفعّل" : "موقوف"
     });
   });
-  addStyledSheet(wb, itemRows, {البند:"","المبلغ (ج)":"",النوع:"","معدَّل لهذا الشهر؟":"",الحالة:""}, "الالتزامات والأقساط",
-    row => row["معدَّل لهذا الشهر؟"]==="نعم" ? {fill:"F7ECD9", font:XL_COLOR.gold} : null, ["المبلغ (ج)"]);
+  addStyledSheet(wb, itemRows, {البند:"",[COL_AMT]:"",النوع:"","معدَّل لهذا الشهر؟":"",الحالة:""}, "الالتزامات والأقساط",
+    row => row["معدَّل لهذا الشهر؟"]==="نعم" ? {fill:"F7ECD9", font:XL_COLOR.gold} : null, [COL_AMT]);
 
   const allocRows = state.allocations.filter(a=>a.date.slice(0,7)===mk).sort((a,b)=>a.date.localeCompare(b.date)).map(a=>({
-    التاريخ:a.date, البند:a.cat, "المبلغ (ج)":a.amount, ملاحظة:a.note||""
+    التاريخ:a.date, البند:a.cat, [COL_AMT]:a.amount, ملاحظة:a.note||""
   }));
-  addStyledSheet(wb, allocRows, {التاريخ:"",البند:"",'المبلغ (ج)':"",ملاحظة:""}, "التوزيعات الفعلية", null, ["المبلغ (ج)"]);
+  addStyledSheet(wb, allocRows, {التاريخ:"",البند:"",[COL_AMT]:"",ملاحظة:""}, "التوزيعات الفعلية", null, [COL_AMT]);
 
   const maintRows = state.maintenanceLog.filter(x=>x.date.slice(0,7)===mk).sort((a,b)=>a.date.localeCompare(b.date)).map(x=>({
-    التاريخ:x.date, الكيلومترات:x.km, "التكلفة (ج)":x.cost, "اللي اتعمل":(x.items||[]).join("، "), ملاحظة:x.note||""
+    التاريخ:x.date, الكيلومترات:x.km, [COL_COST]:x.cost, "اللي اتعمل":(x.items||[]).join("، "), ملاحظة:x.note||""
   }));
-  addStyledSheet(wb, maintRows, {التاريخ:"",الكيلومترات:"",'التكلفة (ج)':"",'اللي اتعمل':"",ملاحظة:""}, "الصيانة", null, ["التكلفة (ج)"]);
+  addStyledSheet(wb, maintRows, {التاريخ:"",الكيلومترات:"",[COL_COST]:"",'اللي اتعمل':"",ملاحظة:""}, "الصيانة", null, [COL_COST]);
 
   const moveRows = state.accountMoves.filter(x=>x.date.slice(0,7)===mk).sort((a,b)=>a.date.localeCompare(b.date)).map(x=>({
-    التاريخ:x.date, الحساب:x.source, النوع:x.type==="withdraw"?"سحب":"إيداع", "المبلغ (ج)":x.amount, ملاحظة:x.note||""
+    التاريخ:x.date, الحساب:x.source, النوع:x.type==="withdraw"?"سحب":"إيداع", [COL_AMT]:x.amount, ملاحظة:x.note||""
   }));
-  addStyledSheet(wb, moveRows, {التاريخ:"",الحساب:"",النوع:"",'المبلغ (ج)':"",ملاحظة:""}, "حركات الحسابات",
+  addStyledSheet(wb, moveRows, {التاريخ:"",الحساب:"",النوع:"",[COL_AMT]:"",ملاحظة:""}, "حركات الحسابات",
     row => row["النوع"]==="سحب" ? {fill:"F5E3DE", font:XL_COLOR.brick}
-         : row["النوع"]==="إيداع" ? {fill:"E6EEE2", font:XL_COLOR.sage} : null, ["المبلغ (ج)"]);
+         : row["النوع"]==="إيداع" ? {fill:"E6EEE2", font:XL_COLOR.sage} : null, [COL_AMT]);
 
   // Balances are a running total (since the very first entry), not "this month's balance" — a
   // balance is a snapshot, not a monthly transaction — but "صافي الحركة هذا الشهر" ties this
@@ -4974,11 +5120,11 @@ document.getElementById("exportExcel").onclick = async ()=>{
     return netMoves - spent;
   }
   const accountBalanceRows = computeAllAccountBalances().map(b=>({
-    الحساب:b.name, "الرصيد الحالي (ج)":b.balance, "صافي الحركة هذا الشهر (ج)": accountNetForMonth(b.name),
+    الحساب:b.name, [COL_BAL]:b.balance, [COL_NET]: accountNetForMonth(b.name),
     الحالة: b.legacy ? "مصدر محذوف من الإعدادات" : "نشط"
   }));
-  addStyledSheet(wb, accountBalanceRows, {الحساب:"", "الرصيد الحالي (ج)":"", "صافي الحركة هذا الشهر (ج)":"", الحالة:""}, "أرصدة الحسابات",
-    null, ["الرصيد الحالي (ج)", "صافي الحركة هذا الشهر (ج)"]);
+  addStyledSheet(wb, accountBalanceRows, {الحساب:"", [COL_BAL]:"", [COL_NET]:"", الحالة:""}, "أرصدة الحسابات",
+    null, [COL_BAL, COL_NET]);
 
   const summaryRows = [
     {البند:"المرتب", القيمة:state.settings.salary},
@@ -5060,7 +5206,12 @@ function setupNativeApp(){
   App.addListener("backButton", ()=>{
     if(isLocked()){ App.exitApp(); return; }
     if(document.getElementById("onboardOverlay").classList.contains("show")){ document.getElementById("obSkip").click(); return; }
-    const openModal = [modalBg, allocModalBg, flexModalBg, maintModalBg, accountModalBg, itemModalBg].find(m=>m.classList.contains("show"));
+    // Every sheet in the app, so back always closes the top one instead of leaving the user
+    // trapped. Listed by id rather than by variable so a newly added sheet can't be forgotten.
+    const openModal = ["expenseModalBg","allocModalBg","flexModalBg","maintModalBg","accountModalBg",
+                       "itemModalBg","advanceModalBg","paywallModalBg"]
+      .map(id=>document.getElementById(id))
+      .find(m=>m && m.classList.contains("show"));
     if(openModal){ openModal.classList.remove("show"); return; }
     if(activeTab !== "home"){ document.querySelector('.tabbtn[data-tab="home"]').click(); return; }
     App.exitApp();
