@@ -112,11 +112,10 @@
   .hero .phase-chip{ margin-top:8px; }
 
   /* ---------- content ---------- */
-  /* Bottom padding must clear both FABs (bottom:58-63px + up to 56px tall, so up to ~114px above
-     the viewport bottom) with room to spare — this used to be 110px, just short of that, so the
-     last section on a tab (usually "التزامات الشهر") still peeked out from under them when
-     scrolled all the way down. */
-  .content{padding:16px 16px 140px; flex:1; animation:tabFadeIn .28s ease;}
+  /* Bottom padding must clear the FABs (bottom:89px + 52px tall, so up to ~141px above the
+     viewport bottom) with room to spare, so the last section on a tab (usually "التزامات الشهر")
+     never peeks out from under them when scrolled all the way down. */
+  .content{padding:16px 16px 160px; flex:1; animation:tabFadeIn .28s ease;}
   @keyframes tabFadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
   .section-title{
     font-size:14px; font-weight:700; color:var(--ink);
@@ -299,13 +298,13 @@
      since that's well inside the actual content area, not just the bottom margin reserved for
      them. Centering them over the bar's middle then made them dip low enough to sit directly on
      top of (and hide) the two tab buttons that live there (measured: bottom:40px put their bottom
-     edge ~27px inside the bar's own 67px-tall content row) — bottom is now pinned to that same
-     67px so the FABs float entirely above the bar's row and never overlap a tab icon/label, with
-     the bar's own bump (.tabbar::before below) filling the visual gap between them instead. A
-     fixed physical offset (not inset-inline-end) centers them the same way in RTL/LTR since
-     centering doesn't depend on reading direction the way edge-anchoring did. */
+     edge ~27px inside the bar's own 67px-tall content row) — bottom is now pinned clear of that
+     67px, with extra clearance so the pair reads as sitting on its own detached island (see
+     .tabbar::before) rather than merged into the bar. A fixed physical offset (not
+     inset-inline-end) centers them the same way in RTL/LTR since centering doesn't depend on
+     reading direction the way edge-anchoring did. */
   .fab, .fab-voice{
-    position:fixed; bottom:calc(69px + env(safe-area-inset-bottom));
+    position:fixed; bottom:calc(89px + env(safe-area-inset-bottom));
     width:52px; height:52px; border-radius:50%;
     display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;
     z-index:21; transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
@@ -329,18 +328,15 @@
     background:#fff; border-top:1px solid var(--line); display:flex;
     padding:8px 8px calc(8px + env(safe-area-inset-bottom)); z-index:20;
   }
-  /* The idea: instead of the two FABs floating above a flat bar edge with a gap of bare page
-     showing through underneath them, the bar's own white background grows a low dome behind them
-     — a half-ellipse the same color as the bar, sitting flush on its top edge and rising just
-     high enough to reach around the buttons' midpoint, so the buttons read as sitting IN the bar
-     rather than hovering separately over it. Same color as the bar (not a new surface), so inside
-     the bar's own boundary it's invisible — the bump only exists in the strip of space above the
-     bar's flat edge, and pointer-events:none keeps it from ever intercepting a tap. */
+  /* A separate floating "island" behind the FAB pair — its own small white card, visibly detached
+     from the bar by a clear gap, instead of merging into the bar's own edge. Sized to sit fully
+     above the bar's 67px-tall content row (with room to spare) so it can never dip down and cover
+     a tab icon/label the way the FABs themselves used to. pointer-events:none since it's purely
+     decorative — nothing under it should ever fail to receive a tap. */
   .tabbar::before{
-    content:""; position:absolute; top:-30px; left:50%; transform:translateX(-50%);
-    width:150px; height:30px; background:#fff;
-    border-radius:50% 50% 0 0 / 100% 100% 0 0;
-    box-shadow:0 -3px 8px rgba(22,48,46,.06);
+    content:""; position:absolute; top:-58px; left:50%; transform:translateX(-50%);
+    width:126px; height:44px; background:#fff; border-radius:22px;
+    box-shadow:0 8px 18px rgba(22,48,46,.16);
     pointer-events:none;
   }
   .tabbtn{flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; cursor:pointer; color:var(--ink-soft); font-family:'Cairo'; transition:color .2s ease;}
