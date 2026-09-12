@@ -166,6 +166,24 @@
   .stat-card .v{font-size:15px; font-weight:800; color:var(--ink);}
   .stat-card .v span{font-size:11px; font-weight:600; color:var(--ink-soft);}
 
+  /* "📌 نظرة سريعة" bento grid — a denser, more colorful info-card layout than .stat-grid above
+     (kept as-is since the Allocations tab still reuses it). Each card carries its own pastel tint
+     (from the app's own teal/gold/sage/brick palette, never the reference app's blue/purple) so the
+     section reads as a grid of distinct tiles rather than a plain list, the way the reference app's
+     analytics screen does. Two cards (budget/emergency) additionally show a small radial gauge. */
+  .bento-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .bento-card{border-radius:16px; padding:12px; position:relative; overflow:hidden; min-height:76px;}
+  .bento-card.span2{grid-column:1 / -1;}
+  .b-head{display:flex; align-items:center; gap:6px; margin-bottom:6px;}
+  .b-icon{width:22px; height:22px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0;}
+  .b-title{font-size:10.5px; font-weight:700; color:var(--ink-soft);}
+  .b-value{font-size:14px; font-weight:800; color:var(--ink); line-height:1.35;}
+  .b-value span{font-size:10.5px; font-weight:600; color:var(--ink-soft);}
+  .b-caption{font-size:10px; font-weight:600; color:var(--ink-soft); margin-top:3px;}
+  .b-row{display:flex; align-items:center; gap:10px;}
+  .b-gauge{width:42px; height:42px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .b-gauge-hole{width:31px; height:31px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:var(--ink);}
+
   .goal-card{background:#fff; border:1px solid var(--line); border-radius:18px; padding:16px;}
   .goal-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
   .goal-top .gn{font-size:13px; font-weight:700; color:var(--ink);}
@@ -472,10 +490,7 @@
     <button class="btn btn-ghost" id="addAdvanceBtn" style="margin-top:8px;" data-i18n="home.addAdvance">+ سلفة/دفعة ائتمانية جديدة</button>
 
     <div class="section-title" data-i18n="home.quickLookTitle">📌 نظرة سريعة</div>
-    <div class="stat-grid">
-      <div class="stat-card"><div class="k" data-i18n="home.topCatLabel">أكتر فئة صرف</div><div class="v" id="topCat">—</div></div>
-      <div class="stat-card"><div class="k" data-i18n="home.avgDailyLabel">متوسط يومي (مرونة)</div><div class="v" id="avgDaily">0 <span data-i18n="common.currency">ج</span></div></div>
-    </div>
+    <div class="bento-grid" id="bentoGrid"></div>
 
     <div class="section-title" data-i18n="home.obligationsTitle">📊 التزامات الشهر</div>
     <div class="obl-list" id="oblList"></div>
@@ -1110,6 +1125,9 @@ const I18N = {
     "home.addMove":"+ تسجيل حركة (إيداع/سحب)", "home.addAdvance":"+ سلفة/دفعة ائتمانية جديدة",
     "home.addExtraIncome":"+ دخل إضافي جديد", "home.quickLookTitle":"📌 نظرة سريعة",
     "home.topCatLabel":"أكتر فئة صرف", "home.avgDailyLabel":"متوسط يومي (مرونة)",
+    "home.budgetUsedLabel":"نسبة الميزانية المستخدمة", "home.emergencyFundLabel":"كاش الطوارئ",
+    "home.setGoalPrompt":"حدد هدف من الإعدادات", "home.upcomingLabel":"التزامات الشهر ده",
+    "home.upcomingCountSuffix":"بند نشط", "home.recentMoveLabel":"آخر حركة",
     "home.obligationsTitle":"📊 التزامات الشهر",
     "expenses.byCatTitle":"🥧 المصروفات حسب الفئة", "expenses.allTitle":"🧾 كل المصاريف",
     "expenses.searchPlaceholder":"دور بالملاحظة...", "expenses.exportCsv":"⬇️ تصدير مصاريف الشهر (CSV)",
@@ -1320,6 +1338,9 @@ const I18N = {
     "home.addMove":"+ Log a Move (Deposit/Withdraw)", "home.addAdvance":"+ New Advance/Credit Draw",
     "home.addExtraIncome":"+ New Extra Income", "home.quickLookTitle":"📌 Quick Look",
     "home.topCatLabel":"Top Spend Category", "home.avgDailyLabel":"Daily Avg (Flex)",
+    "home.budgetUsedLabel":"Budget Used", "home.emergencyFundLabel":"Emergency Cash",
+    "home.setGoalPrompt":"Set a goal in Settings", "home.upcomingLabel":"This Month's Obligations",
+    "home.upcomingCountSuffix":"active", "home.recentMoveLabel":"Latest Move",
     "home.obligationsTitle":"📊 This Month's Obligations",
     "expenses.byCatTitle":"🥧 Spending by Category", "expenses.allTitle":"🧾 All Expenses",
     "expenses.searchPlaceholder":"Search notes...", "expenses.exportCsv":"⬇️ Export This Month's Expenses (CSV)",
@@ -2492,16 +2513,76 @@ function render(){
   document.getElementById("flexBar").style.width = pct+"%";
   document.getElementById("flexBar").style.background = spent > m.flex ? "var(--brick)" : "var(--gold-soft)";
 
-  // quick stats
+  // quick stats — "📌 نظرة سريعة" bento grid. Each tile reuses data already computed elsewhere in
+  // render() (topCatEntry/spent/daysSoFar, theoreticalRemaining/m.recurringSurplus/pct/phase,
+  // emergBal/emergGoal) instead of recomputing it, plus two lightweight new reads
+  // (state.items for the active-obligations count, state.accountMoves for the latest move) that
+  // weren't wired into the Home tab before.
   const catTotals = {};
   monthExpenses.forEach(e=>{ catTotals[e.cat] = (catTotals[e.cat]||0) + Number(e.amount); });
   const topCatEntry = Object.entries(catTotals).sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById("topCat").textContent = topCatEntry ? catLabel(allCats().find(c=>c.k===topCatEntry[0])||{k:topCatEntry[0]})+" ("+fmt(topCatEntry[1])+" "+t("common.currency")+")" : "—";
+  const topCatText = topCatEntry ? catLabel(allCats().find(c=>c.k===topCatEntry[0])||{k:topCatEntry[0]}) : "—";
+  const topCatAmt = topCatEntry ? fmt(topCatEntry[1])+" "+t("common.currency") : "";
   const today = new Date();
   const [yy,mm] = curMonthKey.split("-").map(Number);
   const isCurrentRealMonth = (yy===today.getFullYear() && mm===today.getMonth()+1);
   const daysSoFar = isCurrentRealMonth ? today.getDate() : new Date(yy,mm,0).getDate();
-  document.getElementById("avgDaily").innerHTML = fmt(spent/Math.max(daysSoFar,1)) + " <span>"+t("common.perDay")+"</span>";
+  const avgDaily = spent/Math.max(daysSoFar,1);
+
+  const emergBal = Number(state.settings.emergBal||0);
+  const emergGoal = Number(state.settings.emergGoal||0);
+  const emergPct = emergGoal>0 ? Math.min(100, Math.round((emergBal/emergGoal)*100)) : 0;
+
+  const activeItemsThisMonth = state.items.filter(it=>itemActiveForMonth(it, curMonthKey));
+  const lastMove = state.accountMoves.length ? [...state.accountMoves].sort((a,b)=>b.date.localeCompare(a.date))[0] : null;
+  let lastMoveValue = "—", lastMoveCaption = "";
+  if(lastMove){
+    const isDeposit = lastMove.type!=="withdraw";
+    const d = new Date(lastMove.date);
+    const monthNames = state.settings.lang==="en" ? MONTH_NAMES_EN : MONTH_NAMES;
+    lastMoveValue = (isDeposit?"⬆️ ":"⬇️ ") + fmt(lastMove.amount) + " " + t("common.currency");
+    lastMoveCaption = (lastMove.source||"—") + " · " + d.getDate()+" "+monthNames[d.getMonth()].slice(0,3);
+  }
+
+  const gauge = (pctVal, color)=> `<div class="b-gauge" style="background:conic-gradient(${color} ${pctVal*3.6}deg, var(--line) 0)"><div class="b-gauge-hole" style="background:#fff">${pctVal}%</div></div>`;
+  document.getElementById("bentoGrid").innerHTML = `
+    <div class="bento-card" style="background:#E3F1EF;">
+      <div class="b-head"><div class="b-icon" style="background:var(--teal); color:#fff;">🏷️</div><div class="b-title">${t("home.topCatLabel")}</div></div>
+      <div class="b-value">${topCatText}</div>
+      ${topCatAmt?`<div class="b-caption">${topCatAmt}</div>`:""}
+    </div>
+    <div class="bento-card" style="background:#FBF1DD;">
+      <div class="b-head"><div class="b-icon" style="background:var(--gold); color:var(--ink);">📆</div><div class="b-title">${t("home.avgDailyLabel")}</div></div>
+      <div class="b-value">${fmt(avgDaily)} <span>${t("common.perDay")}</span></div>
+    </div>
+    <div class="bento-card" style="background:#EAF3EA;">
+      <div class="b-row">
+        ${gauge(Math.round(pct), "var(--sage)")}
+        <div>
+          <div class="b-title" style="margin-bottom:2px;">${t("home.budgetUsedLabel")}</div>
+          <div class="b-caption">${phaseLabel(m.phase)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="bento-card" style="background:#F7E7E1;">
+      <div class="b-row">
+        ${gauge(emergPct, "var(--brick)")}
+        <div>
+          <div class="b-title" style="margin-bottom:2px;">${t("home.emergencyFundLabel")}</div>
+          <div class="b-caption">${emergGoal>0 ? fmt(emergBal)+" / "+fmt(emergGoal) : t("home.setGoalPrompt")}</div>
+        </div>
+      </div>
+    </div>
+    <div class="bento-card span2" style="background:var(--paper-dim);">
+      <div class="b-head"><div class="b-icon" style="background:var(--ink); color:#fff;">📋</div><div class="b-title">${t("home.upcomingLabel")}</div></div>
+      <div class="b-value">${activeItemsThisMonth.length} <span>${t("home.upcomingCountSuffix")}</span> — ${fmt(m.obligations)} ${t("common.currency")}</div>
+    </div>
+    <div class="bento-card span2" style="background:#fff; border:1px solid var(--line);">
+      <div class="b-head"><div class="b-icon" style="background:var(--paper-dim); color:var(--ink);">📜</div><div class="b-title">${t("home.recentMoveLabel")}</div></div>
+      <div class="b-value">${lastMoveValue}</div>
+      ${lastMoveCaption?`<div class="b-caption">${lastMoveCaption}</div>`:""}
+    </div>
+  `;
 
   renderCategoryBars(monthExpenses);
   renderExpenses();
