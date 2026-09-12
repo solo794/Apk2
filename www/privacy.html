@@ -9,7 +9,19 @@
 <style>
   :root{
     --ink:#0F2A22; --paper:#F0F8F4; --line:#DCEDE5; --ink-soft:#628075;
-    --green:#0E9F6E; --t1:#E5F5EE; --b1:#D0EBDF; --i1:#0B7A5C;
+    --green:#0E9F6E; --t1:#E5F5EE; --b1:#D0EBDF; --i1:#0B7A5C; --warn:#B23A48;
+    --card:#FFFFFF; --body:#22453A;
+    color-scheme:light;
+  }
+  /* الصفحة دي بتتفتح من جوه التطبيق (زرار سياسة الخصوصية)، فلو التطبيق ليلي وفتحت صفحة
+     بيضا ساطعة يبقى ده مزعج. مفيش هنا JS ولا إعداد محلي، فبتمشي مع النظام مباشرة. */
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#E4F1EA; --paper:#0A1512; --line:#20372F; --ink-soft:#93B3A6;
+      --green:#0B6B50; --t1:#13302A; --b1:#1C4A3D; --i1:#5FDFB0; --warn:#F4707E;
+      --card:#152B25; --body:#C9DED4;
+      color-scheme:dark;
+    }
   }
   *{box-sizing:border-box;}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Cairo',sans-serif; line-height:1.9;}
@@ -19,9 +31,9 @@
   .hero p{margin:6px 0 0; font-size:12.5px; opacity:.85;}
   .fade{height:40px; background:linear-gradient(180deg,var(--green),var(--paper));}
   main{max-width:720px; margin:0 auto; padding:0 20px 60px;}
-  .card{background:#fff; border-radius:22px; padding:20px; box-shadow:0 1px 3px rgba(15,42,34,.05); margin-bottom:14px;}
+  .card{background:var(--card); border-radius:22px; padding:20px; box-shadow:0 1px 3px rgba(15,42,34,.05); margin-bottom:14px;}
   h2{font-size:16px; font-weight:800; margin:0 0 10px;}
-  p, li{font-size:13.5px; color:#22453a;}
+  p, li{font-size:13.5px; color:var(--body);}
   ul{padding-inline-start:20px; margin:8px 0 0;}
   li{margin-bottom:7px;}
   .big{background:var(--t1); border-radius:22px; padding:20px; margin-bottom:14px;}
@@ -145,7 +157,7 @@
          بدّل السطرين اللي تحت بالإيميل الجديد بتاع التطبيق. -->
     <p>
       لأي سؤال عن خصوصيتك أو عن التطبيق:
-      <strong style="color:#B23A48;">[[ حُطّ إيميل الدعم هنا ]]</strong>
+      <strong style="color:var(--warn);">[[ حُطّ إيميل الدعم هنا ]]</strong>
     </p>
     <p class="muted">كود التطبيق مفتوح: <a href="https://github.com/solo794/Apk2">github.com/solo794/Apk2</a></p>
   </div>
@@ -178,7 +190,7 @@
         in Settings erases everything from the device; revoke Drive access from your
         <a href="https://myaccount.google.com/permissions">Google account settings</a>.</li>
     </ul>
-    <p>Contact: <strong style="color:#B23A48;">[[ support email goes here ]]</strong></p>
+    <p>Contact: <strong style="color:var(--warn);">[[ support email goes here ]]</strong></p>
   </div>
 
   <p class="updated">آخر تحديث: سبتمبر 2026 · Last updated: September 2026</p>

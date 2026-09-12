@@ -48,8 +48,56 @@
     /* Cards sit on a tinted ground, so they need a lift rather than an outline — one shadow,
        reused, instead of a 1px border on every surface. */
     --lift:0 1px 3px rgba(15,42,34,.05);
+    /* سطح الكروت. كان مكتوب #fff مباشرة في كل قاعدة، فالوضع الليلي كان مستحيل من غير تحويله
+       لتوكن. الأبيض اللي فاضل مكتوب صريح في الكود هو اللي فوق سطح ملوّن (نص على --gold/--teal،
+       زرار الاشتراك، بُصلة السويتش) — وده أبيض في الوضعين عن قصد. */
+    --card:#FFFFFF;
+    /* الكارت الغامق المقصود إنه غامق (كارت المرونة، شاشة القفل) — مش بيتقلب مع الثيم، لأن نصه
+       أبيض ثابت. في الوضع الفاتح هو نفسه --ink. */
+    --ink-card:#0F2A22;
+    --backdrop:rgba(15,42,34,.55);
+    --app-shadow:0 0 40px rgba(0,0,0,.35);
+    color-scheme:light;
+  }
+  /* ---------- الوضع الليلي ---------- */
+  /* نفس الهوية النعناعية مقلوبة: الأخضر بيفتح شوية عشان يقرا على خلفية غامقة، والكروت بقت سطح
+     أفتح من أرضية الصفحة (الظلال مبتبانش على الغامق، فالفرق في السطوع هو اللي بيفصل الكروت).
+     التوكن الواحد ده بس هو اللي بيتغيّر — مفيش قاعدة واحدة متكتوبة مرتين، عشان الوضعين
+     ميفرقوش عن بعض مع الوقت.
+     مفيش @media(prefers-color-scheme) هنا بالمرة عن قصد: الثيم بيتحسم في JS (تلقائي = من
+     النظام) وبيتحطّ كـdata-theme على <html> قبل أول رسمة، فالحالة واحدة ومصدرها واحد. */
+  :root[data-theme="dark"]{
+    --ink:#E4F1EA;
+    --paper:#0A1512;
+    --paper-dim:#14251F;
+    --gold:#10B981;
+    --gold-soft:#0E7A5A;
+    --teal:#14B8A6;
+    --teal-dark:#0B4F47;
+    --brick:#F4707E;
+    --sage:#34D399;
+    --line:#20372F;
+    --ink-soft:#93B3A6;
+    --hero:#0B6B50;
+    --t1:#13302A; --b1:#1C4A3D; --i1:#5FDFB0;
+    --t2:#232C1C; --b2:#3A4926; --i2:#C2DC80;
+    --t3:#11303A; --b3:#1A4757; --i3:#7FD3E7;
+    --t4:#37202A; --b4:#562C33; --i4:#F58A98;
+    --card:#152B25;
+    --ink-card:#10302A;
+    --lift:0 1px 3px rgba(0,0,0,.4);
+    --backdrop:rgba(0,0,0,.62);
+    --app-shadow:0 0 40px rgba(0,0,0,.6);
+    /* مش تجميل: ده اللي بيخلي الحاجات اللي المتصفح بيرسمها بنفسه تبقى غامقة كمان — منتقي
+       التاريخ/الشهر/الوقت، الاسكرول بار، وخلفية أي حقل من غير background صريح. */
+    color-scheme:dark;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  /* الحقول مبتورّثش لون النص افتراضيًا — بتستخدم لون المتصفح (أسود). كان شكله عادي في الوضع
+     الفاتح، وفي الليلي الأرقام بقت سودة على خلفية غامقة. القاعدة دي بأقل أولوية فأي قاعدة
+     أخصّ منها (زرار فوق لون مثلاً) لسه بتغلبها. */
+  input, select, textarea{color:var(--ink);}
+  ::placeholder{color:var(--ink-soft); opacity:1;}
   html,body{margin:0;padding:0;min-height:100%;}
   body{
     font-family:'Cairo',sans-serif;
@@ -67,7 +115,7 @@
     position:relative;
     display:flex; flex-direction:column;
     padding-bottom:120px;
-    box-shadow:0 0 40px rgba(0,0,0,.35);
+    box-shadow:var(--app-shadow);
   }
   /* ---------- top bar ---------- */
   /* The bar is solid where its content sits and then dissolves into the page ground through a
@@ -99,7 +147,9 @@
     padding:4px 6px;
   }
   .month-switch button{
-    background:none;border:none;color:var(--paper);
+    /* أبيض ثابت مش var(--paper): الهيدر غامق في الوضعين، والـ--paper في الوضع الليلي بقى
+       أرضية غامقة — فالسهم كان بيختفي جوه الهيدر (قياس التباين طلّعه 2.86). */
+    background:none;border:none;color:#fff;
     font-family:'Cairo';font-size:16px;font-weight:700;
     width:26px;height:26px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
@@ -114,7 +164,7 @@
   [dir="ltr"] .dir-arrow{display:inline-block; transform:scaleX(-1);}
   .month-switch span{font-size:12.5px;font-weight:600;min-width:82px;text-align:center;}
   .undo-redo-pill{display:flex; align-items:center; gap:2px; background:rgba(255,255,255,.12); border-radius:999px; padding:4px 6px;}
-  .undo-redo-pill button{background:none;border:none;color:var(--paper); font-family:'Cairo'; font-size:14px; width:26px;height:26px;border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer;}
+  .undo-redo-pill button{background:none;border:none;color:#fff; font-family:'Cairo'; font-size:14px; width:26px;height:26px;border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer;}
   .undo-redo-pill button:active:not(:disabled){background:rgba(255,255,255,.2);}
   .undo-redo-pill button:disabled{opacity:.3; cursor:default;}
 
@@ -171,7 +221,7 @@
   .sec-lbl{font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:22px 6px 10px;}
   .sec-lbl:first-child{margin-top:6px;}
 
-  .flex-card{background:var(--ink); color:#fff; border-radius:24px; padding:18px;}
+  .flex-card{background:var(--ink-card); color:#fff; border-radius:24px; padding:18px;}
   .flex-top{display:flex; justify-content:space-between; align-items:flex-start;}
   .flex-top .t1{font-size:13px; opacity:.8; font-weight:500;}
   .flex-top .t2{font-size:22px; font-weight:800; margin-top:2px;}
@@ -182,7 +232,7 @@
   /* Grouped list card: one card holding several rows, divided by hairlines that stop short of the
      card's own edges, instead of each row carrying its own full-width border. Used everywhere a
      list of label/value rows appears, so the same idiom reads across all tabs. */
-  .obl-list{background:#fff; border-radius:22px; overflow:hidden; border:none;}
+  .obl-list{background:var(--card); border-radius:22px; overflow:hidden; border:none;}
   .obl-row{display:flex; justify-content:space-between; align-items:center; padding:14px 16px; font-size:13.5px; position:relative;}
   .obl-row + .obl-row::before{
     content:""; position:absolute; top:0; inset-inline-start:16px; inset-inline-end:16px;
@@ -206,7 +256,7 @@
   .obl-row-action .name{color:var(--teal);}
 
   .alloc-grid{display:flex; gap:8px;}
-  .alloc-card{flex:1; background:#fff; border:none; border-radius:20px; padding:15px 10px; text-align:center; box-shadow:var(--lift); transition:transform .12s ease;}
+  .alloc-card{flex:1; background:var(--card); border:none; border-radius:20px; padding:15px 10px; text-align:center; box-shadow:var(--lift); transition:transform .12s ease;}
   .alloc-card:active{transform:scale(.96);}
   .alloc-card .dot{width:8px;height:8px;border-radius:50%;margin:0 auto 6px;}
   .alloc-card .amt{font-size:17px; font-weight:800; color:var(--ink);}
@@ -272,7 +322,7 @@
   /* ---------- obligations: month summary ---------- */
   /* One card that answers the three questions the old flat list couldn't: how much, how it splits
      across the three kinds, and how big a bite it takes out of the month's income. */
-  .obl-sum{background:#fff; border-radius:24px; padding:16px; box-shadow:var(--lift);}
+  .obl-sum{background:var(--card); border-radius:24px; padding:16px; box-shadow:var(--lift);}
   .os-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
   .os-lbl{font-size:11.5px; font-weight:700; color:var(--ink-soft);}
   .os-amt{font-size:30px; font-weight:800; letter-spacing:-.01em; margin-top:2px; color:var(--ink);}
@@ -344,7 +394,7 @@
   /* Grouped cards of rows, each row led by a colored square tile — the settings screen used to be
      five accordions of bordered cards with their own headings, which meant two levels of heading
      before you reached any actual control. */
-  .set-group{background:#fff; border-radius:22px; overflow:hidden; box-shadow:var(--lift); margin-bottom:6px;}
+  .set-group{background:var(--card); border-radius:22px; overflow:hidden; box-shadow:var(--lift); margin-bottom:6px;}
   .set-row{
     display:flex; align-items:center; gap:12px; width:100%; padding:13px 14px;
     background:none; border:none; text-align:start; position:relative;
@@ -375,7 +425,7 @@
   /* The expanded body of a row: sits inside the same card, indented to line up with the label. */
   .set-panel{padding:2px 14px 14px 14px; background:var(--t1);}
   .set-panel[hidden]{display:none;}
-  .set-panel .field input, .set-panel .field select{background:#fff;}
+  .set-panel .field input, .set-panel .field select{background:var(--card);}
   .set-panel > p{font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;}
   /* An explainer that opens a tab, for a screen whose numbers mean nothing without one. Tinted
      rather than white so it reads as guidance, not as another data card. */
@@ -384,13 +434,13 @@
   .intro-body{font-size:12px; color:var(--ink-soft); font-weight:600; line-height:1.85; margin:8px 0 0;}
   .intro-pockets{display:grid; gap:10px; margin-top:14px;}
   .intro-pockets > div{
-    background:#fff; border-radius:16px; padding:11px 13px;
+    background:var(--card); border-radius:16px; padding:11px 13px;
     display:grid; grid-template-columns:10px 1fr; gap:10px; align-items:start;
   }
   .intro-pockets .d{width:10px; height:10px; border-radius:50%; margin-top:5px;}
   .intro-pockets b{display:block; font-size:12.5px; font-weight:800; color:var(--ink);}
   .intro-pockets .pk-sub{display:block; font-size:11px; font-weight:600; color:var(--ink-soft); line-height:1.7; margin-top:3px;}
-  .intro-more{margin-top:14px; background:#fff; font-size:12px !important;}
+  .intro-more{margin-top:14px; background:var(--card); font-size:12px !important;}
   .intro-panel{padding:0 2px;}
   .intro-panel p{font-size:11.5px; color:var(--ink-soft); font-weight:600; line-height:1.85; margin:12px 0 0;}
   .intro-panel p b{color:var(--ink); font-weight:800;}
@@ -452,7 +502,7 @@
   }
   .set-foot{text-align:center; font-size:10.5px; color:var(--ink-soft); opacity:.75; margin-top:6px; font-weight:600;}
 
-  .goal-card{background:#fff; border:none; border-radius:22px; padding:16px; box-shadow:var(--lift);}
+  .goal-card{background:var(--card); border:none; border-radius:22px; padding:16px; box-shadow:var(--lift);}
   .goal-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
   .goal-top .gn{font-size:13px; font-weight:700; color:var(--ink);}
   .goal-top .gp{font-size:12px; font-weight:700; color:var(--teal);}
@@ -460,7 +510,7 @@
   .goal-fill{height:100%; background:var(--gold); border-radius:999px; transition:width .35s ease;}
   .goal-sub{font-size:11px; color:var(--ink-soft); margin-top:7px; font-weight:500;}
 
-  .cat-bars{background:#fff; border:none; border-radius:22px; padding:16px; box-shadow:var(--lift);}
+  .cat-bars{background:var(--card); border:none; border-radius:22px; padding:16px; box-shadow:var(--lift);}
   .cat-bar-row{margin-bottom:12px;}
   .cat-bar-row:last-child{margin-bottom:0;}
   .cat-bar-top{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px;}
@@ -474,13 +524,13 @@
   .search-wrap{display:flex; gap:8px; margin-bottom:12px;}
   .search-wrap input{
     flex:1; border:1px solid var(--line); border-radius:999px; padding:11px 16px;
-    font-family:'Cairo'; font-size:13px; background:#fff; color:var(--ink);
+    font-family:'Cairo'; font-size:13px; background:var(--card); color:var(--ink);
   }
   .search-wrap input:focus{outline:none; border-color:var(--gold);}
   .filter-scroll{display:flex; gap:6px; overflow-x:auto; padding-bottom:10px; margin-bottom:4px;}
   .filter-scroll::-webkit-scrollbar{display:none;}
   .fchip{
-    flex-shrink:0; padding:8px 14px; border-radius:999px; background:#fff; border:1px solid var(--line);
+    flex-shrink:0; padding:8px 14px; border-radius:999px; background:var(--card); border:1px solid var(--line);
     font-size:12px; font-weight:700; color:var(--ink-soft); cursor:pointer; white-space:nowrap;
     transition:transform .12s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
   }
@@ -488,7 +538,7 @@
   .fchip:active{transform:scale(.94);}
 
   /* expenses list */
-  .exp-row{display:flex; align-items:center; gap:12px; background:#fff; border:none; border-radius:20px; padding:13px 14px; margin-bottom:8px; box-shadow:var(--lift); content-visibility:auto; contain-intrinsic-size:0 68px;}
+  .exp-row{display:flex; align-items:center; gap:12px; background:var(--card); border:none; border-radius:20px; padding:13px 14px; margin-bottom:8px; box-shadow:var(--lift); content-visibility:auto; contain-intrinsic-size:0 68px;}
   .exp-icon{width:38px;height:38px;border-radius:13px; background:var(--t1); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;}
   .exp-mid{flex:1; min-width:0;}
   .exp-mid .cat{font-size:13.5px; font-weight:700; color:var(--ink);}
@@ -499,7 +549,7 @@
   .exp-del{background:none;border:none;color:var(--ink-soft); font-size:16px; cursor:pointer; padding:4px; transition:transform .1s ease;}
   .exp-edit{background:none;border:none;color:var(--teal); font-size:15px; cursor:pointer; padding:4px; transition:transform .1s ease;}
   .exp-del:active, .exp-edit:active{transform:scale(.8);}
-  .empty-state{text-align:center; padding:34px 20px; color:var(--ink-soft); background:#fff; border-radius:22px; box-shadow:var(--lift);}
+  .empty-state{text-align:center; padding:34px 20px; color:var(--ink-soft); background:var(--card); border-radius:22px; box-shadow:var(--lift);}
   .empty-state .big{font-size:32px; margin-bottom:8px;}
   .empty-state p{font-size:13px; margin:0; line-height:1.7;}
 
@@ -508,7 +558,7 @@
   .acc-group{margin-bottom:14px;}
   .acc-header{
     display:flex; align-items:center; gap:8px; width:100%; padding:15px 16px;
-    background:#fff; border:none; border-radius:18px; cursor:pointer; box-shadow:var(--lift);
+    background:var(--card); border:none; border-radius:18px; cursor:pointer; box-shadow:var(--lift);
     font-family:'Cairo'; font-weight:700; font-size:13.5px; color:var(--ink);
   }
   .acc-header.open{background:var(--t1); box-shadow:none;}
@@ -518,7 +568,7 @@
   .acc-body[hidden]{display:none;}
 
   /* settings */
-  .set-card{background:#fff; border:none; border-radius:22px; padding:16px; margin-bottom:12px; box-shadow:var(--lift);}
+  .set-card{background:var(--card); border:none; border-radius:22px; padding:16px; margin-bottom:12px; box-shadow:var(--lift);}
   .set-card h3{font-size:13px; margin:0 0 12px; color:var(--ink); font-weight:700;}
   .field{margin-bottom:12px;}
   .field:last-child{margin-bottom:0;}
@@ -563,7 +613,7 @@
 
   .btn{display:block; width:100%; text-align:center; padding:13px; border-radius:999px; border:none; font-family:'Cairo'; font-weight:700; font-size:13.5px; cursor:pointer; transition:transform .12s ease, opacity .12s ease;}
   .btn-primary{background:var(--gold); color:#fff;}
-  .btn-ghost{background:#fff; color:var(--ink); box-shadow:var(--lift);}
+  .btn-ghost{background:var(--card); color:var(--ink); box-shadow:var(--lift);}
   .btn-danger{background:none; color:var(--brick); border:1px solid var(--brick);}
   .btn:active{transform:scale(.97); opacity:.85;}
 
@@ -585,7 +635,7 @@
 
   .tabbar{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
-    background:#fff; border-top:1px solid var(--line); display:flex;
+    background:var(--card); border-top:1px solid var(--line); display:flex;
     padding:8px 8px calc(8px + env(safe-area-inset-bottom)); z-index:20;
   }
   .tabbtn{flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; cursor:pointer; color:var(--ink-soft); font-family:'Cairo'; transition:color .2s ease;}
@@ -606,18 +656,18 @@
   .tabbtn.active .lb{transform:translateY(-1px);}
   .tabbtn:active .ic{transform:scale(.85);}
 
-  .modal-bg{position:fixed; inset:0; background:rgba(15,42,34,.55); display:none; align-items:flex-end; justify-content:center; z-index:50;}
+  .modal-bg{position:fixed; inset:0; background:var(--backdrop); display:none; align-items:flex-end; justify-content:center; z-index:50;}
   .modal-bg.show{display:flex;}
   .modal{position:relative; background:var(--paper); width:100%; max-width:460px; border-radius:26px 26px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); animation:slideUp .25s ease; max-height:88vh; overflow-y:auto;}
   @keyframes slideUp{from{transform:translateY(30px); opacity:0} to{transform:translateY(0); opacity:1}}
   .modal h2{font-size:16px; margin:0 0 16px; color:var(--ink);}
   .chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
-  .chip{padding:8px 14px; border-radius:999px; background:#fff; border:1px solid var(--line); font-size:12.5px; font-weight:700; color:var(--ink); cursor:pointer; transition:transform .12s ease, background-color .15s ease, color .15s ease, border-color .15s ease;}
+  .chip{padding:8px 14px; border-radius:999px; background:var(--card); border:1px solid var(--line); font-size:12.5px; font-weight:700; color:var(--ink); cursor:pointer; transition:transform .12s ease, background-color .15s ease, color .15s ease, border-color .15s ease;}
   .chip.sel{background:var(--teal); color:#fff; border-color:var(--teal);}
   .chip:active{transform:scale(.94);}
   .calc-row{display:flex; gap:6px; margin-top:6px;}
   .calc-row button{
-    flex:1; padding:8px 0; border-radius:8px; border:1px solid var(--line); background:#fff;
+    flex:1; padding:8px 0; border-radius:8px; border:1px solid var(--line); background:var(--card);
     font-family:'Cairo'; font-weight:700; font-size:13px; color:var(--ink); cursor:pointer;
     transition:transform .1s ease;
   }
@@ -642,16 +692,16 @@
   .onboard-hero p{font-size:12.5px; color:var(--ink-soft); line-height:1.8; margin:0;}
 
   .lock-overlay{
-    position:fixed; inset:0; z-index:99; background:linear-gradient(160deg,var(--teal-dark),var(--ink) 80%);
+    position:fixed; inset:0; z-index:99; background:linear-gradient(160deg,var(--teal-dark),var(--ink-card) 80%);
     display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px;
-    padding:24px; text-align:center; color:var(--paper);
+    padding:24px; text-align:center; color:#fff;
   }
   .lock-overlay.show{display:flex;}
   .lock-overlay .lock-icon{font-size:56px;}
   .lock-overlay h2{font-size:18px; margin:0; font-weight:700;}
   .lock-overlay p{font-size:13px; color:rgba(243,238,221,.75); margin:0; max-width:260px; line-height:1.7;}
 
-  .sms-banner{margin:14px 16px 0; background:#fff; border:1.5px solid var(--gold); border-radius:16px; padding:12px 14px;}
+  .sms-banner{margin:14px 16px 0; background:var(--card); border:1.5px solid var(--gold); border-radius:16px; padding:12px 14px;}
   .sms-banner .sb-title{font-size:12.5px; font-weight:800; color:var(--ink); margin-bottom:2px;}
   .sms-item{border-top:1px solid var(--line); padding-top:10px; margin-top:10px;}
   .sms-item:first-of-type{border-top:none; padding-top:0; margin-top:0;}
@@ -673,6 +723,24 @@
     }
   }
 </style>
+<script>
+  // بيتنفّذ قبل أول رسمة عن قصد: لو الثيم اتحسم بعد ما الصفحة تترسم، المستخدم بيشوف ومضة
+  // بيضاء ساطعة قبل الوضع الليلي. مفيش أي اعتماد على باقي الكود هنا (الـstate لسه محمّلش)،
+  // فبنقرا الإعداد من localStorage بنفسنا، وبنفضل ساكتين لو قراءته فشلت (متصفح بيمنع
+  // التخزين) — الوضع الفاتح هو الافتراضي وقتها.
+  (function(){
+    var pref = "auto";
+    try{
+      var raw = localStorage.getItem("settings");
+      if(raw){ var v = JSON.parse(raw).theme; if(v==="dark"||v==="light"||v==="auto") pref = v; }
+    }catch(e){}
+    var dark = pref==="dark" || (pref==="auto" && window.matchMedia
+      && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute("content", dark ? "#0B6B50" : "#0E9F6E");
+  })();
+</script>
 </head>
 <body>
 <div id="app">
@@ -820,7 +888,7 @@
     <div id="itemsPausedWrap" style="margin-top:10px;"></div>
     <button class="btn btn-primary" id="addItemBtn" style="margin-top:12px;" data-i18n="obligations.addItem">+ إضافة بند جديد</button>
 
-    <button class="set-row acc-header" data-acc="oblHelp" style="background:#fff; border-radius:18px; box-shadow:var(--lift); margin-top:14px;">
+    <button class="set-row acc-header" data-acc="oblHelp" style="background:var(--card); border-radius:18px; box-shadow:var(--lift); margin-top:14px;">
       <span class="set-sq" style="--sq:var(--b3)">❓</span>
       <span class="set-txt"><span class="n" data-i18n="obligations.knowMore">إزاي التعديل الشهري بيشتغل؟</span></span>
       <span class="chev">▾</span>
@@ -1065,6 +1133,16 @@
       </button>
       <div class="acc-body set-panel" id="acc-lang" hidden>
         <div class="chip-row" id="langChips" style="margin-bottom:0; margin-top:10px;"></div>
+      </div>
+      <button class="set-row acc-header" data-acc="theme" style="--sq:var(--b1)">
+        <span class="set-sq">🎨</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.themeTitle">الشكل (نهاري / ليلي)</span></span>
+        <span class="set-val" id="themeStateLbl"></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body set-panel" id="acc-theme" hidden>
+        <div class="chip-row" id="themeChips" style="margin-bottom:0; margin-top:10px;"></div>
+        <p data-i18n="settings.themeNote">«تلقائي» بيمشي مع إعداد الجهاز نفسه وبيتغيّر معاه فورًا.</p>
       </div>
       <div class="set-row" data-static style="--sq:var(--b4)">
         <span class="set-sq">🔒</span>
@@ -1436,6 +1514,8 @@ function defaultSettings(){
   return {
     salary: 0, emergBal: 0, emergGoal: 0, caps: {}, sources: ["كاش","فيزا","بطاقة بنكية","فودافون كاش"], allocOverrides: {},
     hasCar: true, customCats: [], lang: "ar",
+    // "auto" = تابع النظام، "light"/"dark" = اختيار صريح من المستخدم
+    theme: "auto",
     // Empty means "use the language's default" (ج / EGP) — anyone outside Egypt sets their own.
     currency: "",
     // The phase thresholds as a PERCENTAGE OF INCOME, not fixed amounts: a surplus of 13,000 is
@@ -1548,6 +1628,8 @@ const I18N = {
     "settings.groupMoney":"فلوسك", "settings.groupCats":"الفئات والحدود",
     "settings.groupAutomation":"التنبيهات والأتمتة", "settings.groupData":"بياناتك",
     "settings.groupGeneral":"عام",
+    "settings.themeTitle":"الشكل (نهاري / ليلي)", "settings.themeAuto":"تلقائي", "settings.themeLight":"نهاري", "settings.themeDark":"ليلي",
+    "settings.themeNote":"«تلقائي» بيمشي مع إعداد الجهاز نفسه وبيتغيّر معاه فورًا.",
     "settings.sourcesCount":"المصادر: {0}", "settings.movesCount":"الحركات المسجّلة: {0}", "settings.catsCount":"الفئات: {0}",
     "settings.capsSub":"اختياري — بينبهك لما تتجاوز حد فئة",
     "settings.weeklyReminderSub":"كل يوم اتنين الساعة 10 صباحًا",
@@ -1857,6 +1939,8 @@ const I18N = {
     "settings.groupMoney":"Your money", "settings.groupCats":"Categories & caps",
     "settings.groupAutomation":"Alerts & automation", "settings.groupData":"Your data",
     "settings.groupGeneral":"General",
+    "settings.themeTitle":"Appearance (light / dark)", "settings.themeAuto":"Auto", "settings.themeLight":"Light", "settings.themeDark":"Dark",
+    "settings.themeNote":"\"Auto\" follows your device setting and switches with it instantly.",
     "settings.sourcesCount":"Sources: {0}", "settings.movesCount":"Movements logged: {0}", "settings.catsCount":"Categories: {0}",
     "settings.capsSub":"Optional — warns you when a category goes over",
     "settings.weeklyReminderSub":"Every Monday at 10 AM",
@@ -2140,11 +2224,63 @@ function applyStaticI18n(){
   document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{ el.placeholder = t(el.dataset.i18nPlaceholder); });
   document.querySelectorAll("[data-i18n-title]").forEach(el=>{ el.title = t(el.dataset.i18nTitle); });
 }
+// The dark palette is one :root[data-theme="dark"] block, so the whole theme decision lives
+// here: "auto" asks the OS, anything else is the user's explicit choice. The same resolution runs
+// in the inline <head> script before the first paint — this one re-runs it after the state is
+// loaded and on every change.
+function resolvedTheme(){
+  const pref = state.settings.theme || "auto";
+  if(pref === "dark" || pref === "light") return pref;
+  return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+}
+function applyTheme(){
+  const theme = resolvedTheme();
+  document.documentElement.setAttribute("data-theme", theme);
+  // The browser chrome / Android status bar aren't styled by CSS, so they're set from the same
+  // resolved value rather than left on the light hero color.
+  const hero = getComputedStyle(document.documentElement).getPropertyValue("--hero").trim() || "#0E9F6E";
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute("content", hero);
+  if(isNativeApp()){
+    try{
+      const { StatusBar } = window.Capacitor.Plugins;
+      StatusBar.setBackgroundColor({ color: hero });
+      StatusBar.setStyle({ style: "DARK" });   // DARK = محتوى فاتح على خلفية غامقة (الهيدر غامق في الوضعين)
+    }catch(e){}
+  }
+  renderThemeChips();
+}
+// Only meaningful while the choice is "auto": the OS theme can flip under us (sunset schedule,
+// battery saver) with the app open.
+if(window.matchMedia){
+  try{
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ()=>{
+      if((state.settings.theme || "auto") === "auto") applyTheme();
+    });
+  }catch(e){}
+}
+function renderThemeChips(){
+  const el = document.getElementById("themeChips");
+  if(!el) return;
+  const pref = state.settings.theme || "auto";
+  const opts = [["auto","⚙️",t("settings.themeAuto")], ["light","☀️",t("settings.themeLight")], ["dark","🌙",t("settings.themeDark")]];
+  el.innerHTML = opts.map(([k,i,l])=>`<button class="chip ${pref===k?"sel":""}" data-theme="${k}">${i} ${l}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(ch=>{
+    ch.onclick = async ()=>{
+      state.settings.theme = ch.dataset.theme;
+      await saveSettings();
+      applyTheme();
+    };
+  });
+  const lbl = document.getElementById("themeStateLbl");
+  if(lbl) lbl.textContent = t(pref==="dark" ? "settings.themeDark" : pref==="light" ? "settings.themeLight" : "settings.themeAuto");
+}
 function applyLanguage(){
   document.documentElement.lang = state.settings.lang === "en" ? "en" : "ar";
   document.documentElement.dir = isRTL() ? "rtl" : "ltr";
   applyStaticI18n();
   renderLangChips();
+  renderThemeChips();
   syncWidgetLang();
 }
 // The home-screen widget lives outside the WebView and can't read this setting, and the system
@@ -4739,6 +4875,7 @@ async function applyBackupData(data){
   await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
   localStorage.setItem("onboarded", "1");
   rescheduleItemDueReminders();
+  applyTheme();
   render();
 }
 
@@ -4772,6 +4909,7 @@ document.getElementById("resetBtn").onclick = async ()=>{
   await rescheduleItemDueReminders();
   pendingSms = [];
   localStorage.removeItem("onboarded");
+  applyTheme();
   applyLanguage();
   render();
   showToast(t("toast.dataReset"));
@@ -5505,11 +5643,9 @@ document.getElementById("lockRetryBtn").onclick = tryUnlock;
 
 function setupNativeApp(){
   if(!isNativeApp()) return;
-  try{
-    const { StatusBar } = window.Capacitor.Plugins;
-    StatusBar.setBackgroundColor({ color: "#0E9F6E" });
-    StatusBar.setStyle({ style: "DARK" });
-  }catch(e){}
+  // شريط الحالة بقى من applyTheme() (لون --hero المحسوم للثيم الحالي) — كان مكتوب هنا بلون
+  // الوضع الفاتح ثابت، وde بيتنادى بعد applyTheme فكان بيلغيه ويرجّع الشريط فاتح في الوضع الليلي.
+  applyTheme();
 
   const { App } = window.Capacitor.Plugins;
   App.addListener("backButton", ()=>{
@@ -5585,6 +5721,7 @@ function checkQuickAddUrlParam(){
 
 (async ()=>{
   await loadState();
+  applyTheme();
   applyLanguage();
   // Asked for before the first render rather than after it: render() touches several native
   // plugins, and a throw in any one of them would otherwise skip everything below it — including
