@@ -266,6 +266,117 @@
   .acct-name span{display:block; font-size:10.5px; font-weight:600; color:var(--ink-soft); margin-top:2px;}
   .acct-val{font-size:14.5px; font-weight:800;}
 
+  /* ---------- obligations: month summary ---------- */
+  /* One card that answers the three questions the old flat list couldn't: how much, how it splits
+     across the three kinds, and how big a bite it takes out of the month's income. */
+  .obl-sum{background:#fff; border-radius:24px; padding:16px; box-shadow:var(--lift);}
+  .os-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
+  .os-lbl{font-size:11.5px; font-weight:700; color:var(--ink-soft);}
+  .os-amt{font-size:30px; font-weight:800; letter-spacing:-.01em; margin-top:2px; color:var(--ink);}
+  .os-amt small{font-size:13px; font-weight:700; color:var(--ink-soft); margin-inline-start:3px;}
+  .os-share{
+    background:var(--b1); color:var(--i1); border-radius:999px; padding:8px 12px;
+    font-size:11px; font-weight:800; text-align:center; line-height:1.5; flex:0 0 auto; max-width:42%;
+  }
+  .os-share.hot{background:var(--b4); color:var(--i4);}
+  .os-share span{display:block; font-size:9.5px; font-weight:700; opacity:.8;}
+  .os-bar{display:flex; height:12px; border-radius:999px; overflow:hidden; background:var(--line); margin-top:15px;}
+  .os-bar i{display:block; height:100%;}
+  .os-leg{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:11px;}
+  .os-leg div{display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--ink-soft);}
+  .os-leg i{width:9px; height:9px; border-radius:3px; flex:0 0 auto;}
+  .os-leg b{color:var(--ink); font-weight:800;}
+  .os-note{font-size:11px; color:var(--ink-soft); margin-top:12px; line-height:1.7; font-weight:600;}
+
+  /* ---------- obligations: one item ---------- */
+  /* Replaces the old three-stacked-lines row. Leads with a category tile, keeps every control the
+     old row had (this-month switch, this-month amount, and the four actions) but demotes the
+     destructive ones to text links, and adds a real repayment progress bar for any installment
+     that knows its own start and end month. */
+  .oi{
+    display:flex; gap:12px; padding:14px; align-items:flex-start; position:relative;
+    border-bottom:none;
+  }
+  .oi + .oi::before{
+    content:""; position:absolute; top:0; inset-inline-start:62px; inset-inline-end:0;
+    height:1px; background:var(--line);
+  }
+  .oi-sq{
+    width:36px; height:36px; border-radius:12px; flex:0 0 auto; font-size:16px;
+    display:flex; align-items:center; justify-content:center; background:var(--sq);
+  }
+  .oi-body{flex:1; min-width:0;}
+  .oi-head{display:flex; align-items:center; gap:8px;}
+  .oi-name{
+    flex:1; min-width:0; border:none; background:none; padding:0;
+    font-family:'Cairo'; font-size:13.5px; font-weight:800; color:var(--ink);
+  }
+  .oi-name:focus{outline:none; border-bottom:1px solid var(--gold);}
+  .oi-meta{font-size:10.5px; color:var(--ink-soft); font-weight:600; margin-top:4px; line-height:1.65;}
+  .oi-chip{
+    display:inline-flex; align-items:center; gap:5px; margin-top:7px;
+    background:var(--b2); color:var(--i2); border-radius:999px; padding:4px 10px;
+    font-size:10px; font-weight:800;
+  }
+  .oi-chip.done{background:var(--b1); color:var(--i1);}
+  .oi-prog{margin-top:10px;}
+  .oi-prog .pt{height:7px; border-radius:999px; background:var(--line); overflow:hidden;}
+  .oi-prog .pt b{display:block; height:100%; border-radius:999px; background:var(--i3); transition:width .35s ease;}
+  .oi-prog .pl{display:flex; justify-content:space-between; gap:8px; font-size:10px; font-weight:700; color:var(--ink-soft); margin-top:5px;}
+  .oi-prog .pl b{color:var(--ink); font-weight:800;}
+  .oi-notes{margin-top:6px; font-size:10.5px; color:var(--ink-soft); line-height:1.65;}
+  .oi-notes .itmResetAmountOverride, .oi-notes .itmResetActiveOverride{text-decoration:underline; cursor:pointer;}
+  .oi-acts{display:flex; flex-wrap:wrap; gap:6px 13px; margin-top:9px;}
+  .oi-acts span{font-size:10.5px; font-weight:600; color:var(--ink-soft); cursor:pointer;}
+  .oi-acts span:active{opacity:.6;}
+  .oi-acts .itmEditDetails{color:var(--i1);}
+  .oi-acts .itmDeleteForever{color:var(--brick);}
+  .oi-side{flex:0 0 auto;}
+
+  /* ---------- settings rows ---------- */
+  /* Grouped cards of rows, each row led by a colored square tile — the settings screen used to be
+     five accordions of bordered cards with their own headings, which meant two levels of heading
+     before you reached any actual control. */
+  .set-group{background:#fff; border-radius:22px; overflow:hidden; box-shadow:var(--lift); margin-bottom:6px;}
+  .set-row{
+    display:flex; align-items:center; gap:12px; width:100%; padding:13px 14px;
+    background:none; border:none; text-align:start; position:relative;
+    font-family:'Cairo'; color:var(--ink); cursor:pointer;
+  }
+  .set-row + .set-row::before, .set-panel + .set-row::before{
+    content:""; position:absolute; top:0; inset-inline-start:62px; inset-inline-end:0;
+    height:1px; background:var(--line);
+  }
+  .set-row[data-static]{cursor:default;}
+  .set-sq{
+    width:36px; height:36px; border-radius:12px; flex:0 0 auto; font-size:16px;
+    display:flex; align-items:center; justify-content:center; background:var(--sq);
+  }
+  .set-txt{flex:1; min-width:0;}
+  .set-txt .n{display:block; font-size:13px; font-weight:700; color:var(--ink); line-height:1.45;}
+  .set-txt .s{display:block; font-size:10.5px; font-weight:600; color:var(--ink-soft); margin-top:2px; line-height:1.55;}
+  .set-txt .s:empty{display:none;}
+  .set-val{font-size:12.5px; font-weight:800; color:var(--ink-soft); white-space:nowrap;}
+  .set-row .chev{color:var(--ink-soft); opacity:.55; font-size:12px; transition:transform .2s;}
+  .set-row.open .chev{transform:rotate(180deg);}
+  .set-num{
+    width:96px; border:1px solid var(--line); border-radius:11px; padding:7px 8px;
+    font-family:'Cairo'; font-size:13px; font-weight:800; text-align:center;
+    background:var(--paper); color:var(--ink);
+  }
+  .set-num:focus{outline:2px solid var(--gold); outline-offset:1px;}
+  /* The expanded body of a row: sits inside the same card, indented to line up with the label. */
+  .set-panel{padding:2px 14px 14px 14px; background:var(--t1);}
+  .set-panel[hidden]{display:none;}
+  .set-panel .field input, .set-panel .field select{background:#fff;}
+  .set-panel > p{font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;}
+  .set-danger{
+    display:block; width:100%; background:none; border:none; margin:18px 0 0;
+    font-family:'Cairo'; font-size:12.5px; font-weight:700; color:var(--brick);
+    text-align:center; cursor:pointer; padding:12px;
+  }
+  .set-foot{text-align:center; font-size:10.5px; color:var(--ink-soft); opacity:.75; margin-top:6px; font-weight:600;}
+
   .goal-card{background:#fff; border:none; border-radius:22px; padding:16px; box-shadow:var(--lift);}
   .goal-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
   .goal-top .gn{font-size:13px; font-weight:700; color:var(--ink);}
@@ -601,32 +712,37 @@
   </div>
 
   <div class="content" id="tab-obligations" style="display:none;">
-    <div class="set-card">
-      <h3 data-i18n="obligations.title">📋 التزامات ثابتة / أقساط / جمعيات</h3>
-      <p style="font-size:11px; color:var(--ink-soft); margin:0 0 8px; line-height:1.6;">
-        <span data-i18n="obligations.helpIntro">المبالغ تحت خاصة بشهر</span> <span id="itemsMonthHint"></span> <span data-i18n="obligations.helpIntroSuffix">بس.</span>
-        <span class="acc-header" data-acc="oblHelp" style="display:inline; padding:0; border:none; background:none; font-size:11px; font-weight:700; color:var(--teal); text-decoration:underline; cursor:pointer;" data-i18n="obligations.knowMore">اعرف أكتر ↓</span>
+    <!-- Restructured: a month summary card (total, split across the three kinds, and the bite it
+         takes out of income) on top, then the list grouped per kind with its own subtotal, instead
+         of one flat list whose only summary was a single total row. -->
+    <div class="sec-lbl"><span data-i18n="obligations.summaryTitle">التزامات</span> <span id="itemsMonthHint"></span></div>
+    <div class="obl-sum" id="oblSummary"></div>
+
+    <div class="sec-lbl" data-i18n="obligations.listTitle">البنود</div>
+    <div class="search-wrap">
+      <input type="text" id="itemsSearchBox" data-i18n-placeholder="obligations.searchPlaceholder" placeholder="دور باسم البند...">
+    </div>
+    <div class="filter-scroll" id="itemsFilterChips"></div>
+    <div class="filter-scroll" id="itemsSourceFilterChips"></div>
+    <div class="filter-scroll" id="itemsSortChips"></div>
+    <div class="obl-list" id="itemsFilteredSumWrap" style="margin-bottom:10px;"></div>
+    <div id="itemsEdit"></div>
+    <div id="itemsPausedWrap" style="margin-top:10px;"></div>
+    <button class="btn btn-primary" id="addItemBtn" style="margin-top:12px;" data-i18n="obligations.addItem">+ إضافة بند جديد</button>
+
+    <button class="set-row acc-header" data-acc="oblHelp" style="background:#fff; border-radius:18px; box-shadow:var(--lift); margin-top:14px;">
+      <span class="set-sq" style="--sq:var(--b3)">❓</span>
+      <span class="set-txt"><span class="n" data-i18n="obligations.knowMore">إزاي التعديل الشهري بيشتغل؟</span></span>
+      <span class="chev">▾</span>
+    </button>
+    <div class="acc-body set-panel" id="acc-oblHelp" style="border-radius:0 0 18px 18px; margin-top:-6px;" hidden>
+      <p style="font-size:11px; color:var(--ink-soft); margin:10px 0 0; line-height:1.75;" data-i18n="obligations.helpFull">
+        تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
+        فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
+        اللي انت فيه بس. "✕ الشهر ده" بيشيل البند من الشهر اللي انت فيه بس (زي ما توقف السويتش
+        بالظبط). "⏸️ كل الشهور" بيشغّل أو يوقف البند في <b>كل الشهور</b> مرة واحدة (وبيشيل أي
+        استثناءات شهرية كانت متسجلة له). و"🗑️ حذف" بيمسحه نهائي من كل الشهور.
       </p>
-      <div class="acc-body" id="acc-oblHelp" hidden>
-        <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;" data-i18n="obligations.helpFull">
-          تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
-          فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
-          اللي انت فيه بس. زرار ✕ بيشيل البند من الشهر ده بس (زي ما توقفه بالظبط). زرار ⏸️/▶️ بيشغّل
-          أو يوقف البند في <b>كل الشهور</b> مرة واحدة (وبيشيل أي استثناءات شهرية كانت متسجلة له). لو
-          عايز تمسحه نهائي، استخدم رابط "🗑️ حذف نهائي" جنب البند.
-        </p>
-      </div>
-      <div class="obl-list" id="itemsGrandTotalWrap" style="margin-bottom:10px;"></div>
-      <div class="search-wrap">
-        <input type="text" id="itemsSearchBox" data-i18n-placeholder="obligations.searchPlaceholder" placeholder="دور باسم البند...">
-      </div>
-      <div class="filter-scroll" id="itemsFilterChips"></div>
-      <div class="filter-scroll" id="itemsSourceFilterChips"></div>
-      <div class="filter-scroll" id="itemsSortChips"></div>
-      <div class="obl-list" id="itemsFilteredSumWrap" style="margin-bottom:10px;"></div>
-      <div id="itemsEdit"></div>
-      <div id="itemsPausedWrap" style="margin-top:10px;"></div>
-      <button class="btn btn-ghost" id="addItemBtn" style="margin-top:10px;" data-i18n="obligations.addItem">+ إضافة بند جديد</button>
     </div>
   </div>
 
@@ -653,168 +769,181 @@
   </div>
 
   <div class="content" id="tab-settings" style="display:none;">
-    <div class="acc-group">
-      <button class="acc-header" data-acc="money"><span data-i18n="settings.moneyGroup">💰 المال والحسابات</span> <span class="chev">▾</span></button>
-      <div class="acc-body" id="acc-money">
-        <div class="set-card">
-          <h3 data-i18n="settings.incomeTitle">💵 الدخل والطوارئ</h3>
-          <div class="field"><label data-i18n="settings.salaryLabel">المرتب الشهري</label><input type="number" id="inSalary"></div>
-          <div class="field"><label data-i18n="settings.emergBalLabel">رصيد كاش الطوارئ الحالي</label><input type="number" id="inEmergBal"></div>
-          <div class="field"><label data-i18n="settings.emergGoalLabel">هدف كاش الطوارئ</label><input type="number" id="inEmergGoal"></div>
-        </div>
+    <!-- Rebuilt as grouped rows: a quiet eyebrow, then one card whose rows each lead with a
+         colored square tile. Controls that are a single value (a number, a switch) sit inline on
+         their row; anything with a list or a note behind it opens in place, so the whole screen
+         stays one scroll instead of five accordions of bordered cards each with its own heading. -->
 
-        <div class="set-card">
-          <h3 data-i18n="settings.sourcesTitle">💳 مصادر الصرف</h3>
-          <div id="sourcesEdit"></div>
-          <div class="field" style="display:flex; gap:8px; margin-top:10px;">
-            <input type="text" id="newSourceInput" data-i18n-placeholder="settings.newSourcePlaceholder" placeholder="مصدر جديد (مثال: انستاباي)" style="flex:1;">
-            <button class="btn btn-ghost" id="addSourceBtn" style="width:auto; padding:10px 16px;" data-i18n="common.add">+ إضافة</button>
-          </div>
+    <div class="sec-lbl" data-i18n="settings.groupMoney">فلوسك</div>
+    <div class="set-group">
+      <div class="set-row" data-static style="--sq:var(--b1)">
+        <span class="set-sq">💵</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.salaryLabel">المرتب الشهري</span></span>
+        <input type="number" id="inSalary" class="set-num">
+      </div>
+      <div class="set-row" data-static style="--sq:var(--b4)">
+        <span class="set-sq">🛡️</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.emergBalLabel">رصيد كاش الطوارئ الحالي</span></span>
+        <input type="number" id="inEmergBal" class="set-num">
+      </div>
+      <div class="set-row" data-static style="--sq:var(--b4)">
+        <span class="set-sq">🎯</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.emergGoalLabel">هدف كاش الطوارئ</span></span>
+        <input type="number" id="inEmergGoal" class="set-num">
+      </div>
+      <button class="set-row acc-header" data-acc="sources" style="--sq:var(--b3)">
+        <span class="set-sq">💳</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.sourcesTitle">مصادر الصرف</span><span class="s" id="sourcesCountLbl"></span></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body set-panel" id="acc-sources" hidden>
+        <div id="sourcesEdit"></div>
+        <div class="field" style="display:flex; gap:8px; margin-top:10px; margin-bottom:0;">
+          <input type="text" id="newSourceInput" data-i18n-placeholder="settings.newSourcePlaceholder" placeholder="مصدر جديد (مثال: انستاباي)" style="flex:1;">
+          <button class="btn btn-ghost" id="addSourceBtn" style="width:auto; padding:10px 16px;" data-i18n="common.add">+ إضافة</button>
         </div>
-
-        <div class="set-card">
-          <h3 data-i18n="settings.movesTitle">📜 حركات الحسابات</h3>
-          <div class="filter-scroll" id="accountMoveSortChips"></div>
-          <div id="accountMovesList"></div>
-        </div>
+      </div>
+      <button class="set-row acc-header" data-acc="moves" style="--sq:var(--b1)">
+        <span class="set-sq">📜</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.movesTitle">حركات الحسابات</span><span class="s" id="movesCountLbl"></span></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body set-panel" id="acc-moves" hidden>
+        <div class="filter-scroll" id="accountMoveSortChips"></div>
+        <div id="accountMovesList"></div>
       </div>
     </div>
 
-    <div class="acc-group">
-      <button class="acc-header" data-acc="cats"><span data-i18n="settings.catsGroup">🏷️ الفئات والحدود</span> <span class="chev">▾</span></button>
-      <div class="acc-body" id="acc-cats" hidden>
-        <div class="set-card">
-          <h3 data-i18n="settings.catsTitle">🏷️ فئات المصاريف</h3>
-          <div id="catsEdit"></div>
-          <div class="field" style="display:flex; gap:8px; margin-top:10px;">
-            <input type="text" id="newCatEmojiInput" placeholder="🏷️" maxlength="4" style="width:56px; text-align:center; flex:none;">
-            <input type="text" id="newCatNameInput" data-i18n-placeholder="settings.newCatPlaceholder" placeholder="فئة جديدة (مثال: هدايا)" style="flex:1;">
-            <button class="btn btn-ghost" id="addCatBtn" style="width:auto; padding:10px 16px;" data-i18n="common.add">+ إضافة</button>
-          </div>
+    <div class="sec-lbl" data-i18n="settings.groupCats">الفئات والحدود</div>
+    <div class="set-group">
+      <button class="set-row acc-header" data-acc="cats" style="--sq:var(--b2)">
+        <span class="set-sq">🏷️</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.catsTitle">فئات المصاريف</span><span class="s" id="catsCountLbl"></span></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body set-panel" id="acc-cats" hidden>
+        <div id="catsEdit"></div>
+        <div class="field" style="display:flex; gap:8px; margin-top:10px; margin-bottom:0;">
+          <input type="text" id="newCatEmojiInput" placeholder="🏷️" maxlength="4" style="width:56px; text-align:center; flex:none;">
+          <input type="text" id="newCatNameInput" data-i18n-placeholder="settings.newCatPlaceholder" placeholder="فئة جديدة (مثال: هدايا)" style="flex:1;">
+          <button class="btn btn-ghost" id="addCatBtn" style="width:auto; padding:10px 16px;" data-i18n="common.add">+ إضافة</button>
         </div>
-
-        <div class="set-card">
-          <h3 data-i18n="settings.capsTitle">🎯 حدود شهرية للفئات (اختياري)</h3>
-          <div id="capsEdit"></div>
-        </div>
+      </div>
+      <button class="set-row acc-header" data-acc="caps" style="--sq:var(--b2)">
+        <span class="set-sq">🎯</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.capsTitle">حدود شهرية للفئات</span><span class="s" data-i18n="settings.capsSub">اختياري — بيحسب تنبيه لما تتجاوز الحد</span></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body set-panel" id="acc-caps" hidden>
+        <div id="capsEdit"></div>
       </div>
     </div>
 
-    <div class="acc-group">
-      <button class="acc-header" data-acc="notif"><span data-i18n="settings.notifGroup">🔔 الإشعارات والأتمتة</span> <span class="chev">▾</span></button>
-      <div class="acc-body" id="acc-notif" hidden>
-        <div class="set-card">
-          <h3 data-i18n="settings.remindersTitle">🔔 التذكيرات</h3>
-          <div class="toggle-row">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.dailyReminder">تذكير يومي بتسجيل المصاريف</span>
-            <label class="switch"><input type="checkbox" id="notifDailyEnabled"><span class="slider"></span></label>
-          </div>
-          <div class="field" id="notifDailyTimeField" style="margin-top:2px;">
-            <input type="time" id="notifDailyTime">
-          </div>
-          <div class="toggle-row">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.weeklyReminder">تذكير أسبوعي بعمل نسخة احتياطية (كل اتنين الساعة 10ص)</span>
-            <label class="switch"><input type="checkbox" id="notifWeeklyEnabled"><span class="slider"></span></label>
-          </div>
-          <div class="toggle-row">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.capReminder">تنبيه لما أتجاوز حد فئة مصروف</span>
-            <label class="switch"><input type="checkbox" id="notifCapEnabled"><span class="slider"></span></label>
-          </div>
-          <div class="toggle-row" id="notifMaintRow">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.maintReminder">تنبيه قرب موعد صيانة العربية</span>
-            <label class="switch"><input type="checkbox" id="notifMaintEnabled"><span class="slider"></span></label>
-          </div>
-          <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;" data-i18n="settings.remindersNote">بعض الأجهزة بتأخر التذكيرات المجدولة بسبب إعدادات توفير البطارية — لو التذكير مش بيوصل، جرّب تستثني التطبيق من توفير البطارية من إعدادات الأندرويد.</p>
+    <div class="sec-lbl" data-i18n="settings.groupAutomation">التنبيهات والأتمتة</div>
+    <div class="set-group">
+      <div class="set-row" data-static style="--sq:var(--b1)">
+        <span class="set-sq">🔔</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.dailyReminder">تذكير يومي بتسجيل المصاريف</span></span>
+        <label class="switch"><input type="checkbox" id="notifDailyEnabled"><span class="slider"></span></label>
+      </div>
+      <div class="set-panel" id="notifDailyTimeField">
+        <div class="field" style="margin-bottom:0;"><input type="time" id="notifDailyTime"></div>
+      </div>
+      <div class="set-row" data-static style="--sq:var(--b3)">
+        <span class="set-sq">💾</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.weeklyReminder">تذكير أسبوعي بعمل نسخة احتياطية</span><span class="s" data-i18n="settings.weeklyReminderSub">كل يوم اتنين الساعة 10 صباحًا</span></span>
+        <label class="switch"><input type="checkbox" id="notifWeeklyEnabled"><span class="slider"></span></label>
+      </div>
+      <div class="set-row" data-static style="--sq:var(--b4)">
+        <span class="set-sq">🚨</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.capReminder">تنبيه لما أتجاوز حد فئة مصروف</span></span>
+        <label class="switch"><input type="checkbox" id="notifCapEnabled"><span class="slider"></span></label>
+      </div>
+      <div class="set-row" data-static id="notifMaintRow" style="--sq:var(--b2)">
+        <span class="set-sq">🚗</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.maintReminder">تنبيه قرب موعد صيانة العربية</span></span>
+        <label class="switch"><input type="checkbox" id="notifMaintEnabled"><span class="slider"></span></label>
+      </div>
+      <div class="set-row" data-static style="--sq:var(--b3)">
+        <span class="set-sq">🏦</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.smsEnable">كشف المصاريف من رسائل البنك</span><span class="s" data-i18n="settings.smsSub">تجريبي — بيقترح بس، مفيش حاجة بتتسجل لوحدها</span></span>
+        <label class="switch"><input type="checkbox" id="smsAutoEnabled"><span class="slider"></span></label>
+      </div>
+      <button class="set-row acc-header" data-acc="sms" style="--sq:var(--b3)">
+        <span class="set-sq">⚙️</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.smsSendersLabel">البنوك المتابَعة</span></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body set-panel" id="acc-sms" hidden>
+        <div class="field" style="display:flex; gap:8px; margin-bottom:0; margin-top:10px;">
+          <input type="text" id="bankSendersInput" placeholder="QNB,CIB" style="flex:1;">
+          <button class="btn btn-ghost" id="saveBankSendersBtn" style="width:auto; padding:10px 16px;" data-i18n="common.save">حفظ</button>
         </div>
-
-        <div class="set-card">
-          <h3 data-i18n="settings.smsTitle">🏦 كشف مصاريف من رسائل البنك (تجريبي)</h3>
-          <div class="toggle-row">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.smsEnable">تفعيل الكشف التلقائي</span>
-            <label class="switch"><input type="checkbox" id="smsAutoEnabled"><span class="slider"></span></label>
-          </div>
-          <div class="field" style="margin-top:10px;">
-            <label data-i18n="settings.smsSendersLabel">البنوك المتابَعة (افصل بفاصلة)</label>
-            <div style="display:flex; gap:8px;">
-              <input type="text" id="bankSendersInput" placeholder="QNB,CIB" style="flex:1;">
-              <button class="btn btn-ghost" id="saveBankSendersBtn" style="width:auto; padding:10px 16px;" data-i18n="common.save">حفظ</button>
-            </div>
-          </div>
-          <p style="font-size:11px; color:var(--ink-soft); margin:10px 0 0; line-height:1.7;" data-i18n="settings.smsNote">
-            بيراقب رسائل SMS اللي جايه من البنوك دي بس، وبيقترح مصروف — مفيش حاجة بتتسجل تلقائيًا،
-            دايمًا بتراجع وتأكد (أو تتجاهل) من الكارت اللي بيظهر فوق أي تبويب. تحليل نص الرسالة أول
-            محاولة (مفيش عينات رسائل حقيقية من QNB/CIB اتجربت عليها)، فممكن يحتاج ضبط لو الصيغة مختلفة.
-          </p>
-        </div>
+        <p data-i18n="settings.smsNote">
+          بيراقب رسائل SMS اللي جايه من البنوك دي بس، وبيقترح مصروف — مفيش حاجة بتتسجل تلقائيًا،
+          دايمًا بتراجع وتأكد (أو تتجاهل) من الكارت اللي بيظهر فوق أي تبويب.
+        </p>
+        <p data-i18n="settings.remindersNote">بعض الأجهزة بتأخر التذكيرات المجدولة بسبب إعدادات توفير البطارية — لو التذكير مش بيوصل، جرّب تستثني التطبيق من توفير البطارية من إعدادات الأندرويد.</p>
       </div>
     </div>
 
-    <div class="acc-group">
-      <button class="acc-header" data-acc="backup"><span data-i18n="settings.backupGroup">☁️ البيانات والنسخ الاحتياطي</span> <span class="chev">▾</span></button>
-      <div class="acc-body" id="acc-backup" hidden>
-        <div class="set-card">
-          <h3 data-i18n="settings.googleTitle">☁️ حساب جوجل (نسخة احتياطية سحابية)</h3>
-          <div id="googleAccountArea"></div>
-          <p style="font-size:11px; color:var(--ink-soft); margin-top:10px; line-height:1.7;" data-i18n="settings.googleNote">
-            بيرفع/يرجّع نفس ملف النسخة الاحتياطية (JSON) من مساحة خاصة بالتطبيق جوه Google Drive بتاعك —
-            مش هتشوفها في Drive العادي، ومحدش غير التطبيق نفسه يقدر يوصلها. محتاجة إعداد لمرة واحدة على
-            Google Cloud Console الأول (التفاصيل في README).
-          </p>
-        </div>
+    <div class="sec-lbl" data-i18n="settings.groupData">بياناتك</div>
+    <div class="set-group">
+      <button class="set-row acc-header" data-acc="google" style="--sq:var(--b3)">
+        <span class="set-sq">☁️</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.googleTitle">نسخة احتياطية على جوجل درايف</span><span class="s" id="googleStateLbl"></span></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body set-panel" id="acc-google" hidden>
+        <div id="googleAccountArea"></div>
+        <p data-i18n="settings.googleNote">
+          بيرفع/يرجّع نفس ملف النسخة الاحتياطية (JSON) من مساحة خاصة بالتطبيق جوه Google Drive بتاعك —
+          مش هتشوفها في Drive العادي، ومحدش غير التطبيق نفسه يقدر يوصلها.
+        </p>
+      </div>
+      <button class="set-row" id="exportBackup" style="--sq:var(--b1)">
+        <span class="set-sq">⬆️</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.exportBackupBtn">تصدير نسخة احتياطية</span><span class="s" data-i18n="settings.localBackupNote">البيانات محفوظة في المتصفح/الجهاز ده بس — صدّرها لو هتنقلها لجهاز تاني.</span></span>
+        <span class="chev">‹</span>
+      </button>
+      <input type="file" id="importFile" accept=".json" style="display:none;">
+      <button class="set-row" id="importBackup" style="--sq:var(--b1)">
+        <span class="set-sq">⬇️</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.importBackupBtn">استيراد نسخة احتياطية</span></span>
+        <span class="chev">‹</span>
+      </button>
+      <button class="set-row" id="exportExcel" style="--sq:var(--b2)">
+        <span class="set-sq">📊</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.excelTitle">تقرير إكسيل للشهر</span><span class="s" data-i18n="settings.excelSub">مصاريف + التزامات + توزيعات + حسابات، كل قايمة في شيت</span></span>
+        <span class="set-val" id="exportExcelMonthLbl">الشهر الحالي</span>
+      </button>
+    </div>
 
-        <div class="set-card">
-          <h3 data-i18n="settings.localBackupTitle">💾 نسخة احتياطية (لنقل بياناتك بين المتصفحات)</h3>
-          <div class="field" style="margin-bottom:8px;">
-            <label style="margin-bottom:8px;" data-i18n="settings.localBackupNote">البيانات محفوظة داخل المتصفح اللي بتفتح بيه الملف بس. لو فتحته من متصفح تاني، صدّر نسخة من هنا واستوردها هناك.</label>
-          </div>
-          <button class="btn btn-primary" id="exportBackup" style="margin-bottom:8px;" data-i18n="settings.exportBackupBtn">⬆️ تصدير نسخة احتياطية</button>
-          <input type="file" id="importFile" accept=".json" style="display:none;">
-          <button class="btn btn-ghost" id="importBackup" data-i18n="settings.importBackupBtn">⬇️ استيراد نسخة احتياطية</button>
-        </div>
-
-        <div class="set-card">
-          <h3><span data-i18n="settings.excelTitle">📊 تقرير إكسيل —</span> <span id="exportExcelMonthLbl">الشهر الحالي</span></h3>
-          <p style="font-size:11px; color:var(--ink-soft); margin:0 0 10px; line-height:1.7;" data-i18n="settings.excelNote">
-            كل التفاصيل الخاصة بالشهر المختار فوق (مصاريف، التزامات، توزيعات، صيانة،
-            حركات حسابات) في ملف واحد، كل قايمة في شيت لوحدها ومجموع تحتها. أرصدة
-            الحسابات نفسها بتفضل إجمالية (من أول ما بدأت التطبيق)، مش خاصة بشهر واحد،
-            لإنها رصيد لحظي مش حركة شهر.
-          </p>
-          <button class="btn btn-primary" id="exportExcel" data-i18n="settings.exportExcelBtn">تصدير تقرير الشهر (مصاريف + التزامات + توزيعات + حسابات)</button>
-        </div>
+    <div class="sec-lbl" data-i18n="settings.groupGeneral">عام</div>
+    <div class="set-group">
+      <button class="set-row acc-header" data-acc="lang" style="--sq:var(--b3)">
+        <span class="set-sq">🌐</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.langTitle">اللغة / Language</span></span>
+        <span class="set-val" id="langStateLbl"></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body set-panel" id="acc-lang" hidden>
+        <div class="chip-row" id="langChips" style="margin-bottom:0; margin-top:10px;"></div>
+      </div>
+      <div class="set-row" data-static style="--sq:var(--b4)">
+        <span class="set-sq">🔒</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.lockToggle">قفل بالبصمة قبل كل دخول</span><span class="s" data-i18n="settings.lockNote">محتاج بصمة/وجه/قفل شاشة متفعّل على الجهاز الأول.</span></span>
+        <label class="switch"><input type="checkbox" id="biometricLockEnabled"><span class="slider"></span></label>
+      </div>
+      <div class="set-row" data-static style="--sq:var(--b2)">
+        <span class="set-sq">🚗</span>
+        <span class="set-txt"><span class="n" data-i18n="settings.carToggle">تتبع صيانة العربية</span><span class="s" data-i18n="settings.carToggleSub">بيظهر/يخفي تبويب السيارة</span></span>
+        <label class="switch"><input type="checkbox" id="inHasCar"><span class="slider"></span></label>
       </div>
     </div>
 
-    <div class="acc-group">
-      <button class="acc-header" data-acc="general"><span data-i18n="settings.generalGroup">🔧 عام</span> <span class="chev">▾</span></button>
-      <div class="acc-body" id="acc-general" hidden>
-        <div class="set-card">
-          <h3 data-i18n="settings.langTitle">🌐 اللغة / Language</h3>
-          <div class="chip-row" id="langChips"></div>
-        </div>
-
-        <div class="set-card">
-          <h3 data-i18n="settings.lockTitle">🔒 الحماية</h3>
-          <div class="toggle-row" style="border-bottom:none;">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.lockToggle">قفل بالبصمة قبل كل دخول</span>
-            <label class="switch"><input type="checkbox" id="biometricLockEnabled"><span class="slider"></span></label>
-          </div>
-          <p style="font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;" data-i18n="settings.lockNote">لو مفعّلة، هتحتاج بصمتك أو رمز قفل شاشة موبايلك كل ما تفتح التطبيق أو ترجعله من الخلفية. محتاج جهازك يكون فيه بصمة/وجه/قفل شاشة متفعّل الأول.</p>
-        </div>
-
-        <div class="set-card">
-          <h3 data-i18n="settings.carTitle">🚗 العربية</h3>
-          <div class="toggle-row">
-            <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="settings.carToggle">تتبع صيانة العربية (تبويب السيارة)</span>
-            <label class="switch"><input type="checkbox" id="inHasCar"><span class="slider"></span></label>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="set-card">
-      <button class="btn btn-danger" id="resetBtn" data-i18n="settings.resetBtn">تصفير كل البيانات</button>
-    </div>
+    <button class="set-danger" id="resetBtn" data-i18n="settings.resetBtn">تصفير كل البيانات</button>
+    <div class="set-foot" id="appVersionLbl"></div>
   </div>
 
   <!-- Hidden to start with, since home is the tab that opens first and home's adds live in the
@@ -824,7 +953,7 @@
   <div class="tabbar">
     <button class="tabbtn active" data-tab="home"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 11.2l8-6.2 8 6.2v7.6a2 2 0 01-2 2H6a2 2 0 01-2-2z"/></svg></span><span class="lb" data-i18n="nav.home">الرئيسية</span></button>
     <button class="tabbtn" data-tab="expenses"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5.2" y="3.2" width="13.6" height="17.6" rx="2.4"/><path d="M8.8 8.4h6.4M8.8 12h6.4M8.8 15.6h3.4"/></svg></span><span class="lb" data-i18n="nav.expenses">المصاريف</span></button>
-    <button class="tabbtn" data-tab="allocations"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4"/></svg></span><span class="lb" data-i18n="nav.allocations">التوزيعات</span></button>
+    <button class="tabbtn" data-tab="allocations"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4"/></svg></span><span class="lb" data-i18n="nav.allocations">الاستثمار</span></button>
     <button class="tabbtn" data-tab="obligations"><span class="ic"><svg viewBox="0 0 24 24"><path d="M8.6 7h11M8.6 12h11M8.6 17h11M4.6 7h.02M4.6 12h.02M4.6 17h.02"/></svg></span><span class="lb" data-i18n="nav.obligations">الالتزامات</span></button>
     <button class="tabbtn" data-tab="maintenance"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3.4 14.4h17.2v3.8H3.4z"/><path d="M5.6 14.4l2-5.2h8.8l2 5.2"/><circle cx="7.6" cy="18.2" r="1.2"/><circle cx="16.4" cy="18.2" r="1.2"/></svg></span><span class="lb" data-i18n="nav.maintenance">السيارة</span></button>
     <button class="tabbtn" data-tab="settings"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.4v2.2M12 18.4v2.2M4.9 7.6l1.9 1.1M17.2 15.3l1.9 1.1M4.9 16.4l1.9-1.1M17.2 8.7l1.9-1.1"/></svg></span><span class="lb" data-i18n="nav.settings">الإعدادات</span></button>
@@ -1208,7 +1337,14 @@ const I18N = {
     "allocations.monthlyTitle":"📅 تراكمي شهري", "allocations.allTitle":"🧾 كل العمليات",
     "obligations.title":"📋 التزامات ثابتة / أقساط / جمعيات",
     "obligations.helpIntro":"المبالغ تحت خاصة بشهر", "obligations.helpIntroSuffix":"بس.",
-    "obligations.knowMore":"اعرف أكتر ↓",
+    "obligations.knowMore":"إزاي التعديل الشهري بيشتغل؟",
+    "obligations.summaryTitle":"التزامات", "obligations.listTitle":"البنود",
+    "obligations.ofIncome":"من دخل الشهر", "obligations.leftAfter":"فاضل بعد الالتزامات: {0} ج",
+    "obligations.noneThisMonth":"مفيش التزامات نشطة الشهر ده",
+    "obligations.groupCount":"{0} بند", "obligations.thisMonthOnly":"الشهر ده",
+    "obligations.paidOf":"مدفوع {0} من {1}", "obligations.leftToPay":"فاضل {0} قسط · {1} ج",
+    "obligations.finished":"خلصت ✓",
+    "obligations.payoutDue":"بتقبض {0} ج في {1}", "obligations.payoutGot":"قبضت {0} ج في {1}",
     "obligations.helpFull":`تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
           فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
           اللي انت فيه بس. زرار ✕ بيشيل البند من الشهر ده بس (زي ما توقفه بالظبط). زرار ⏸️/▶️ بيشغّل
@@ -1224,41 +1360,50 @@ const I18N = {
     "maintenance.scheduleHint":"حسب موقع الوكيل الرسمي", "maintenance.addSched":"+ إضافة نقطة صيانة",
     "maintenance.logTitle":"🧾 سجل الصيانة الفعلي",
     "settings.moneyGroup":"💰 المال والحسابات", "settings.incomeTitle":"💵 الدخل والطوارئ",
+    "settings.groupMoney":"فلوسك", "settings.groupCats":"الفئات والحدود",
+    "settings.groupAutomation":"التنبيهات والأتمتة", "settings.groupData":"بياناتك",
+    "settings.groupGeneral":"عام",
+    "settings.sourcesCount":"المصادر: {0}", "settings.movesCount":"الحركات المسجّلة: {0}", "settings.catsCount":"الفئات: {0}",
+    "settings.capsSub":"اختياري — بينبهك لما تتجاوز حد فئة",
+    "settings.weeklyReminderSub":"كل يوم اتنين الساعة 10 صباحًا",
+    "settings.smsSub":"تجريبي — بيقترح بس، مفيش حاجة بتتسجل لوحدها",
+    "settings.excelSub":"مصاريف + التزامات + توزيعات + حسابات، كل قايمة في شيت",
+    "settings.carToggleSub":"بيظهر/يخفي تبويب السيارة",
     "settings.salaryLabel":"المرتب الشهري", "settings.emergBalLabel":"رصيد كاش الطوارئ الحالي",
-    "settings.emergGoalLabel":"هدف كاش الطوارئ", "settings.sourcesTitle":"💳 مصادر الصرف",
+    "settings.emergGoalLabel":"هدف كاش الطوارئ", "settings.sourcesTitle":"مصادر الصرف",
     "settings.newSourcePlaceholder":"مصدر جديد (مثال: انستاباي)", "common.add":"+ إضافة",
-    "settings.movesTitle":"📜 حركات الحسابات",
-    "settings.catsGroup":"🏷️ الفئات والحدود", "settings.catsTitle":"🏷️ فئات المصاريف",
-    "settings.newCatPlaceholder":"فئة جديدة (مثال: هدايا)", "settings.capsTitle":"🎯 حدود شهرية للفئات (اختياري)",
+    "settings.movesTitle":"حركات الحسابات",
+    "settings.catsGroup":"🏷️ الفئات والحدود", "settings.catsTitle":"فئات المصاريف",
+    "settings.newCatPlaceholder":"فئة جديدة (مثال: هدايا)", "settings.capsTitle":"حدود شهرية للفئات",
     "settings.notifGroup":"🔔 الإشعارات والأتمتة", "settings.remindersTitle":"🔔 التذكيرات",
     "settings.dailyReminder":"تذكير يومي بتسجيل المصاريف",
-    "settings.weeklyReminder":"تذكير أسبوعي بعمل نسخة احتياطية (كل اتنين الساعة 10ص)",
+    "settings.weeklyReminder":"تذكير أسبوعي بعمل نسخة احتياطية",
     "settings.capReminder":"تنبيه لما أتجاوز حد فئة مصروف", "settings.maintReminder":"تنبيه قرب موعد صيانة العربية",
     "settings.remindersNote":"بعض الأجهزة بتأخر التذكيرات المجدولة بسبب إعدادات توفير البطارية — لو التذكير مش بيوصل، جرّب تستثني التطبيق من توفير البطارية من إعدادات الأندرويد.",
-    "settings.smsTitle":"🏦 كشف مصاريف من رسائل البنك (تجريبي)", "settings.smsEnable":"تفعيل الكشف التلقائي",
+    "settings.smsTitle":"🏦 كشف مصاريف من رسائل البنك (تجريبي)", "settings.smsEnable":"كشف المصاريف من رسائل البنك",
     "settings.smsSendersLabel":"البنوك المتابَعة (افصل بفاصلة)", "common.save":"حفظ",
     "settings.smsNote":`بيراقب رسائل SMS اللي جايه من البنوك دي بس، وبيقترح مصروف — مفيش حاجة بتتسجل تلقائيًا،
             دايمًا بتراجع وتأكد (أو تتجاهل) من الكارت اللي بيظهر فوق أي تبويب. تحليل نص الرسالة أول
             محاولة (مفيش عينات رسائل حقيقية من QNB/CIB اتجربت عليها)، فممكن يحتاج ضبط لو الصيغة مختلفة.`,
-    "settings.backupGroup":"☁️ البيانات والنسخ الاحتياطي", "settings.googleTitle":"☁️ حساب جوجل (نسخة احتياطية سحابية)",
+    "settings.backupGroup":"☁️ البيانات والنسخ الاحتياطي", "settings.googleTitle":"نسخة احتياطية على جوجل درايف",
     "settings.googleNote":`بيرفع/يرجّع نفس ملف النسخة الاحتياطية (JSON) من مساحة خاصة بالتطبيق جوه Google Drive بتاعك —
             مش هتشوفها في Drive العادي، ومحدش غير التطبيق نفسه يقدر يوصلها. محتاجة إعداد لمرة واحدة على
             Google Cloud Console الأول (التفاصيل في README).`,
     "settings.localBackupTitle":"💾 نسخة احتياطية (لنقل بياناتك بين المتصفحات)",
     "settings.localBackupNote":"البيانات محفوظة داخل المتصفح اللي بتفتح بيه الملف بس. لو فتحته من متصفح تاني، صدّر نسخة من هنا واستوردها هناك.",
-    "settings.exportBackupBtn":"⬆️ تصدير نسخة احتياطية", "settings.importBackupBtn":"⬇️ استيراد نسخة احتياطية",
-    "settings.excelTitle":"📊 تقرير إكسيل —",
+    "settings.exportBackupBtn":"تصدير نسخة احتياطية", "settings.importBackupBtn":"استيراد نسخة احتياطية",
+    "settings.excelTitle":"تقرير إكسيل للشهر",
     "settings.excelNote":`كل التفاصيل الخاصة بالشهر المختار فوق (مصاريف، التزامات، توزيعات، صيانة،
             حركات حسابات) في ملف واحد، كل قايمة في شيت لوحدها ومجموع تحتها. أرصدة
             الحسابات نفسها بتفضل إجمالية (من أول ما بدأت التطبيق)، مش خاصة بشهر واحد،
             لإنها رصيد لحظي مش حركة شهر.`,
     "settings.exportExcelBtn":"تصدير تقرير الشهر (مصاريف + التزامات + توزيعات + حسابات)",
-    "settings.generalGroup":"🔧 عام", "settings.langTitle":"🌐 اللغة / Language",
+    "settings.generalGroup":"🔧 عام", "settings.langTitle":"اللغة / Language",
     "settings.lockTitle":"🔒 الحماية", "settings.lockToggle":"قفل بالبصمة قبل كل دخول",
     "settings.lockNote":"لو مفعّلة، هتحتاج بصمتك أو رمز قفل شاشة موبايلك كل ما تفتح التطبيق أو ترجعله من الخلفية. محتاج جهازك يكون فيه بصمة/وجه/قفل شاشة متفعّل الأول.",
-    "settings.carTitle":"🚗 العربية", "settings.carToggle":"تتبع صيانة العربية (تبويب السيارة)",
+    "settings.carTitle":"🚗 العربية", "settings.carToggle":"تتبع صيانة العربية",
     "settings.resetBtn":"تصفير كل البيانات",
-    "nav.home":"الرئيسية", "nav.expenses":"المصاريف", "nav.allocations":"التوزيعات",
+    "nav.home":"الرئيسية", "nav.expenses":"المصاريف", "nav.allocations":"الاستثمار",
     "nav.obligations":"الالتزامات", "nav.maintenance":"السيارة", "nav.settings":"الإعدادات",
     "modal.alloc.title":"تسجيل توزيع فعلي", "modal.alloc.catLabel":"البند",
     "common.amountCurrency":"المبلغ (ج)", "common.noteOptional":"ملاحظة (اختياري)",
@@ -1342,7 +1487,7 @@ const I18N = {
     "obligations.activeOverrideNote":"{0} لشهر {1} بس", "obligations.active":"مفعّل", "obligations.paused":"موقوف",
     "obligations.fromMonth":"من", "obligations.toMonth":"لحد",
     "obligations.payoutNote":"هتقبض {0} في {1}", "obligations.autoDeductFrom":"يتخصم من {0}",
-    "obligations.pause":"إيقاف", "obligations.resume":"تشغيل", "obligations.everyMonth":"البند في كل الشهور",
+    "obligations.pause":"إيقاف", "obligations.resume":"تشغيل", "obligations.everyMonth":"كل الشهور",
     "obligations.removeThisMonthOnly":"شيل من شهر {0} بس",
     "obligations.editDetails":"تعديل", "obligations.editDetailsGam3iya":" (النوع/الشهور/القبض)", "obligations.editDetailsPlain":" (النوع/الشهور)",
     "obligations.deleteForever":"حذف نهائي",
@@ -1425,7 +1570,14 @@ const I18N = {
     "allocations.monthlyTitle":"📅 Monthly Breakdown", "allocations.allTitle":"🧾 All Transactions",
     "obligations.title":"📋 Fixed Bills / Installments / Gam3iya",
     "obligations.helpIntro":"Amounts below are specific to", "obligations.helpIntroSuffix":"only.",
-    "obligations.knowMore":"Learn more ↓",
+    "obligations.knowMore":"How do monthly edits work?",
+    "obligations.summaryTitle":"Obligations", "obligations.listTitle":"Items",
+    "obligations.ofIncome":"of this month's income", "obligations.leftAfter":"Left after obligations: {0} EGP",
+    "obligations.noneThisMonth":"No active obligations this month",
+    "obligations.groupCount":"{0} items", "obligations.thisMonthOnly":"this month",
+    "obligations.paidOf":"Paid {0} of {1}", "obligations.leftToPay":"{0} left · {1} EGP",
+    "obligations.finished":"Finished ✓",
+    "obligations.payoutDue":"Collect {0} EGP in {1}", "obligations.payoutGot":"Collected {0} EGP in {1}",
     "obligations.helpFull":`Editing an item's amount or turning it on/off while viewing a specific month doesn't
           affect other months. The first time you set an amount for a new item it becomes its
           regular value for every month, and any edit after that stays specific to the month
@@ -1443,43 +1595,52 @@ const I18N = {
     "maintenance.scheduleHint":"Per the official dealer's site", "maintenance.addSched":"+ Add Maintenance Point",
     "maintenance.logTitle":"🧾 Actual Maintenance Log",
     "settings.moneyGroup":"💰 Money & Accounts", "settings.incomeTitle":"💵 Income & Emergency Fund",
+    "settings.groupMoney":"Your money", "settings.groupCats":"Categories & caps",
+    "settings.groupAutomation":"Alerts & automation", "settings.groupData":"Your data",
+    "settings.groupGeneral":"General",
+    "settings.sourcesCount":"Sources: {0}", "settings.movesCount":"Movements logged: {0}", "settings.catsCount":"Categories: {0}",
+    "settings.capsSub":"Optional — warns you when a category goes over",
+    "settings.weeklyReminderSub":"Every Monday at 10 AM",
+    "settings.smsSub":"Experimental — only suggests, never logs on its own",
+    "settings.excelSub":"Expenses + obligations + allocations + accounts, one sheet each",
+    "settings.carToggleSub":"Shows/hides the Car tab",
     "settings.salaryLabel":"Monthly Salary", "settings.emergBalLabel":"Current Emergency Cash Balance",
-    "settings.emergGoalLabel":"Emergency Cash Goal", "settings.sourcesTitle":"💳 Payment Sources",
+    "settings.emergGoalLabel":"Emergency Cash Goal", "settings.sourcesTitle":"Payment Sources",
     "settings.newSourcePlaceholder":"New source (e.g. InstaPay)", "common.add":"+ Add",
-    "settings.movesTitle":"📜 Account Movements",
-    "settings.catsGroup":"🏷️ Categories & Limits", "settings.catsTitle":"🏷️ Expense Categories",
-    "settings.newCatPlaceholder":"New category (e.g. Gifts)", "settings.capsTitle":"🎯 Monthly Category Limits (optional)",
+    "settings.movesTitle":"Account Movements",
+    "settings.catsGroup":"🏷️ Categories & Limits", "settings.catsTitle":"Expense Categories",
+    "settings.newCatPlaceholder":"New category (e.g. Gifts)", "settings.capsTitle":"Monthly Category Limits",
     "settings.notifGroup":"🔔 Notifications & Automation", "settings.remindersTitle":"🔔 Reminders",
     "settings.dailyReminder":"Daily reminder to log expenses",
-    "settings.weeklyReminder":"Weekly backup reminder (every Monday at 10am)",
+    "settings.weeklyReminder":"Weekly backup reminder",
     "settings.capReminder":"Alert when I exceed a category limit", "settings.maintReminder":"Alert when car maintenance is due soon",
     "settings.remindersNote":"Some devices delay scheduled reminders because of battery-saving settings — if a reminder isn't arriving, try excluding the app from battery optimization in Android settings.",
-    "settings.smsTitle":"🏦 Bank SMS Expense Detection (Experimental)", "settings.smsEnable":"Enable auto-detection",
+    "settings.smsTitle":"🏦 Bank SMS Expense Detection (Experimental)", "settings.smsEnable":"Detect expenses from bank SMS",
     "settings.smsSendersLabel":"Watched banks (comma-separated)", "common.save":"Save",
     "settings.smsNote":`It only watches SMS messages coming from these banks and suggests an expense — nothing
             gets logged automatically, you always review and confirm (or dismiss) from the card
             that appears above any tab. Message parsing is a first attempt (no real QNB/CIB
             messages were tested against it), so it may need adjusting if the format differs.`,
-    "settings.backupGroup":"☁️ Data & Backup", "settings.googleTitle":"☁️ Google Account (Cloud Backup)",
+    "settings.backupGroup":"☁️ Data & Backup", "settings.googleTitle":"Backup to Google Drive",
     "settings.googleNote":`Uploads/restores the same backup file (JSON) from a private app-specific space inside
             your Google Drive — you won't see it in regular Drive, and nothing but this app can
             access it. Needs a one-time setup on Google Cloud Console first (details in the
             README).`,
     "settings.localBackupTitle":"💾 Backup (to move your data between browsers)",
     "settings.localBackupNote":"Your data is only stored inside the browser you're using to open this file. If you open it from a different browser, export a copy here and import it there.",
-    "settings.exportBackupBtn":"⬆️ Export Backup", "settings.importBackupBtn":"⬇️ Import Backup",
-    "settings.excelTitle":"📊 Excel Report —",
+    "settings.exportBackupBtn":"Export a backup", "settings.importBackupBtn":"Import a backup",
+    "settings.excelTitle":"Monthly Excel Report",
     "settings.excelNote":`Every detail for the month selected above (expenses, obligations, allocations,
             maintenance, account movements) in one file, each list on its own sheet with a total
             underneath. Account balances themselves stay running totals (since you started using
             the app), not month-specific, since a balance is a snapshot, not a monthly transaction.`,
     "settings.exportExcelBtn":"Export This Month's Report (expenses + obligations + allocations + accounts)",
-    "settings.generalGroup":"🔧 General", "settings.langTitle":"🌐 اللغة / Language",
+    "settings.generalGroup":"🔧 General", "settings.langTitle":"Language / اللغة",
     "settings.lockTitle":"🔒 Security", "settings.lockToggle":"Lock with biometrics before every entry",
     "settings.lockNote":"If enabled, you'll need your fingerprint or phone lock code every time you open the app or return to it from the background. Your device needs fingerprint/face/screen lock already set up.",
-    "settings.carTitle":"🚗 Car", "settings.carToggle":"Track car maintenance (Car tab)",
+    "settings.carTitle":"🚗 Car", "settings.carToggle":"Track car maintenance",
     "settings.resetBtn":"Reset All Data",
-    "nav.home":"Home", "nav.expenses":"Expenses", "nav.allocations":"Allocations",
+    "nav.home":"Home", "nav.expenses":"Expenses", "nav.allocations":"Investing",
     "nav.obligations":"Obligations", "nav.maintenance":"Car", "nav.settings":"Settings",
     "modal.alloc.title":"Log an Actual Allocation", "modal.alloc.catLabel":"Category",
     "common.amountCurrency":"Amount (EGP)", "common.noteOptional":"Note (optional)",
@@ -1564,7 +1725,7 @@ const I18N = {
     "obligations.activeOverrideNote":"{0} for {1} only", "obligations.active":"On", "obligations.paused":"Paused",
     "obligations.fromMonth":"from", "obligations.toMonth":"to",
     "obligations.payoutNote":"You'll collect {0} in {1}", "obligations.autoDeductFrom":"Auto-deducts from {0}",
-    "obligations.pause":"Pause", "obligations.resume":"Resume", "obligations.everyMonth":"this item every month",
+    "obligations.pause":"Pause", "obligations.resume":"Resume", "obligations.everyMonth":"every month",
     "obligations.removeThisMonthOnly":"Remove from {0} only",
     "obligations.editDetails":"Edit", "obligations.editDetailsGam3iya":" (type/months/payout)", "obligations.editDetailsPlain":" (type/months)",
     "obligations.deleteForever":"Delete permanently",
@@ -2842,6 +3003,13 @@ function renderAllocations(){
 
 function renderSettings(){
   renderGoogleAccountCard();
+  // Row summaries: each collapsed row says what's behind it, so the screen is readable without
+  // opening anything (the reference's settings rows do the same with a value on the row).
+  document.getElementById("sourcesCountLbl").textContent = tf("settings.sourcesCount", state.settings.sources.length);
+  document.getElementById("movesCountLbl").textContent = tf("settings.movesCount", state.accountMoves.length);
+  document.getElementById("catsCountLbl").textContent = tf("settings.catsCount", allCats().length);
+  document.getElementById("langStateLbl").textContent = state.settings.lang==="en" ? "English" : "العربية";
+  document.getElementById("appVersionLbl").textContent = APP_NAME_VERSION;
   document.getElementById("biometricLockEnabled").checked = state.settings.biometricLock.enabled;
   document.getElementById("inSalary").value = state.settings.salary;
   document.getElementById("inEmergBal").value = state.settings.emergBal;
@@ -2908,13 +3076,39 @@ function renderSettings(){
   document.getElementById("exportExcelMonthLbl").textContent = monthLabelOf(curMonthKey);
   document.getElementById("itemsSearchBox").value = itemsSearchTerm;
 
-  // Grand total — always every active-for-month item, regardless of whatever filter is currently
-  // selected below (same number as "الفائض الشهري المتكرر"'s obligations component on the home
-  // tab), shown once at the very top so it's never hidden behind a filter.
+  // Month summary — always every active-for-month item, regardless of whatever filter is selected
+  // below, so the headline number can never be hidden behind a filter. Beyond the total it shows
+  // how the month splits across the three kinds (a proportion bar the flat list couldn't convey)
+  // and what share of the month's income it eats, which is the number that actually tells you
+  // whether the month is tight.
   const allActiveThisMonth = state.items.filter(it=>itemActiveForMonth(it, curMonthKey));
   const grandTotal = allActiveThisMonth.reduce((s,it)=>s+itemAmountForMonth(it, curMonthKey), 0);
-  document.getElementById("itemsGrandTotalWrap").innerHTML =
-    `<div class="obl-row total"><span class="name">${t("obligations.grandTotalLabel")}</span><span class="val">${fmt(grandTotal)} ${t("common.currency")}</span></div>`;
+  const mSum = computeMonth(curMonthKey);
+  const income = mSum.salary + mSum.extraIncome;
+  const sharePct = income>0 ? Math.round((grandTotal/income)*100) : 0;
+  const CAT_TONE = {"قسط":3, "ثابت":1, "جمعية":2};
+  const catSums = ITEM_CATS.map(c=>({
+    ...c,
+    tone: CAT_TONE[c.k],
+    sum: allActiveThisMonth.filter(it=>it.cat===c.k).reduce((s,it)=>s+itemAmountForMonth(it, curMonthKey), 0),
+    count: allActiveThisMonth.filter(it=>it.cat===c.k).length,
+  }));
+  const withSum = catSums.filter(c=>c.sum>0);
+  document.getElementById("oblSummary").innerHTML = `
+    <div class="os-top">
+      <div>
+        <div class="os-lbl">${t("obligations.grandTotalLabel")}</div>
+        <div class="os-amt">${fmt(grandTotal)}<small>${t("common.currency")}</small></div>
+      </div>
+      ${income>0 ? `<div class="os-share${sharePct>=60?" hot":""}">${sharePct}%<span>${t("obligations.ofIncome")}</span></div>` : ""}
+    </div>
+    ${withSum.length ? `
+      <div class="os-bar">${withSum.map(c=>
+        `<i style="width:${(c.sum/grandTotal)*100}%; background:var(--i${c.tone})"></i>`).join("")}</div>
+      <div class="os-leg">${withSum.map(c=>
+        `<div><i style="background:var(--i${c.tone})"></i>${catLabel(c)} <b>${fmt(c.sum)}</b></div>`).join("")}</div>`
+      : `<div class="os-note">${t("obligations.noneThisMonth")}</div>`}
+    ${income>0 ? `<div class="os-note">${tf("obligations.leftAfter", fmt(income - grandTotal))}</div>` : ""}`;
 
   // Category filter — same "الكل" + one chip per category idiom as the expenses tab.
   const itemFilterEntries = [{k:"الكل"}, ...ITEM_CATS];
@@ -2949,6 +3143,12 @@ function renderSettings(){
   else if(itemFilterSource!=="الكل") itemsWithEffAmount = itemsWithEffAmount.filter(it=>it.source===itemFilterSource);
   if(itemsSearchTerm.trim()) itemsWithEffAmount = itemsWithEffAmount.filter(it=>(it.name||"").includes(itemsSearchTerm.trim()));
   const sortedItems = sortList(itemsWithEffAmount, itemsSortBy, null, "_effAmount");
+  // Months from `a` to `b`, inclusive-exclusive (so start→start is 0) — used for installment
+  // progress, where a start and an end month are all we need to know how far along a plan is.
+  function monthsBetween(a, b){
+    const [y1,m1] = a.split("-").map(Number), [y2,m2] = b.split("-").map(Number);
+    return (y2-y1)*12 + (m2-m1);
+  }
   function itemRowHtml(it){
     const amtOverridden = it.amountOverrides && it.amountOverrides[curMonthKey]!==undefined;
     const activeOverridden = it.activeOverrides && it.activeOverrides[curMonthKey]!==undefined;
@@ -2958,26 +3158,56 @@ function renderSettings(){
     const rangeNote = (it.startMonth ? " · "+t("obligations.fromMonth")+" "+monthLabelOf(it.startMonth) : "") + (it.endMonth ? " · "+t("obligations.toMonth")+" "+monthLabelOf(it.endMonth) : "");
     const payoutNote = (it.cat==="جمعية" && it.payoutMonth) ? ` · ${tf("obligations.payoutNote", fmt(it.payoutAmount||0), monthLabelOf(it.payoutMonth))}` : "";
     const sourceNote = it.source ? ` · 🔗 ${tf("obligations.autoDeductFrom", it.source)}` : "";
-    // Name gets its own full-width row (was squeezed next to the amount/toggle/delete buttons on
-    // one line before, cutting long names off) — everything else that used to be crammed into one
-    // long wrapping sentence (edit/reset/delete links) moved into a short action row instead, so a
-    // row with no overrides stays just 3 short lines instead of one very tall wrapped paragraph.
+    const cat = ITEM_CATS.find(c=>c.k===it.cat) || {k:it.cat, i:"📋"};
+    const tone = {"قسط":3, "ثابت":1, "جمعية":2}[it.cat] || 1;
+    // Repayment progress — only for an item that actually knows its own window. This is the part
+    // the old row couldn't show at all: with a start and an end month, how many payments are
+    // behind you, how many are left, and what the remaining total still is.
+    let progress = "";
+    if(it.startMonth && it.endMonth && it.endMonth >= it.startMonth){
+      const total = monthsBetween(it.startMonth, it.endMonth) + 1;
+      const paid = Math.min(Math.max(monthsBetween(it.startMonth, curMonthKey), 0), total);
+      const left = total - paid;
+      const pctDone = Math.round((paid/total)*100);
+      progress = `
+      <div class="oi-prog">
+        <div class="pt"><b style="width:${pctDone}%"></b></div>
+        <div class="pl">
+          <span>${tf("obligations.paidOf", paid, total)}</span>
+          <span>${left>0 ? tf("obligations.leftToPay", left, fmt(left*itemAmountForMonth(it, curMonthKey))) : t("obligations.finished")}</span>
+        </div>
+      </div>`;
+    }
+    // A gam3iya's payout is the one thing about it that isn't a monthly cost, so it gets its own
+    // chip rather than being buried in the meta line.
+    let payoutChip = "";
+    if(it.cat==="جمعية" && it.payoutMonth){
+      const got = it.payoutMonth < curMonthKey;
+      payoutChip = `<div class="oi-chip${got?" done":""}">${got?"✓":"🎁"} ${
+        tf(got?"obligations.payoutGot":"obligations.payoutDue", fmt(it.payoutAmount||0), monthLabelOf(it.payoutMonth))}</div>`;
+    }
+    const meta = [catLabel(cat), rangeNote.replace(/^ · /,""), sourceNote.replace(/^ · /,"")]
+      .filter(Boolean).join(" · ");
     return `
-    <div class="item-row-edit obl-row-edit" data-id="${it.id}">
-      <div class="oi-top">
-        <label class="switch"><input type="checkbox" class="itmToggle" ${itemActiveForMonth(it,curMonthKey)?"checked":""}><span class="slider"></span></label>
-        <input class="itmName oi-name" value="${it.name}">
-        <button class="del-x itmToggleGlobal" title="${it.active?t('obligations.pause'):t('obligations.resume')} ${t('obligations.everyMonth')}" style="color:${it.active?"var(--sage)":"var(--ink-soft)"};">${it.active?"⏸️":"▶️"}</button>
-        <button class="del-x itmDeleteMonth" title="${tf('obligations.removeThisMonthOnly', monthLabelOf(curMonthKey))}">✕</button>
+    <div class="item-row-edit oi" data-id="${it.id}" style="--sq:var(--b${tone})">
+      <span class="oi-sq">${cat.i||"📋"}</span>
+      <div class="oi-body">
+        <div class="oi-head">
+          <input class="itmName oi-name" value="${it.name}">
+          <label class="switch"><input type="checkbox" class="itmToggle" ${itemActiveForMonth(it,curMonthKey)?"checked":""}><span class="slider"></span></label>
+        </div>
+        <div class="oi-meta">${meta}</div>
+        ${payoutChip}
+        ${progress}
+        ${extraNotes.length ? `<div class="oi-notes">${extraNotes.join("<br>")}</div>` : ""}
+        <div class="oi-acts">
+          <span class="itmEditDetails">✏️ ${t("obligations.editDetails")}</span>
+          <span class="itmToggleGlobal">${it.active?"⏸️":"▶️"} ${t("obligations.everyMonth")}</span>
+          <span class="itmDeleteForever">🗑️ ${t("obligations.deleteForever")}</span>
+        </div>
       </div>
-      <div class="oi-sub">
-        <input type="number" class="amt-in itmAmount" value="${itemAmountForMonth(it, curMonthKey)}">
-        <div class="oi-meta">${catLabel(ITEM_CATS.find(c=>c.k===it.cat) || {k:it.cat})}${rangeNote}${payoutNote}${sourceNote}</div>
-      </div>
-      ${extraNotes.length ? `<div class="oi-notes">${extraNotes.join("<br>")}</div>` : ""}
-      <div class="oi-actions">
-        <span class="itmEditDetails">✏️ ${t("obligations.editDetails")}${it.cat==="جمعية"?t("obligations.editDetailsGam3iya"):t("obligations.editDetailsPlain")}</span>
-        <span class="itmDeleteForever">🗑️ ${t("obligations.deleteForever")}</span>
+      <div class="oi-side">
+        <input type="number" class="amt-in itmAmount oi-amt" value="${itemAmountForMonth(it, curMonthKey)}">
       </div>
     </div>`;
   }
@@ -2997,7 +3227,17 @@ function renderSettings(){
     filteredSumWrap.innerHTML = `<div class="obl-row total"><span class="name">${tf("obligations.filteredSumLabel", visibleItems.length)}</span><span class="val">${fmt(filteredSum)} ${t("common.currency")}</span></div>`;
   }
 
-  el.innerHTML = collapseSlice(visibleItems, "items").map(itemRowHtml).join("");
+  // Grouped per kind, each group with its own count + subtotal eyebrow, so أقساط / ثابت / جمعيات
+  // read as three short lists instead of one long mixed one you had to filter to make sense of.
+  const shown = collapseSlice(visibleItems, "items");
+  el.innerHTML = catSums.map(c=>{
+    const rows = shown.filter(it=>it.cat===c.k);
+    if(rows.length===0) return "";
+    const sum = rows.reduce((a,it)=>a+it._effAmount, 0);
+    return `<div class="sec-lbl" style="margin-top:16px;">${catLabel(c)} · ${
+      tf("obligations.groupCount", rows.length)} — <b>${fmt(sum)} ${t("common.currency")}</b></div>
+      <div class="obl-list">${rows.map(itemRowHtml).join("")}</div>`;
+  }).join("") || `<div class="empty-state"><div class="big">📋</div><p>${t("obligations.noneThisMonth")}</p></div>`;
   appendCollapseToggle(el, "items", visibleItems.length, render);
 
   const pausedWrap = document.getElementById("itemsPausedWrap");
@@ -3009,7 +3249,7 @@ function renderSettings(){
   } else {
     pausedWrap.innerHTML =
       `<button class="btn btn-ghost" id="hidePausedItemsBtn" style="margin-bottom:8px;">${t("obligations.foldPaused")}</button>` +
-      pausedItems.map(itemRowHtml).join("");
+      `<div class="obl-list">${pausedItems.map(itemRowHtml).join("")}</div>`;
     document.getElementById("hidePausedItemsBtn").onclick = ()=>{ listExpanded["itemsPaused"] = false; render(); };
   }
 
@@ -3058,7 +3298,10 @@ function renderSettings(){
       if(item.activeOverrides) delete item.activeOverrides[curMonthKey];
       await saveItems(); render();
     };
-    row.querySelector(".itmDeleteMonth").onclick = async ()=>{
+    // Kept guarded: the row no longer renders this link (the switch above does the same thing),
+    // but the behaviour stays reachable for any row that does render it.
+    const delMonthLink = row.querySelector(".itmDeleteMonth");
+    if(delMonthLink) delMonthLink.onclick = async ()=>{
       // Removing a row here only ever meant "not this month" to begin with (installments/bills
       // recur — deleting one shouldn't wipe it out of months it still applies to). Isolate it to
       // the month being viewed, same mechanism as the toggle switch — this was reported as a bug
@@ -3530,6 +3773,7 @@ document.getElementById("addItemBtn").onclick = addNewObligationItem;
 // the payout amount + which month your turn to collect falls in — computeMonth() already reads
 // payoutAmount/payoutMonth as one-off extra income, this modal is just the first UI to set them.
 const itemModalBg = document.getElementById("itemModalBg");
+const APP_NAME_VERSION = "معايا كام؟ · v1.0";
 const ITEM_CATS = [{k:"قسط", i:"💳", lEn:"Installment"}, {k:"ثابت", i:"🏠", lEn:"Fixed"}, {k:"جمعية", i:"🤝", lEn:"Gam3iya"}];
 let selectedItemCat = "قسط";
 let selectedItemSource = null;
