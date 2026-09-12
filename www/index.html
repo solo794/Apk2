@@ -617,16 +617,6 @@
   .calc-row button:active{transform:scale(.92);}
   .modal-actions{display:flex; gap:10px; margin-top:16px;}
   .modal-actions .btn{flex:1;}
-  /* A real target, inside the sheet: 34px circle on a tinted ground so it reads as a button on
-     any sheet instead of a bare glyph. */
-  .close-x{
-    position:absolute; top:14px; inset-inline-start:14px; z-index:2;
-    width:34px; height:34px; border-radius:50%; border:none; cursor:pointer;
-    background:var(--paper-dim); color:var(--ink); font-size:15px; line-height:1;
-    display:flex; align-items:center; justify-content:center;
-    transition:transform .1s ease;
-  }
-  .close-x:active{transform:scale(.85);}
   .toast{
     position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--paper);
     padding:10px 18px; border-radius:999px; font-size:12.5px; font-weight:600; z-index:80; opacity:0; pointer-events:none; transition:.25s;
@@ -671,7 +661,7 @@
   @media (prefers-reduced-motion: reduce){
     .content{animation:none;}
     .tabbtn .ic, .tabbtn .lb, .btn, .fab, .chip, .fchip, .alloc-card,
-    .exp-edit, .exp-del, .del-x, .close-x, .calc-row button, .sms-item .si-actions button{
+    .exp-edit, .exp-del, .del-x, .calc-row button, .sms-item .si-actions button{
       transition:none;
     }
   }
@@ -1090,7 +1080,6 @@
 
 <div class="modal-bg" id="allocModalBg">
   <div class="modal">
-    <button class="close-x" id="closeAllocModal">✕</button>
     <h2 data-i18n="modal.alloc.title">تسجيل توزيع فعلي</h2>
     <div class="field">
       <label data-i18n="modal.alloc.catLabel">البند</label>
@@ -1117,7 +1106,6 @@
 
 <div class="modal-bg" id="expenseModalBg">
   <div class="modal">
-    <button class="close-x" id="closeModal">✕</button>
     <h2 id="expenseModalTitle">مصروف جديد</h2>
     <div class="field">
       <label data-i18n="modal.expense.amountLabel">المبلغ — تقدر تكتب عملية زي 50+30</label>
@@ -1154,7 +1142,6 @@
 
 <div class="modal-bg" id="flexModalBg">
   <div class="modal">
-    <button class="close-x" id="closeFlexModal">✕</button>
     <h2 id="flexModalTitle">تعديل التوزيع</h2>
     <div class="field">
       <label id="flexModalLabel">القيمة</label>
@@ -1162,6 +1149,7 @@
     </div>
     <p style="font-size:11.5px;color:var(--ink-soft);margin-top:-6px;" data-i18n="modal.flex.note">تقدر تحط أي رقم حتى لو كان الفائض كله — البندين التانيين هيفضلوا زي ما هما لحد ما تعدّلهم بنفسك.</p>
     <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelFlexAdd" data-i18n="common.cancel">إلغاء</button>
       <button class="btn btn-ghost" id="flexAutoBtn" data-i18n="modal.flex.autoBtn">رجوع للحساب التلقائي</button>
       <button class="btn btn-primary" id="saveFlexAdd" data-i18n="common.save">حفظ</button>
     </div>
@@ -1170,7 +1158,6 @@
 
 <div class="modal-bg" id="maintModalBg">
   <div class="modal">
-    <button class="close-x" id="closeMaintModal">✕</button>
     <h2 data-i18n="modal.maint.title">تسجيل صيانة</h2>
     <div class="field">
       <label data-i18n="modal.maint.kmLabel">الكيلومترات وقت الصيانة</label>
@@ -1209,7 +1196,6 @@
 
 <div class="modal-bg" id="accountModalBg">
   <div class="modal">
-    <button class="close-x" id="closeAccountModal">✕</button>
     <h2 data-i18n="modal.account.title">تسجيل حركة على حساب</h2>
     <div class="field">
       <label data-i18n="modal.account.accountLabel">الحساب</label>
@@ -1240,7 +1226,6 @@
 
 <div class="modal-bg" id="itemModalBg">
   <div class="modal">
-    <button class="close-x" id="closeItemModal">✕</button>
     <h2 id="itemModalTitle">بند التزام جديد</h2>
     <div class="field">
       <label data-i18n="modal.expense.catLabel">النوع</label>
@@ -1290,7 +1275,6 @@
 
 <div class="modal-bg" id="paywallModalBg">
   <div class="modal">
-    <button class="close-x" id="closePaywall">✕</button>
     <h2 data-i18n="pro.modalTitle">🌟 النسخة الكاملة</h2>
     <div class="pro-why" id="paywallWhy" style="display:none;"></div>
     <ul class="pro-list">
@@ -1313,7 +1297,6 @@
 
 <div class="modal-bg" id="advanceModalBg">
   <div class="modal">
-    <button class="close-x" id="closeAdvanceModal">✕</button>
     <h2 id="advanceModalTitle">سلفة/دفعة ائتمانية جديدة</h2>
     <div class="field">
       <label id="advNameLabel">اسم السلفة</label>
@@ -4364,7 +4347,6 @@ function openItemModal(existingItem){
 
   itemModalBg.classList.add("show");
 }
-document.getElementById("closeItemModal").onclick = ()=>itemModalBg.classList.remove("show");
 document.getElementById("cancelItemAdd").onclick = ()=>itemModalBg.classList.remove("show");
 document.getElementById("saveItemAdd").onclick = async ()=>{
   const name = document.getElementById("itName").value.trim();
@@ -4514,7 +4496,7 @@ function openAllocEditModal(key){
   document.getElementById("fAmount").value = m[key];
   flexModalBg.classList.add("show");
 }
-document.getElementById("closeFlexModal").onclick = ()=>flexModalBg.classList.remove("show");
+document.getElementById("cancelFlexAdd").onclick = ()=>flexModalBg.classList.remove("show");
 document.getElementById("flexAutoBtn").onclick = async ()=>{
   if(state.settings.allocOverrides[curMonthKey]) delete state.settings.allocOverrides[curMonthKey][editingAllocKey];
   await saveSettings();
@@ -4599,11 +4581,16 @@ document.getElementById("qaExpense").onclick = ()=>openModal(null);
 document.getElementById("qaVoice").onclick = ()=>{ if(requirePro("automation")) startVoiceExpenseInput(); };
 document.getElementById("qaMove").onclick = openAccountModal;
 document.getElementById("qaAdvance").onclick = ()=>openAdvanceModal("advance");
-document.getElementById("closePaywall").onclick = ()=>document.getElementById("paywallModalBg").classList.remove("show");
-// Tapping the dimmed area outside the sheet closes it too. Only for the subscription sheet: doing
-// this to the expense/item forms would throw away half-typed input on a stray tap.
-document.getElementById("paywallModalBg").addEventListener("click", (e)=>{
-  if(e.target === document.getElementById("paywallModalBg")) document.getElementById("paywallModalBg").classList.remove("show");
+// Tapping the dimmed area outside a sheet closes it — the standard bottom-sheet gesture, and now
+// the way out on the web/iPhone build, which has no Android back button. Wired for every sheet at
+// once so a newly added one is covered without being remembered here. The listener only fires on
+// the backdrop itself, never on a tap that lands inside the sheet.
+document.querySelectorAll(".modal-bg").forEach(bg=>{
+  bg.addEventListener("click", (e)=>{
+    if(e.target !== bg) return;
+    bg.classList.remove("show");
+    if(bg.id === "expenseModalBg") editingExpenseId = null; // same reset the form's إلغاء does
+  });
 });
 document.getElementById("paywallBuyBtn").onclick = startProPurchase;
 // The owner's own way to run the paid features on a build Play can't sell through (the sideloaded
@@ -4633,7 +4620,6 @@ const OWNER_TAPS_NEEDED = 7;
     render();
   });
 })();
-document.getElementById("closeModal").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
 document.getElementById("cancelAdd").onclick = ()=>{ modalBg.classList.remove("show"); editingExpenseId=null; };
 document.querySelectorAll(".calcBtn").forEach(b=>{
   b.onclick = ()=>{ document.getElementById("mAmount").value += b.dataset.op; };
@@ -4687,7 +4673,6 @@ function openAllocModal(){
   });
   allocModalBg.classList.add("show");
 }
-document.getElementById("closeAllocModal").onclick = ()=>allocModalBg.classList.remove("show");
 document.getElementById("cancelAllocAdd").onclick = ()=>allocModalBg.classList.remove("show");
 document.getElementById("saveAllocAdd").onclick = async ()=>{
   const amt = Number(document.getElementById("aAmount").value);
@@ -4731,7 +4716,6 @@ function openMaintModal(){
   });
   maintModalBg.classList.add("show");
 }
-document.getElementById("closeMaintModal").onclick = ()=>maintModalBg.classList.remove("show");
 document.getElementById("cancelMaintAdd").onclick = ()=>maintModalBg.classList.remove("show");
 document.getElementById("saveMaintAdd").onclick = async ()=>{
   const km = Number(document.getElementById("maKm").value);
@@ -4793,7 +4777,6 @@ function openAccountModal(){
   });
   accountModalBg.classList.add("show");
 }
-document.getElementById("closeAccountModal").onclick = ()=>accountModalBg.classList.remove("show");
 document.getElementById("cancelAccountAdd").onclick = ()=>accountModalBg.classList.remove("show");
 document.getElementById("saveAccountAdd").onclick = async ()=>{
   const amt = Number(document.getElementById("acAmount").value);
@@ -4869,7 +4852,6 @@ function openAdvanceModal(mode){
 }
 // "+ دخل إضافي جديد" itself is rendered inside #oblList (right under "المرتب") and rewired on
 // every render() call above, since innerHTML replacement there drops any previously-bound handler.
-document.getElementById("closeAdvanceModal").onclick = ()=>advanceModalBg.classList.remove("show");
 document.getElementById("cancelAdvanceAdd").onclick = ()=>advanceModalBg.classList.remove("show");
 document.getElementById("advHasRepayment").onchange = updateAdvanceRepaymentFieldsVisibility;
 document.getElementById("saveAdvanceAdd").onclick = async ()=>{
@@ -5201,7 +5183,7 @@ document.getElementById("lockRetryBtn").onclick = tryUnlock;
 // the rest of the app. showLockOverlay() (not tryUnlock()) is the right call here: tryUnlock()
 // verifies-then-hides, it doesn't re-show. Added as extra listeners (not replacing the existing
 // onclick handlers above) so this doesn't need to touch their own logic.
-["closeModal","cancelAdd","saveAdd"].forEach(id=>{
+["cancelAdd","saveAdd"].forEach(id=>{
   document.getElementById(id).addEventListener("click", ()=>{
     if(quickAddLockBypassActive){
       quickAddLockBypassActive = false;
