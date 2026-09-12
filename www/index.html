@@ -45,6 +45,9 @@
     --t2:#F3F8E9; --b2:#E5F0D2; --i2:#5E7A26;
     --t3:#E7F3F5; --b3:#D3E9ED; --i3:#1E7383;
     --t4:#FDEEEE; --b4:#F8DADA; --i4:#B23A48;
+    /* Cards sit on a tinted ground, so they need a lift rather than an outline — one shadow,
+       reused, instead of a 1px border on every surface. */
+    --lift:0 1px 3px rgba(15,42,34,.05);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;min-height:100%;}
@@ -155,17 +158,17 @@
   #tab-home{padding-bottom:92px;}
   @keyframes tabFadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
   .section-title{
-    font-size:14px; font-weight:700; color:var(--ink);
-    margin:18px 4px 10px; display:flex; align-items:center; justify-content:space-between;
+    font-size:11.5px; font-weight:700; color:var(--ink-soft);
+    margin:22px 6px 10px; display:flex; align-items:center; justify-content:space-between; gap:8px;
   }
-  .section-title .hint{font-size:11.5px; font-weight:500; color:var(--ink-soft);}
+  .section-title .hint{font-size:10.5px; font-weight:600; color:var(--ink-soft); opacity:.8;}
   /* Quiet eyebrow label above a group of cards — deliberately small and muted so the big numbers
      inside the cards are what the eye lands on first. Replaces the emoji-prefixed .section-title
      on the home tab, where every heading used to compete with the values underneath it. */
   .sec-lbl{font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:22px 6px 10px;}
   .sec-lbl:first-child{margin-top:6px;}
 
-  .flex-card{background:var(--ink); color:var(--paper); border-radius:20px; padding:18px 18px 16px;}
+  .flex-card{background:var(--ink); color:#fff; border-radius:24px; padding:18px;}
   .flex-top{display:flex; justify-content:space-between; align-items:flex-start;}
   .flex-top .t1{font-size:13px; opacity:.8; font-weight:500;}
   .flex-top .t2{font-size:22px; font-weight:800; margin-top:2px;}
@@ -200,16 +203,16 @@
   .obl-row-action .name{color:var(--teal);}
 
   .alloc-grid{display:flex; gap:8px;}
-  .alloc-card{flex:1; background:#fff; border:1px solid var(--line); border-radius:16px; padding:12px 10px; text-align:center; transition:transform .12s ease;}
+  .alloc-card{flex:1; background:#fff; border:none; border-radius:20px; padding:15px 10px; text-align:center; box-shadow:var(--lift); transition:transform .12s ease;}
   .alloc-card:active{transform:scale(.96);}
   .alloc-card .dot{width:8px;height:8px;border-radius:50%;margin:0 auto 6px;}
-  .alloc-card .amt{font-size:14px; font-weight:800; color:var(--ink);}
+  .alloc-card .amt{font-size:17px; font-weight:800; color:var(--ink);}
   .alloc-card .lbl{font-size:10.5px; color:var(--ink-soft); font-weight:600; margin-top:2px;}
 
   .stat-grid{display:flex; gap:8px;}
-  .stat-card{flex:1; background:#fff; border:1px solid var(--line); border-radius:16px; padding:12px 12px;}
-  .stat-card .k{font-size:11px; color:var(--ink-soft); font-weight:600; margin-bottom:4px;}
-  .stat-card .v{font-size:15px; font-weight:800; color:var(--ink);}
+  .stat-card{flex:1; background:var(--t1); border:none; border-radius:20px; padding:14px;}
+  .stat-card .k{font-size:11px; color:var(--ink-soft); font-weight:700; margin-bottom:5px;}
+  .stat-card .v{font-size:19px; font-weight:800; color:var(--ink);}
   .stat-card .v span{font-size:11px; font-weight:600; color:var(--ink-soft);}
 
   /* Bento tiles — big, airy, one wash per tile, with a circular line-icon badge. Sized so the
@@ -263,43 +266,44 @@
   .acct-name span{display:block; font-size:10.5px; font-weight:600; color:var(--ink-soft); margin-top:2px;}
   .acct-val{font-size:14.5px; font-weight:800;}
 
-  .goal-card{background:#fff; border:1px solid var(--line); border-radius:18px; padding:16px;}
+  .goal-card{background:#fff; border:none; border-radius:22px; padding:16px; box-shadow:var(--lift);}
   .goal-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
   .goal-top .gn{font-size:13px; font-weight:700; color:var(--ink);}
   .goal-top .gp{font-size:12px; font-weight:700; color:var(--teal);}
-  .goal-track{height:12px; border-radius:999px; background:var(--paper-dim); overflow:hidden;}
-  .goal-fill{height:100%; background:linear-gradient(90deg,var(--teal),var(--sage)); border-radius:999px; transition:width .35s ease;}
+  .goal-track{height:10px; border-radius:999px; background:var(--line); overflow:hidden;}
+  .goal-fill{height:100%; background:var(--gold); border-radius:999px; transition:width .35s ease;}
   .goal-sub{font-size:11px; color:var(--ink-soft); margin-top:7px; font-weight:500;}
 
-  .cat-bars{background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px 16px;}
+  .cat-bars{background:#fff; border:none; border-radius:22px; padding:16px; box-shadow:var(--lift);}
   .cat-bar-row{margin-bottom:12px;}
   .cat-bar-row:last-child{margin-bottom:0;}
   .cat-bar-top{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px;}
   .cat-bar-top .cn{font-weight:700; color:var(--ink);}
   .cat-bar-top .cv{font-weight:700; color:var(--ink-soft);}
-  .cat-bar-track{height:8px; border-radius:999px; background:var(--paper-dim); overflow:hidden;}
-  .cat-bar-fill{height:100%; border-radius:999px; background:var(--teal);}
+  .cat-bar-track{height:9px; border-radius:999px; background:var(--line); overflow:hidden;}
+  .cat-bar-fill{height:100%; border-radius:999px; background:var(--gold); transition:width .35s ease;}
   .cat-bar-fill.over{background:var(--brick);}
 
   /* search/filter */
   .search-wrap{display:flex; gap:8px; margin-bottom:12px;}
   .search-wrap input{
-    flex:1; border:1px solid var(--line); border-radius:12px; padding:10px 14px;
+    flex:1; border:1px solid var(--line); border-radius:999px; padding:11px 16px;
     font-family:'Cairo'; font-size:13px; background:#fff; color:var(--ink);
   }
+  .search-wrap input:focus{outline:none; border-color:var(--gold);}
   .filter-scroll{display:flex; gap:6px; overflow-x:auto; padding-bottom:10px; margin-bottom:4px;}
   .filter-scroll::-webkit-scrollbar{display:none;}
   .fchip{
-    flex-shrink:0; padding:7px 13px; border-radius:999px; background:#fff; border:1px solid var(--line);
+    flex-shrink:0; padding:8px 14px; border-radius:999px; background:#fff; border:1px solid var(--line);
     font-size:12px; font-weight:700; color:var(--ink-soft); cursor:pointer; white-space:nowrap;
     transition:transform .12s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
   }
-  .fchip.sel{background:var(--teal); color:#fff; border-color:var(--teal);}
+  .fchip.sel{background:var(--gold); color:#fff; border-color:var(--gold);}
   .fchip:active{transform:scale(.94);}
 
   /* expenses list */
-  .exp-row{display:flex; align-items:center; gap:12px; background:#fff; border:1px solid var(--line); border-radius:16px; padding:12px 14px; margin-bottom:8px; content-visibility:auto; contain-intrinsic-size:0 66px;}
-  .exp-icon{width:38px;height:38px;border-radius:12px; background:var(--paper-dim); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;}
+  .exp-row{display:flex; align-items:center; gap:12px; background:#fff; border:none; border-radius:20px; padding:13px 14px; margin-bottom:8px; box-shadow:var(--lift); content-visibility:auto; contain-intrinsic-size:0 68px;}
+  .exp-icon{width:38px;height:38px;border-radius:13px; background:var(--t1); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;}
   .exp-mid{flex:1; min-width:0;}
   .exp-mid .cat{font-size:13.5px; font-weight:700; color:var(--ink);}
   .exp-mid .note{font-size:11.5px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -309,7 +313,7 @@
   .exp-del{background:none;border:none;color:var(--ink-soft); font-size:16px; cursor:pointer; padding:4px; transition:transform .1s ease;}
   .exp-edit{background:none;border:none;color:var(--teal); font-size:15px; cursor:pointer; padding:4px; transition:transform .1s ease;}
   .exp-del:active, .exp-edit:active{transform:scale(.8);}
-  .empty-state{text-align:center; padding:40px 20px; color:var(--ink-soft);}
+  .empty-state{text-align:center; padding:34px 20px; color:var(--ink-soft); background:#fff; border-radius:22px; box-shadow:var(--lift);}
   .empty-state .big{font-size:32px; margin-bottom:8px;}
   .empty-state p{font-size:13px; margin:0; line-height:1.7;}
 
@@ -317,31 +321,32 @@
      (settings especially) can start mostly collapsed instead of one long scroll */
   .acc-group{margin-bottom:14px;}
   .acc-header{
-    display:flex; align-items:center; gap:8px; width:100%; padding:13px 14px;
-    background:#fff; border:1px solid var(--line); border-radius:12px; cursor:pointer;
+    display:flex; align-items:center; gap:8px; width:100%; padding:15px 16px;
+    background:#fff; border:none; border-radius:18px; cursor:pointer; box-shadow:var(--lift);
     font-family:'Cairo'; font-weight:700; font-size:13.5px; color:var(--ink);
   }
+  .acc-header.open{background:var(--t1); box-shadow:none;}
   .acc-header .chev{margin-inline-start:auto; transition:transform .2s; color:var(--ink-soft);}
   .acc-header.open .chev{transform:rotate(180deg);}
   .acc-body{margin-top:10px;}
   .acc-body[hidden]{display:none;}
 
   /* settings */
-  .set-card{background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin-bottom:12px;}
+  .set-card{background:#fff; border:none; border-radius:22px; padding:16px; margin-bottom:12px; box-shadow:var(--lift);}
   .set-card h3{font-size:13px; margin:0 0 12px; color:var(--ink); font-weight:700;}
   .field{margin-bottom:12px;}
   .field:last-child{margin-bottom:0;}
   .field label{display:block; font-size:12px; color:var(--ink-soft); font-weight:600; margin-bottom:5px;}
   .field input, .field select{
-    width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+    width:100%; border:1px solid var(--line); border-radius:14px; padding:11px 14px;
     font-family:'Cairo'; font-size:14px; background:var(--paper); color:var(--ink);
   }
-  .field input:focus, .field select:focus{outline:2px solid var(--teal); outline-offset:1px;}
+  .field input:focus, .field select:focus{outline:2px solid var(--gold); outline-offset:1px;}
 
   .cap-row{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--line);}
   .cap-row:last-child{border-bottom:none;}
   .cap-row .cl{flex:1; font-size:12.5px; font-weight:700; color:var(--ink);}
-  .cap-row input{width:90px; border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-family:'Cairo'; font-size:12.5px; text-align:center; background:var(--paper);}
+  .cap-row input{width:90px; border:1px solid var(--line); border-radius:11px; padding:7px 8px; font-family:'Cairo'; font-size:12.5px; text-align:center; background:var(--paper);}
 
   .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--line);}
   .toggle-row:last-child{border-bottom:none;}
@@ -353,7 +358,7 @@
      (matching the original design) and left:3px under LTR, instead of a hardcoded physical right
      that stayed put regardless of direction. */
   .slider:before{content:""; position:absolute; width:20px; height:20px; border-radius:50%; background:#fff; top:3px; inset-inline-start:3px; transition:.2s;}
-  input:checked + .slider{background:var(--teal);}
+  input:checked + .slider{background:var(--gold);}
   /* translateX has no logical-property equivalent, so "checked" (slides to the "end" side) needs
      an explicit value per direction rather than one default + one override — that split was the
      source of a bug where the LTR rule silently lost to this one. */
@@ -365,7 +370,7 @@
   .item-row-edit .ii{flex:1;}
   .item-row-edit .ii .n input{border:none;background:none;font-family:'Cairo';font-size:12.5px;font-weight:700;color:var(--ink);width:100%;padding:0;}
   .item-row-edit .ii .m{font-size:10.5px; color:var(--ink-soft); font-weight:500;}
-  .item-row-edit .amt-in{width:78px; border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-family:'Cairo'; font-size:12.5px; text-align:center; background:var(--paper);}
+  .item-row-edit .amt-in{width:78px; border:1px solid var(--line); border-radius:11px; padding:7px 8px; font-family:'Cairo'; font-size:12.5px; text-align:center; background:var(--paper);}
   .del-x{background:none;border:none;color:var(--brick); font-size:15px; cursor:pointer; padding:4px; transition:transform .1s ease;}
   .del-x:active{transform:scale(.8);}
 
@@ -384,9 +389,9 @@
   .oi-actions span{font-size:10.5px; text-decoration:underline; cursor:pointer; color:var(--ink-soft);}
   .oi-actions .itmDeleteForever{color:var(--brick);}
 
-  .btn{display:block; width:100%; text-align:center; padding:12px; border-radius:12px; border:none; font-family:'Cairo'; font-weight:700; font-size:13.5px; cursor:pointer; transition:transform .12s ease, opacity .12s ease;}
-  .btn-primary{background:var(--teal); color:#fff;}
-  .btn-ghost{background:var(--paper-dim); color:var(--ink);}
+  .btn{display:block; width:100%; text-align:center; padding:13px; border-radius:999px; border:none; font-family:'Cairo'; font-weight:700; font-size:13.5px; cursor:pointer; transition:transform .12s ease, opacity .12s ease;}
+  .btn-primary{background:var(--gold); color:#fff;}
+  .btn-ghost{background:#fff; color:var(--ink); box-shadow:var(--lift);}
   .btn-danger{background:none; color:var(--brick); border:1px solid var(--brick);}
   .btn:active{transform:scale(.97); opacity:.85;}
 
@@ -431,7 +436,7 @@
 
   .modal-bg{position:fixed; inset:0; background:rgba(15,42,34,.55); display:none; align-items:flex-end; justify-content:center; z-index:50;}
   .modal-bg.show{display:flex;}
-  .modal{background:var(--paper); width:100%; max-width:460px; border-radius:22px 22px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); animation:slideUp .25s ease; max-height:88vh; overflow-y:auto;}
+  .modal{background:var(--paper); width:100%; max-width:460px; border-radius:26px 26px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); animation:slideUp .25s ease; max-height:88vh; overflow-y:auto;}
   @keyframes slideUp{from{transform:translateY(30px); opacity:0} to{transform:translateY(0); opacity:1}}
   .modal h2{font-size:16px; margin:0 0 16px; color:var(--ink);}
   .chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
