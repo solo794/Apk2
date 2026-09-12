@@ -106,8 +106,11 @@
     cursor:pointer;
   }
   .month-switch button:active{background:rgba(255,255,255,.2);}
-  /* ‹/› read as "back/forward" — under LTR the reading direction flips, so the glyphs must mirror
-     to keep pointing the right way (prevMonth should still point toward the earlier month visually) */
+  /* The glyphs are written for RTL: "previous month" is to the RIGHT in Arabic, so prevMonth
+     carries "›" and nextMonth "‹" — both pointing outward, away from the label. Under LTR the row
+     itself mirrors, so the glyphs have to mirror with it to keep pointing outward; that is what
+     this rule does. Measured in both directions: the result reads "‹ [month] ›" either way, with
+     the left arrow always stepping toward the month on that side. */
   [dir="ltr"] .dir-arrow{display:inline-block; transform:scaleX(-1);}
   .month-switch span{font-size:12.5px;font-weight:600;min-width:82px;text-align:center;}
   .undo-redo-pill{display:flex; align-items:center; gap:2px; background:rgba(255,255,255,.12); border-radius:999px; padding:4px 6px;}
@@ -683,9 +686,9 @@
           <button id="redoBtn" data-i18n-title="redo.title" title="إعادة آخر تراجع" disabled>↪️</button>
         </div>
         <div class="month-switch">
-          <button id="prevMonth" class="dir-arrow">‹</button>
+          <button id="prevMonth" class="dir-arrow">›</button>
           <span id="monthLabel">سبتمبر 2026</span>
-          <button id="nextMonth" class="dir-arrow">›</button>
+          <button id="nextMonth" class="dir-arrow">‹</button>
         </div>
       </div>
     </div>
@@ -1488,6 +1491,8 @@ const I18N = {
     "obligations.groupCount":"{0} بند", "obligations.thisMonthOnly":"الشهر ده",
     "obligations.paidOf":"مدفوع {0} من {1}", "obligations.leftToPay":"فاضل {0} {1} · {2} {cur}",
     "obligations.paidSoFar":"مدفوع {0} {1} لحد دلوقتي",
+    "obligations.startsIn":"يبدأ {0} · {1} {2}", "obligations.noneYet":"لسه مدفعتش حاجة · {0} {1}",
+    "obligations.noneYetShort":"لسه مدفعتش حاجة",
     "obligations.leftToPayOne":"فاضل {0} واحد · {1} {cur}",
     "obligations.unitInstallment":"قسط|قسطين|أقساط", "obligations.unitPayment":"دفعة|دفعتين|دفعات",
     "obligations.unitMonth":"شهر|شهرين|شهور",
@@ -1781,6 +1786,8 @@ const I18N = {
     "obligations.groupCount":"{0} items", "obligations.thisMonthOnly":"this month",
     "obligations.paidOf":"Paid {0} of {1}", "obligations.leftToPay":"{0} {1} left · {2} {cur}",
     "obligations.paidSoFar":"{0} {1} paid so far",
+    "obligations.startsIn":"starts {0} · {1} {2}", "obligations.noneYet":"none paid yet · {0} {1}",
+    "obligations.noneYetShort":"none paid yet",
     "obligations.leftToPayOne":"1 {0} left · {1} {cur}",
     "obligations.unitInstallment":"installment|installments|installments",
     "obligations.unitPayment":"payment|payments|payments",
@@ -3753,11 +3760,19 @@ function renderSettings(){
       const paid = Math.min(Math.max(monthsBetween(start, curMonthKey), 0), total);
       const left = total - paid;
       const pctDone = Math.round((paid/total)*100);
+      const totalUnit = countedUnit(unitSpec, total);
+      // "مدفوع 0 من 9" was being misread as "مدفوع ٥ من ٩" — a circular zero is the shape of the
+      // Arabic five. Saying what the zero actually means removes the ambiguity instead of relying
+      // on the reader to tell the two shapes apart.
+      const paidLabel = paid === 0
+        ? (curMonthKey < start ? tf("obligations.startsIn", monthLabelOf(start), total, totalUnit)
+                               : tf("obligations.noneYet", total, totalUnit))
+        : tf("obligations.paidOf", paid, total);
       progress = `
       <div class="oi-prog">
         <div class="pt"><b style="width:${pctDone}%"></b></div>
         <div class="pl">
-          <span>${tf("obligations.paidOf", paid, total)}</span>
+          <span>${paidLabel}</span>
           <span>${left>0 ? remainingText(left) : t("obligations.finished")}</span>
         </div>
       </div>`;
@@ -3775,7 +3790,8 @@ function renderSettings(){
       progress = `
       <div class="oi-prog">
         <div class="pl">
-          <span>${tf("obligations.paidSoFar", paid, countedUnit(unitSpec, paid))}</span>
+          <span>${paid === 0 ? t("obligations.noneYetShort")
+                              : tf("obligations.paidSoFar", paid, countedUnit(unitSpec, paid))}</span>
           <span class="itmOpenDetails oi-hint">${t("obligations.setEndHint")}</span>
         </div>
       </div>`;
