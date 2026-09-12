@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:text="➕ أضف مصروف"
-        android:textColor="#F3EEDD"
+        android:textColor="#E5F5EE"
         android:textSize="13sp"
         android:textStyle="bold"
         android:paddingBottom="6dp" />
@@ -35,7 +35,7 @@
             android:background="@drawable/widget_btn_bg"
             android:text="✏️ اكتب"
             android:textAllCaps="false"
-            android:textColor="#16302E"
+            android:textColor="#FFFFFF"
             android:textSize="12sp" />
 
         <Button
@@ -46,7 +46,7 @@
             android:background="@drawable/widget_btn_bg"
             android:text="🎤 اتكلم"
             android:textAllCaps="false"
-            android:textColor="#16302E"
+            android:textColor="#FFFFFF"
             android:textSize="12sp" />
 
     </LinearLayout>
