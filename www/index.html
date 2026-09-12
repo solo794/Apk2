@@ -306,12 +306,15 @@
     display:flex; align-items:center; justify-content:center; background:var(--sq);
   }
   .oi-body{flex:1; min-width:0;}
-  .oi-head{display:flex; align-items:center; gap:8px;}
+  .oi-head{display:flex; align-items:flex-start; gap:8px;}
+  /* Plain text, not an <input>: an input can't wrap, so a long name was simply clipped and could
+     only be read by scrolling sideways inside the field. Renaming moved to the details sheet,
+     which tapping the name opens. */
   .oi-name{
-    flex:1; min-width:0; border:none; background:none; padding:0;
-    font-family:'Cairo'; font-size:13.5px; font-weight:800; color:var(--ink);
+    flex:1; min-width:0; font-size:13.5px; font-weight:800; color:var(--ink);
+    line-height:1.45; cursor:pointer; overflow-wrap:anywhere; padding-top:1px;
   }
-  .oi-name:focus{outline:none; border-bottom:1px solid var(--gold);}
+  .oi-name:active{opacity:.6;}
   .oi-meta{font-size:10.5px; color:var(--ink-soft); font-weight:600; margin-top:4px; line-height:1.65;}
   .oi-chip{
     display:inline-flex; align-items:center; gap:5px; margin-top:7px;
@@ -331,7 +334,7 @@
   .oi-acts span:active{opacity:.6;}
   .oi-acts .itmEditDetails{color:var(--i1);}
   .oi-acts .itmDeleteForever{color:var(--brick);}
-  .oi-side{flex:0 0 auto;}
+  .oi-amt{flex:0 0 auto;}
 
   /* ---------- settings rows ---------- */
   /* Grouped cards of rows, each row led by a colored square tile — the settings screen used to be
@@ -3697,7 +3700,8 @@ function renderSettings(){
       <span class="oi-sq">${cat.i||"📋"}</span>
       <div class="oi-body">
         <div class="oi-head">
-          <input class="itmName oi-name" value="${it.name}">
+          <div class="oi-name itmOpenDetails">${it.name}</div>
+          <input type="number" class="amt-in itmAmount oi-amt" value="${itemAmountForMonth(it, curMonthKey)}">
           <label class="switch"><input type="checkbox" class="itmToggle" ${itemActiveForMonth(it,curMonthKey)?"checked":""}><span class="slider"></span></label>
         </div>
         <div class="oi-meta">${meta}</div>
@@ -3709,9 +3713,6 @@ function renderSettings(){
           <span class="itmToggleGlobal">${it.active?"⏸️":"▶️"} ${t("obligations.everyMonth")}</span>
           <span class="itmDeleteForever">🗑️ ${t("obligations.deleteForever")}</span>
         </div>
-      </div>
-      <div class="oi-side">
-        <input type="number" class="amt-in itmAmount oi-amt" value="${itemAmountForMonth(it, curMonthKey)}">
       </div>
     </div>`;
   }
@@ -3767,7 +3768,13 @@ function renderSettings(){
       item.activeOverrides[curMonthKey] = e.target.checked;
       await saveItems(); render();
     };
-    row.querySelector(".itmName").onchange = async (e)=>{ state.items.find(x=>x.id===id).name = e.target.value; await saveItems(); render(); };
+    // The name is display text now (so it can wrap instead of being clipped) — renaming happens
+    // in the details sheet, which a tap on the name opens. The old inline-rename handler stays,
+    // guarded, for any row that still renders an editable name.
+    const nameInput = row.querySelector(".itmName");
+    if(nameInput) nameInput.onchange = async (e)=>{ state.items.find(x=>x.id===id).name = e.target.value; await saveItems(); render(); };
+    const openDetails = row.querySelector(".itmOpenDetails");
+    if(openDetails) openDetails.onclick = ()=>openItemModal(state.items.find(x=>x.id===id));
     row.querySelector(".itmAmount").onchange = async (e)=>{
       const item = state.items.find(x=>x.id===id);
       const val = Number(e.target.value)||0;
