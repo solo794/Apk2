@@ -21,6 +21,20 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 public class QuickAddPlugin extends Plugin {
     public static final String PREFS = "quick_add_widget";
     public static final String KEY_MODE = "pending_mode";
+    /** The app's own language ("ar"/"en"), mirrored here so the widget can label itself. */
+    public static final String KEY_LANG = "widget_lang";
+
+    /**
+     * Mirrors the app's current language into prefs and re-renders any placed widget, so the
+     * widget's labels follow the in-app language toggle rather than the device locale.
+     */
+    @PluginMethod
+    public void setWidgetLang(PluginCall call) {
+        String lang = call.getString("lang", "ar");
+        prefs().edit().putString(KEY_LANG, "en".equals(lang) ? "en" : "ar").apply();
+        QuickAddWidgetProvider.refreshAll(getContext());
+        call.resolve();
+    }
 
     @PluginMethod
     public void getPendingAction(PluginCall call) {

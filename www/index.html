@@ -370,6 +370,28 @@
   .set-panel[hidden]{display:none;}
   .set-panel .field input, .set-panel .field select{background:#fff;}
   .set-panel > p{font-size:11px; color:var(--ink-soft); margin:8px 0 0; line-height:1.7;}
+  /* An explainer that opens a tab, for a screen whose numbers mean nothing without one. Tinted
+     rather than white so it reads as guidance, not as another data card. */
+  .intro-card{background:var(--t1); border-radius:24px; padding:16px; margin-bottom:6px;}
+  .intro-title{font-size:14px; font-weight:800; color:var(--ink); line-height:1.5;}
+  .intro-body{font-size:12px; color:var(--ink-soft); font-weight:600; line-height:1.85; margin:8px 0 0;}
+  .intro-pockets{display:grid; gap:10px; margin-top:14px;}
+  .intro-pockets > div{
+    background:#fff; border-radius:16px; padding:11px 13px;
+    display:grid; grid-template-columns:10px 1fr; gap:10px; align-items:start;
+  }
+  .intro-pockets .d{width:10px; height:10px; border-radius:50%; margin-top:5px;}
+  .intro-pockets b{display:block; font-size:12.5px; font-weight:800; color:var(--ink);}
+  .intro-pockets .pk-sub{display:block; font-size:11px; font-weight:600; color:var(--ink-soft); line-height:1.7; margin-top:3px;}
+  .intro-more{margin-top:14px; background:#fff; font-size:12px !important;}
+  .intro-panel{padding:0 2px;}
+  .intro-panel p{font-size:11.5px; color:var(--ink-soft); font-weight:600; line-height:1.85; margin:12px 0 0;}
+  .intro-panel p b{color:var(--ink); font-weight:800;}
+  .phase-row .name{font-size:12px;}
+  .phase-row .val{font-size:11.5px; font-weight:700; color:var(--ink-soft);}
+  .phase-row.now{background:var(--b1);}
+  .phase-row.now .name, .phase-row.now .val{color:var(--i1); font-weight:800;}
+
   /* ---------- Pro ---------- */
   /* The one dark surface in a light app: the upgrade card is meant to read as a different kind of
      thing from every settings row around it. */
@@ -738,6 +760,37 @@
   </div>
 
   <div class="content" id="tab-allocations" style="display:none;">
+    <!-- The tab was opaque to anyone who didn't build it: three numbers appeared with no
+         explanation of where they came from or what you were meant to do with them. -->
+    <div class="intro-card">
+      <div class="intro-title" data-i18n="allocations.introTitle">التبويب ده بيقولك تعمل إيه بالفاضل من فلوسك</div>
+      <p class="intro-body" data-i18n="allocations.introBody">
+        بعد ما نخصم التزاماتك من دخلك، الباقي مش المفروض يتصرف كله. التطبيق بيقسّمه على
+        3 جيوب، والنسب بتختلف حسب حالتك المالية الشهر ده.
+      </p>
+      <div class="intro-pockets">
+        <div><span class="d" style="background:var(--sage)"></span><div><b data-i18n="allocations.pocketEmergTitle">🛟 طوارئ</b><span class="pk-sub" data-i18n="allocations.pocketEmergSub">كاش بتحطه جنب للمفاجآت (علاج، عطل، شغل وقف). ده أمانك.</span></div></div>
+        <div><span class="d" style="background:var(--teal)"></span><div><b data-i18n="allocations.pocketInvestTitle">📈 استثمار</b><span class="pk-sub" data-i18n="allocations.pocketInvestSub">فلوس بتشتغل وتكبر: شهادة، ذهب، صندوق. مش بتتلمس.</span></div></div>
+        <div><span class="d" style="background:var(--gold)"></span><div><b data-i18n="allocations.pocketFlexTitle">🎯 مرونة</b><span class="pk-sub" data-i18n="allocations.pocketFlexSub">مصروف جيبك المسموح للشهر ده — ودي بالظبط اللي شريط "مرونة الشهر ده" في الرئيسية بيقيس عليها.</span></div></div>
+      </div>
+      <button class="acc-header intro-more" data-acc="allocHelp">
+        <span data-i18n="allocations.introMore">النسب بتتحدد إزاي؟ وإيه اللي لازم أعمله أنا؟</span> <span class="chev">▾</span>
+      </button>
+      <div class="acc-body intro-panel" id="acc-allocHelp" hidden>
+        <p data-i18n="allocations.introPhases">
+          التطبيق بيشوف الفائض المتكرر بتاعك (المرتب + أي دخل إضافي − كل التزاماتك) وبيحدّد
+          مرحلتك، وكل مرحلة ليها نسب مختلفة:
+        </p>
+        <div class="obl-list" id="phaseTable" style="margin:10px 0;"></div>
+        <p data-i18n-html="allocations.introActions">
+          الأرقام دي <b>اقتراح</b>، مش تحويل بيحصل لوحده. انت اللي بتحوّل الفلوس فعليًا (لحساب
+          التوفير، لشهادة، لكاش في الدرج...) وبعدين تسجّلها هنا بزرار "+" عشان التطبيق يعرف
+          إنك نفّذت. تقدر كمان تدوس على أي كارت من التلاتة وتغيّر رقمه للشهر ده بس لو ظروفك
+          اختلفت.
+        </p>
+      </div>
+    </div>
+
     <div class="section-title"><span data-i18n="allocations.suggestTitle">📦 توزيع الفائض المقترح</span> <span class="hint" id="allocSuggestionMonthLbl"></span></div>
     <div class="alloc-grid" id="allocGrid"></div>
 
@@ -782,7 +835,7 @@
       <span class="chev">▾</span>
     </button>
     <div class="acc-body set-panel" id="acc-oblHelp" style="border-radius:0 0 18px 18px; margin-top:-6px;" hidden>
-      <p style="font-size:11px; color:var(--ink-soft); margin:10px 0 0; line-height:1.75;" data-i18n="obligations.helpFull">
+      <p style="font-size:11px; color:var(--ink-soft); margin:10px 0 0; line-height:1.75;" data-i18n-html="obligations.helpFull">
         تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
         فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
         اللي انت فيه بس. "✕ الشهر ده" بيشيل البند من الشهر اللي انت فيه بس (زي ما توقف السويتش
@@ -819,6 +872,9 @@
          colored square tile. Controls that are a single value (a number, a switch) sit inline on
          their row; anything with a list or a note behind it opens in place, so the whole screen
          stays one scroll instead of five accordions of bordered cards each with its own heading. -->
+
+    <div class="sec-lbl" data-i18n="settings.groupAccount">حسابك</div>
+    <div class="set-group" id="accountGroup"></div>
 
     <div class="pro-card" id="proCard"></div>
 
@@ -1501,6 +1557,21 @@ const I18N = {
     "toast.proActivated":"تم تفعيل النسخة الكاملة 🎉", "toast.proFailed":"متمّش الاشتراك — جرّب تاني",
     "toast.devUnlockOn":"وضع التجربة اتفعّل (مزايا النسخة الكاملة مفتوحة)",
     "toast.devUnlockOff":"وضع التجربة اتقفل",
+    "settings.groupAccount":"حسابك", "settings.planFree":"مجاني", "settings.planPro":"مشترك ✓",
+    "settings.accountSignIn":"سجّل دخولك بجوجل", "settings.accountSignInSub":"عشان تحفظ بياناتك على درايف وترجّعها على أي جهاز",
+    "settings.accountSignedIn":"حساب جوجل",
+    "allocations.introTitle":"التبويب ده بيقولك تعمل إيه بالفاضل من فلوسك",
+    "allocations.introBody":"بعد ما نخصم التزاماتك من دخلك، الباقي مش المفروض يتصرف كله. التطبيق بيقسّمه على 3 جيوب، والنسب بتختلف حسب حالتك المالية الشهر ده.",
+    "allocations.pocketEmergTitle":"🛟 طوارئ", "allocations.pocketEmergSub":"كاش بتحطه جنب للمفاجآت (علاج، عطل، شغل وقف). ده أمانك.",
+    "allocations.pocketInvestTitle":"📈 استثمار", "allocations.pocketInvestSub":"فلوس بتشتغل وتكبر: شهادة، ذهب، صندوق. مش بتتلمس.",
+    "allocations.pocketFlexTitle":"🎯 مرونة", "allocations.pocketFlexSub":"مصروف جيبك المسموح للشهر ده — ودي بالظبط اللي شريط \"مرونة الشهر ده\" في الرئيسية بيقيس عليها.",
+    "allocations.introMore":"النسب بتتحدد إزاي؟ وإيه اللي لازم أعمله أنا؟",
+    "allocations.introPhases":"التطبيق بيشوف الفائض المتكرر بتاعك (المرتب + أي دخل إضافي − كل التزاماتك) وبيحدّد مرحلتك، وكل مرحلة ليها نسب مختلفة:",
+    "allocations.introActions":"الأرقام دي <b>اقتراح</b>، مش تحويل بيحصل لوحده. انت اللي بتحوّل الفلوس فعليًا (لحساب التوفير، لشهادة، لكاش في الدرج...) وبعدين تسجّلها هنا بزرار \"+\" عشان التطبيق يعرف إنك نفّذت. تقدر كمان تدوس على أي كارت من التلاتة وتغيّر رقمه للشهر ده بس لو ظروفك اختلفت.",
+    "allocations.phaseRangeDeficit":"(الفائض بالسالب)", "allocations.phaseSplitDeficit":"مفيش توزيع",
+    "allocations.phaseRangePressure":"(أقل من 13,000)", "allocations.phaseRangeTransition":"(13,000 – 17,000)",
+    "allocations.phaseRangeLaunch":"(أكتر من 17,000)",
+    "allocations.phaseOrder":"الترتيب: طوارئ / استثمار / مرونة",
     "nav.home":"الرئيسية", "nav.expenses":"المصاريف", "nav.allocations":"الاستثمار",
     "nav.obligations":"الالتزامات", "nav.maintenance":"السيارة", "nav.settings":"الإعدادات",
     "modal.alloc.title":"تسجيل توزيع فعلي", "modal.alloc.catLabel":"البند",
@@ -1765,6 +1836,21 @@ const I18N = {
     "toast.proActivated":"Full version activated 🎉", "toast.proFailed":"Subscription didn't go through — try again",
     "toast.devUnlockOn":"Trial mode on (full-version features unlocked)",
     "toast.devUnlockOff":"Trial mode off",
+    "settings.groupAccount":"Your account", "settings.planFree":"Free", "settings.planPro":"Subscribed ✓",
+    "settings.accountSignIn":"Sign in with Google", "settings.accountSignInSub":"To back your data up to Drive and restore it on any device",
+    "settings.accountSignedIn":"Google account",
+    "allocations.introTitle":"This tab tells you what to do with what's left",
+    "allocations.introBody":"Once your obligations come out of your income, the rest isn't all meant to be spent. The app splits it into 3 pockets, and the shares change with where you stand this month.",
+    "allocations.pocketEmergTitle":"🛟 Emergency", "allocations.pocketEmergSub":"Cash set aside for surprises (illness, a breakdown, work drying up). This is your safety net.",
+    "allocations.pocketInvestTitle":"📈 Investing", "allocations.pocketInvestSub":"Money that works and grows: a certificate, gold, a fund. Left untouched.",
+    "allocations.pocketFlexTitle":"🎯 Flex", "allocations.pocketFlexSub":"Your allowed spending money this month — exactly what the \"This Month's Flex\" bar on Home measures against.",
+    "allocations.introMore":"How are the shares decided, and what do I actually do?",
+    "allocations.introPhases":"The app looks at your recurring surplus (salary + any extra income − all your obligations), works out your phase, and each phase has its own split:",
+    "allocations.introActions":"These numbers are a <b>suggestion</b>, not a transfer that happens by itself. You move the money for real (to savings, a certificate, cash in a drawer...) and then log it here with \"+\" so the app knows you did. You can also tap any of the three cards to change its number for this month only.",
+    "allocations.phaseRangeDeficit":"(surplus below zero)", "allocations.phaseSplitDeficit":"no split",
+    "allocations.phaseRangePressure":"(under 13,000)", "allocations.phaseRangeTransition":"(13,000 – 17,000)",
+    "allocations.phaseRangeLaunch":"(over 17,000)",
+    "allocations.phaseOrder":"Order: emergency / investing / flex",
     "nav.home":"Home", "nav.expenses":"Expenses", "nav.allocations":"Investing",
     "nav.obligations":"Obligations", "nav.maintenance":"Car", "nav.settings":"Settings",
     "modal.alloc.title":"Log an Actual Allocation", "modal.alloc.catLabel":"Category",
@@ -1923,6 +2009,7 @@ function isRTL(){ return state.settings.lang !== "en"; }
 // heroLabel), since this always runs last and wins.
 function applyStaticI18n(){
   document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-html]").forEach(el=>{ el.innerHTML = t(el.dataset.i18nHtml); });
   document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{ el.placeholder = t(el.dataset.i18nPlaceholder); });
   document.querySelectorAll("[data-i18n-title]").forEach(el=>{ el.title = t(el.dataset.i18nTitle); });
 }
@@ -1931,6 +2018,14 @@ function applyLanguage(){
   document.documentElement.dir = isRTL() ? "rtl" : "ltr";
   applyStaticI18n();
   renderLangChips();
+  syncWidgetLang();
+}
+// The home-screen widget lives outside the WebView and can't read this setting, and the system
+// locale (which a RemoteViews widget would normally follow) isn't the same thing as the language
+// picked inside the app. Mirroring it over on every language change keeps the two in step.
+function syncWidgetLang(){
+  if(!isNativeApp()) return;
+  try{ window.Capacitor.Plugins.QuickAdd.setWidgetLang({ lang: state.settings.lang==="en" ? "en" : "ar" }); }catch(e){}
 }
 function renderLangChips(){
   const el = document.getElementById("langChips");
@@ -2520,6 +2615,49 @@ async function startProPurchase(){
   renderProCard();
 }
 
+// Who is signed in, and on which plan — the first thing on the settings screen, the way an account
+// row is on any app's settings. Doubles as the sign-in entry point when nobody is signed in yet.
+function renderAccountRow(){
+  const el = document.getElementById("accountGroup");
+  if(!el) return;
+  const planChip = `<span class="${isPro() ? "pro-lock" : "set-val"}" style="${isPro() ? "background:var(--b1); color:var(--i1);" : ""}">${
+    isPro() ? t("settings.planPro") : t("settings.planFree")}</span>`;
+  if(googleAccount){
+    const initials = (googleAccount.name || googleAccount.email || "؟").trim().charAt(0).toUpperCase();
+    el.innerHTML = `
+      <div class="set-row" data-static style="--sq:var(--b1)">
+        ${googleAccount.photoUrl
+          ? `<img class="set-sq" src="${googleAccount.photoUrl}" alt="" style="object-fit:cover;">`
+          : `<span class="set-sq" style="font-size:14px; font-weight:800; color:var(--i1)">${initials}</span>`}
+        <span class="set-txt">
+          <span class="n">${googleAccount.name || t("settings.accountSignedIn")}</span>
+          <span class="s">${googleAccount.email || ""}</span>
+        </span>
+        ${planChip}
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <button class="set-row" id="accountSignInRow" style="--sq:var(--b3)">
+        <span class="set-sq">👤</span>
+        <span class="set-txt">
+          <span class="n">${t("settings.accountSignIn")}</span>
+          <span class="s">${t("settings.accountSignInSub")}</span>
+        </span>
+        ${planChip}
+      </button>`;
+    const row = document.getElementById("accountSignInRow");
+    // Sign-in exists for cloud backup, so it goes through the same gate that feature does.
+    if(row) row.onclick = ()=>{
+      if(!requirePro("cloud")) return;
+      const body = document.getElementById("acc-google");
+      const header = document.querySelector('[data-acc="google"]');
+      if(body && body.hidden && header) header.click();
+      const btn = document.getElementById("googleSignInBtn");
+      if(btn) btn.click();
+    };
+  }
+}
+
 // The Pro card in Settings — the one place that always states the current status, whether or not
 // anything is gated on this screen.
 function renderProCard(){
@@ -2624,6 +2762,7 @@ function renderGoogleAccountCard(){
       try{ await window.Capacitor.Plugins.GoogleAuth.signOut(); }catch(e){}
       googleAccount = null;
       renderGoogleAccountCard();
+      renderAccountRow();
       showToast(t("toast.googleSignedOut"));
     };
   } else {
@@ -2639,6 +2778,7 @@ function renderGoogleAccountCard(){
         if(res.success){
           googleAccount = { email: res.email, name: res.name, photoUrl: res.photoUrl };
           renderGoogleAccountCard();
+          renderAccountRow();
           showToast(t("toast.googleSignedIn"));
         } else {
           // res.error is "code:<Google Sign-In status code>" from the native side — show what it
@@ -2978,6 +3118,24 @@ function render(){
        <span class="val" style="color:${m.recurringSurplus<0?'var(--brick)':'var(--sage)'}">${fmt(m.recurringSurplus)} ${t("common.currency")}</span></div>`;
   document.getElementById("oblAddExtraIncomeRow").onclick = ()=>openAdvanceModal("income");
 
+  // Spelled out from the very same thresholds computeMonth() branches on, so the explainer can
+  // never drift away from what the app actually does.
+  const phaseTable = document.getElementById("phaseTable");
+  if(phaseTable){
+    const rows = [
+      { key:"عجز",   range:t("allocations.phaseRangeDeficit"),    split:t("allocations.phaseSplitDeficit") },
+      { key:"ضغط",   range:t("allocations.phaseRangePressure"),   split:"50% / 25% / 25%" },
+      { key:"انتقال", range:t("allocations.phaseRangeTransition"), split:"30% / 45% / 25%" },
+      { key:"انطلاق", range:t("allocations.phaseRangeLaunch"),     split:"10% / 60% / 30%" },
+    ];
+    phaseTable.innerHTML = rows.map(r=>
+      `<div class="obl-row phase-row${r.key===m.phase?" now":""}">
+         <span class="name">${phaseLabel(r.key)} <span style="font-weight:600; color:var(--ink-soft); font-size:10.5px;">${r.range}</span></span>
+         <span class="val">${r.split}</span>
+       </div>`).join("") +
+      `<div class="obl-row" style="background:var(--t2)"><span class="name" style="font-size:10.5px; font-weight:700; color:var(--ink-soft);">${t("allocations.phaseOrder")}</span></div>`;
+  }
+
   document.getElementById("allocSuggestionMonthLbl").textContent = "— " + monthLabelOf(curMonthKey);
   document.getElementById("allocGrid").innerHTML = `
     <div class="alloc-card" data-key="emergency"><div class="dot" style="background:var(--sage)"></div><div class="amt">${fmt(m.emergency)}</div><div class="lbl">${catLabel(ALLOC_CATS[0])} ${m.pEPct}%${m.emergencyIsOverridden?' ✏️':''}</div></div>
@@ -3251,6 +3409,7 @@ function renderAllocations(){
 function renderSettings(){
   renderGoogleAccountCard();
   renderProCard();
+  renderAccountRow();
   // Row summaries: each collapsed row says what's behind it, so the screen is readable without
   // opening anything (the reference's settings rows do the same with a value on the row).
   document.getElementById("sourcesCountLbl").textContent = tf("settings.sourcesCount", state.settings.sources.length);
@@ -4942,6 +5101,7 @@ function setupNativeApp(){
     if(res.signedIn){
       googleAccount = { email: res.email, name: res.name, photoUrl: res.photoUrl };
       renderGoogleAccountCard();
+      renderAccountRow();
     }
   }).catch(()=>{});
 }

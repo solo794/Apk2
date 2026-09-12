@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Static Arabic labels regardless of the in-app language setting (state.settings.lang) —
-     RemoteViews widgets follow the device's system locale, not the app's own language toggle,
-     and duplicating full locale-qualified resources for two short button labels isn't worth the
-     added complexity. Kept intentionally simple: icon + one short word per button. -->
+<!-- The text set here is only what shows before the first bind; QuickAddWidgetProvider.onUpdate
+     overwrites all three strings with the app's current language (see KEY_LANG). Locale-qualified
+     resources would follow the DEVICE language instead, which is the wrong signal here — the user
+     picks the app's language inside the app. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,6 +11,7 @@
     android:padding="10dp">
 
     <TextView
+        android:id="@+id/widgetTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
