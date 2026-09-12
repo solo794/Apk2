@@ -327,6 +327,7 @@
   .oi-prog .pt b{display:block; height:100%; border-radius:999px; background:var(--i3); transition:width .35s ease;}
   .oi-prog .pl{display:flex; justify-content:space-between; gap:8px; font-size:10px; font-weight:700; color:var(--ink-soft); margin-top:5px;}
   .oi-prog .pl b{color:var(--ink); font-weight:800;}
+  .oi-prog .oi-hint{text-decoration:underline; cursor:pointer; opacity:.75; font-weight:600;}
   .oi-notes{margin-top:6px; font-size:10.5px; color:var(--ink-soft); line-height:1.65;}
   .oi-notes .itmResetAmountOverride, .oi-notes .itmResetActiveOverride{text-decoration:underline; cursor:pointer;}
   .oi-acts{display:flex; flex-wrap:wrap; gap:6px 13px; margin-top:9px;}
@@ -1485,7 +1486,13 @@ const I18N = {
     "obligations.ofIncome":"من دخل الشهر", "obligations.leftAfter":"فاضل بعد الالتزامات: {0} {cur}",
     "obligations.noneThisMonth":"مفيش التزامات نشطة الشهر ده",
     "obligations.groupCount":"{0} بند", "obligations.thisMonthOnly":"الشهر ده",
-    "obligations.paidOf":"مدفوع {0} من {1}", "obligations.leftToPay":"فاضل {0} قسط · {1} {cur}",
+    "obligations.paidOf":"مدفوع {0} من {1}", "obligations.leftToPay":"فاضل {0} {1} · {2} {cur}",
+    "obligations.paidSoFar":"مدفوع {0} {1} لحد دلوقتي",
+    "obligations.leftToPayOne":"فاضل {0} واحد · {1} {cur}",
+    "obligations.unitInstallment":"قسط|قسطين|أقساط", "obligations.unitPayment":"دفعة|دفعتين|دفعات",
+    "obligations.unitMonth":"شهر|شهرين|شهور",
+    "obligations.setStartHint":"حدّد شهر البداية للنسبة",
+    "obligations.setEndHint":"حدّد شهر النهاية للنسبة",
     "obligations.finished":"خلصت ✓",
     "obligations.payoutDue":"بتقبض {0} {cur} في {1}", "obligations.payoutGot":"قبضت {0} {cur} في {1}",
     "obligations.helpFull":`تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
@@ -1772,7 +1779,14 @@ const I18N = {
     "obligations.ofIncome":"of this month's income", "obligations.leftAfter":"Left after obligations: {0} {cur}",
     "obligations.noneThisMonth":"No active obligations this month",
     "obligations.groupCount":"{0} items", "obligations.thisMonthOnly":"this month",
-    "obligations.paidOf":"Paid {0} of {1}", "obligations.leftToPay":"{0} left · {1} {cur}",
+    "obligations.paidOf":"Paid {0} of {1}", "obligations.leftToPay":"{0} {1} left · {2} {cur}",
+    "obligations.paidSoFar":"{0} {1} paid so far",
+    "obligations.leftToPayOne":"1 {0} left · {1} {cur}",
+    "obligations.unitInstallment":"installment|installments|installments",
+    "obligations.unitPayment":"payment|payments|payments",
+    "obligations.unitMonth":"month|months|months",
+    "obligations.setStartHint":"set a start month for %",
+    "obligations.setEndHint":"set an end month for %",
     "obligations.finished":"Finished ✓",
     "obligations.payoutDue":"Collect {0} {cur} in {1}", "obligations.payoutGot":"Collected {0} {cur} in {1}",
     "obligations.helpFull":`Editing an item's amount or turning it on/off while viewing a specific month doesn't
@@ -2053,6 +2067,12 @@ function t(key){
 }
 // t() with {0},{1}... placeholders filled in — for the toast/confirm messages that interpolate a
 // name or number into an otherwise-fixed sentence.
+function countedUnit(spec, n){
+  const forms = String(spec).split("|");
+  if(n === 2 && forms[1]) return forms[1];
+  if(n >= 3 && n <= 10 && forms[2]) return forms[2];
+  return forms[0];
+}
 function tf(key, ...args){ return args.reduce((s,v,i)=> s.replaceAll("{"+i+"}", v), t(key)); }
 function isRTL(){ return state.settings.lang !== "en"; }
 // Re-applies every static [data-i18n]/[data-i18n-placeholder]/[data-i18n-title] element's text —
@@ -3652,6 +3672,12 @@ function renderSettings(){
   const sortedItems = sortList(itemsWithEffAmount, itemsSortBy, null, "_effAmount");
   // Months from `a` to `b`, inclusive-exclusive (so start→start is 0) — used for installment
   // progress, where a start and an end month are all we need to know how far along a plan is.
+  // Shifts a month key by n months (n can be negative) — used to fill in a missing start/end
+  // boundary once the plan's length is known.
+  function shiftMonth(key, n){
+    const [y,m] = key.split("-").map(Number);
+    return monthKey(new Date(y, (m - 1) + n, 1));
+  }
   function monthsBetween(a, b){
     const [y1,m1] = a.split("-").map(Number), [y2,m2] = b.split("-").map(Number);
     return (y2-y1)*12 + (m2-m1);
@@ -3670,10 +3696,37 @@ function renderSettings(){
     // Repayment progress — only for an item that actually knows its own window. This is the part
     // the old row couldn't show at all: with a start and an end month, how many payments are
     // behind you, how many are left, and what the remaining total still is.
+    // The bar used to need BOTH a start and an end month, so a real installment entered as just
+    // "لحد سبتمبر 2026" (the common case) got nothing at all. Now:
+    //   • both boundaries known        → the full bar
+    //   • a gam3iya with a known pot   → its length is the pot ÷ your monthly share (that IS the
+    //                                    number of members/months), so the missing boundary is
+    //                                    derived and the bar works from one boundary alone
+    //   • only an end month            → how many payments are left and what they add up to
+    //   • only a start month           → how many have been paid so far
+    const monthly = itemAmountForMonth(it, curMonthKey);
+    const unitSpec = it.cat==="قسط" ? t("obligations.unitInstallment")
+                   : it.cat==="جمعية" ? t("obligations.unitPayment")
+                   : t("obligations.unitMonth");
+    const remainingText = (n)=> n === 1
+      ? tf("obligations.leftToPayOne", countedUnit(unitSpec, 1), fmt(monthly))
+      : tf("obligations.leftToPay", n, countedUnit(unitSpec, n), fmt(n*monthly));
+    let start = it.startMonth || null, end = it.endMonth || null, total = null;
+    if(start && end && end >= start){
+      total = monthsBetween(start, end) + 1;
+    } else if(it.cat==="جمعية" && Number(it.payoutAmount) > 0 && monthly > 0){
+      const inferred = Math.round(Number(it.payoutAmount) / monthly);
+      // Sanity-bounded: anything outside a plausible gam3iya length means the two numbers aren't
+      // actually a pot and a share, so don't invent a plan out of them.
+      if(inferred >= 2 && inferred <= 120){
+        total = inferred;
+        if(start && !end) end = shiftMonth(start, total - 1);
+        else if(end && !start) start = shiftMonth(end, -(total - 1));
+      }
+    }
     let progress = "";
-    if(it.startMonth && it.endMonth && it.endMonth >= it.startMonth){
-      const total = monthsBetween(it.startMonth, it.endMonth) + 1;
-      const paid = Math.min(Math.max(monthsBetween(it.startMonth, curMonthKey), 0), total);
+    if(total && start){
+      const paid = Math.min(Math.max(monthsBetween(start, curMonthKey), 0), total);
       const left = total - paid;
       const pctDone = Math.round((paid/total)*100);
       progress = `
@@ -3681,7 +3734,25 @@ function renderSettings(){
         <div class="pt"><b style="width:${pctDone}%"></b></div>
         <div class="pl">
           <span>${tf("obligations.paidOf", paid, total)}</span>
-          <span>${left>0 ? tf("obligations.leftToPay", left, fmt(left*itemAmountForMonth(it, curMonthKey))) : t("obligations.finished")}</span>
+          <span>${left>0 ? remainingText(left) : t("obligations.finished")}</span>
+        </div>
+      </div>`;
+    } else if(end){
+      const left = Math.max(0, monthsBetween(curMonthKey, end) + 1);
+      progress = `
+      <div class="oi-prog">
+        <div class="pl">
+          <span>${left>0 ? remainingText(left) : t("obligations.finished")}</span>
+          <span class="itmOpenDetails oi-hint">${t("obligations.setStartHint")}</span>
+        </div>
+      </div>`;
+    } else if(start){
+      const paid = Math.max(0, monthsBetween(start, curMonthKey));
+      progress = `
+      <div class="oi-prog">
+        <div class="pl">
+          <span>${tf("obligations.paidSoFar", paid, countedUnit(unitSpec, paid))}</span>
+          <span class="itmOpenDetails oi-hint">${t("obligations.setEndHint")}</span>
         </div>
       </div>`;
     }
@@ -3773,8 +3844,12 @@ function renderSettings(){
     // guarded, for any row that still renders an editable name.
     const nameInput = row.querySelector(".itmName");
     if(nameInput) nameInput.onchange = async (e)=>{ state.items.find(x=>x.id===id).name = e.target.value; await saveItems(); render(); };
-    const openDetails = row.querySelector(".itmOpenDetails");
-    if(openDetails) openDetails.onclick = ()=>openItemModal(state.items.find(x=>x.id===id));
+    // Several elements in one row can open the details sheet (the name, and the "set the start
+    // month" hint under a partial progress line), so wire all of them — querySelector would only
+    // ever reach the first.
+    row.querySelectorAll(".itmOpenDetails").forEach(el=>{
+      el.onclick = ()=>openItemModal(state.items.find(x=>x.id===id));
+    });
     row.querySelector(".itmAmount").onchange = async (e)=>{
       const item = state.items.find(x=>x.id===id);
       const val = Number(e.target.value)||0;
