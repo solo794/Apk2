@@ -37,12 +37,15 @@ jobs:
       - name: Grant execute permission to gradlew
         run: chmod +x android/gradlew
 
-      - name: Build debug APK
+      # The "full" flavor — everything, including bank-SMS reading. This is the build distributed
+      # directly (outside the Play Store). Adding product flavors renamed the variants, so this is
+      # assembleFullDebug now, not assembleDebug.
+      - name: Build debug APK (full flavor)
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleFullDebug --no-daemon
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: masarifi-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/full/debug/app-full-debug.apk

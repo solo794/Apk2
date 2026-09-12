@@ -986,17 +986,17 @@
         <span class="set-txt"><span class="n" data-i18n="settings.maintReminder">تنبيه قرب موعد صيانة العربية</span></span>
         <label class="switch"><input type="checkbox" id="notifMaintEnabled"><span class="slider"></span></label>
       </div>
-      <div class="set-row" data-static style="--sq:var(--b3)">
+      <div class="set-row sms-feature" data-static style="--sq:var(--b3)">
         <span class="set-sq">🏦</span>
         <span class="set-txt"><span class="n" data-i18n="settings.smsEnable">كشف المصاريف من رسائل البنك</span><span class="s" data-i18n="settings.smsSub">تجريبي — بيقترح بس، مفيش حاجة بتتسجل لوحدها</span></span>
         <label class="switch"><input type="checkbox" id="smsAutoEnabled"><span class="slider"></span></label>
       </div>
-      <button class="set-row acc-header" data-acc="sms" style="--sq:var(--b3)">
+      <button class="set-row acc-header sms-feature" data-acc="sms" style="--sq:var(--b3)">
         <span class="set-sq">⚙️</span>
         <span class="set-txt"><span class="n" data-i18n="settings.smsSendersLabel">البنوك المتابَعة</span></span>
         <span class="chev">▾</span>
       </button>
-      <div class="acc-body set-panel" id="acc-sms" hidden>
+      <div class="acc-body set-panel sms-feature" id="acc-sms" hidden>
         <div class="field" style="display:flex; gap:8px; margin-bottom:0; margin-top:10px;">
           <input type="text" id="bankSendersInput" placeholder="QNB,CIB" style="flex:1;">
           <button class="btn btn-ghost" id="saveBankSendersBtn" style="width:auto; padding:10px 16px;" data-i18n="common.save">حفظ</button>
@@ -2363,6 +2363,30 @@ function parseBankSms(sender, body){
 
   return { sender, amount: (amount && amount>0) ? amount : null, isCredit, merchant, rawBody: text };
 }
+// The Play Store build ships without the RECEIVE_SMS permission (see
+// android/app/src/play/AndroidManifest.xml), so bank-SMS detection can't work there at all.
+// Rather than keep two copies of the UI, the app asks the native side once whether the permission
+// is even declared, and hides the feature's rows when it isn't — a switch that can never turn on
+// is worse than no switch.
+let smsFeatureSupported = true;
+async function checkSmsFeatureSupport(){
+  if(!isNativeApp()) return;               // web/PWA can't read SMS either, but the rows there
+  try{                                      // already explain that when tapped
+    const { SmsReader } = window.Capacitor.Plugins;
+    if(!SmsReader || !SmsReader.isSupported) return;
+    const res = await SmsReader.isSupported();
+    smsFeatureSupported = !!res.supported;
+  }catch(e){ return; }                      // an older build with no isSupported(): leave it shown
+  if(!smsFeatureSupported){
+    document.querySelectorAll(".sms-feature").forEach(el=>{ el.style.display = "none"; });
+    // and make sure a setting carried over from a previous build can't keep the banner alive
+    if(state.settings.smsAuto.enabled){
+      state.settings.smsAuto.enabled = false;
+      saveSettings();
+    }
+  }
+}
+
 async function checkPendingSmsTransactions(){
   if(!isNativeApp() || !state.settings.smsAuto.enabled) return;
   try{
@@ -5364,6 +5388,7 @@ function checkQuickAddUrlParam(){
   await syncLinkedItemWithdrawals();
   render();
   setupNativeApp();
+  checkSmsFeatureSupport();
   checkPendingSmsTransactions();
   // Same reasoning as the appStateChange resume listener: checkPendingQuickAdd() fully owns the
   // lock overlay when it finds something pending, so tryUnlock() only runs when it didn't.

@@ -1,0 +1,102 @@
+# بناء ملف AAB موقّع وجاهز للرفع على Google Play.
+#
+# محتاج 4 أسرار (Secrets) في المستودع قبل ما يشتغل:
+#   Settings → Secrets and variables → Actions → New repository secret
+#
+#   ANDROID_KEYSTORE_BASE64    ← مفتاحك (.jks) متحوّل base64:  base64 -w0 upload-keystore.jks
+#   ANDROID_KEYSTORE_PASSWORD  ← باسوورد المفتاح
+#   ANDROID_KEY_ALIAS          ← الـalias (upload)
+#   ANDROID_KEY_PASSWORD       ← باسوورد الـalias
+#
+# لو الأسرار مش متظبّطة، الووركفلو بيوقف برسالة واضحة بدل ما يطلّع ملف غير موقّع
+# (ملف غير موقّع Play بترفضه على طول).
+#
+# بيبني نسخة "play" — اللي مفيهاش صلاحية قراءة الرسائل (شوف
+# android/app/src/play/AndroidManifest.xml وقسم صلاحية الرسائل في PUBLISHING.md).
+name: Build Play AAB (signed)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check that the signing secrets exist
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KS_ALIAS_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          missing=""
+          [ -z "$KS" ] && missing="$missing ANDROID_KEYSTORE_BASE64"
+          [ -z "$KS_PASS" ] && missing="$missing ANDROID_KEYSTORE_PASSWORD"
+          [ -z "$KS_ALIAS" ] && missing="$missing ANDROID_KEY_ALIAS"
+          [ -z "$KS_ALIAS_PASS" ] && missing="$missing ANDROID_KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::أسرار التوقيع الناقصة:$missing — راجع تعليمات الملف ده والمرحلة 2 في PUBLISHING.md"
+            exit 1
+          fi
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Restore the keystore from the secret
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/upload-keystore.jks
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x android/gradlew
+
+      - name: Build signed AAB (play flavor)
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: upload-keystore.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew bundlePlayRelease --no-daemon
+
+      - name: Confirm the bundle really is signed
+        working-directory: android
+        run: |
+          AAB=app/build/outputs/bundle/playRelease/app-play-release.aab
+          ls -lh "$AAB"
+          # ملف AAB موقّع لازم يكون جواه META-INF/*.RSA — ولو مش موجود يبقى الرفع هيترفض
+          if unzip -l "$AAB" | grep -qE 'META-INF/.*\.(RSA|EC|DSA)'; then
+            echo "✅ الملف موقّع"
+          else
+            echo "::error::الملف مش موقّع — راجع أسرار التوقيع"
+            exit 1
+          fi
+
+      - name: Remove the keystore from the runner
+        if: always()
+        run: rm -f android/upload-keystore.jks
+
+      - name: Upload the AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: masarifi-play-release-aab
+          path: android/app/build/outputs/bundle/playRelease/app-play-release.aab

@@ -3,6 +3,8 @@ package com.salman.masarifi;
 import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
@@ -23,6 +25,29 @@ import com.getcapacitor.annotation.PermissionCallback;
     permissions = { @Permission(strings = { Manifest.permission.RECEIVE_SMS }, alias = "sms") }
 )
 public class SmsReaderPlugin extends Plugin {
+
+    /**
+     * Whether this build can read bank SMS at all — i.e. whether RECEIVE_SMS is actually declared
+     * in the merged manifest. The Play Store flavor strips that permission (see
+     * src/play/AndroidManifest.xml), so the JS side asks this once and hides the whole feature
+     * instead of offering a switch that could never turn on.
+     */
+    @PluginMethod
+    public void isSupported(PluginCall call) {
+        boolean declared = false;
+        try {
+            PackageInfo info = getContext().getPackageManager()
+                .getPackageInfo(getContext().getPackageName(), PackageManager.GET_PERMISSIONS);
+            if (info.requestedPermissions != null) {
+                for (String p : info.requestedPermissions) {
+                    if (Manifest.permission.RECEIVE_SMS.equals(p)) { declared = true; break; }
+                }
+            }
+        } catch (Exception ignored) {}
+        JSObject ret = new JSObject();
+        ret.put("supported", declared);
+        call.resolve(ret);
+    }
 
     @PluginMethod
     public void checkSmsPermission(PluginCall call) {

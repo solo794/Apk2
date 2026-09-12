@@ -23,6 +23,21 @@ android {
     // build over (or even alongside a half-finished install of) a previous one — "App not
     // installed" with no clearer reason. Pinning the key means every build, from CI or a local
     // machine, installs and updates cleanly.
+    // Release signing comes from android/keystore.properties (local) or the matching env vars
+    // (CI). Neither the keystore nor the passwords are ever committed — see
+    // keystore.properties.example. When nothing is configured, the release build simply stays
+    // unsigned instead of failing, so `assemble`/`bundle` still work for anyone cloning the repo.
+    def keystorePropsFile = rootProject.file('keystore.properties')
+    def keystoreProps = new Properties()
+    if (keystorePropsFile.exists()) {
+        keystoreProps.load(new FileInputStream(keystorePropsFile))
+    }
+    def ksPath = keystoreProps['storeFile'] ?: System.getenv('ANDROID_KEYSTORE_PATH')
+    def ksPass = keystoreProps['storePassword'] ?: System.getenv('ANDROID_KEYSTORE_PASSWORD')
+    def ksAlias = keystoreProps['keyAlias'] ?: System.getenv('ANDROID_KEY_ALIAS')
+    def ksAliasPass = keystoreProps['keyPassword'] ?: System.getenv('ANDROID_KEY_PASSWORD')
+    def hasReleaseKey = ksPath && ksPass && ksAlias && ksAliasPass && file(ksPath).exists()
+
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -30,6 +45,27 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        if (hasReleaseKey) {
+            release {
+                storeFile file(ksPath)
+                storePassword ksPass.toString()
+                keyAlias ksAlias.toString()
+                keyPassword ksAliasPass.toString()
+            }
+        }
+    }
+
+    // Two builds from one codebase, same applicationId (so Play treats them as the same app):
+    //   full — everything, including reading bank SMS. This is the build distributed directly.
+    //   play — identical except the RECEIVE_SMS permission and the SMS receiver are stripped from
+    //          the manifest (see src/play/AndroidManifest.xml), because Play treats SMS access as
+    //          a restricted permission and this app's use of it isn't one of the permitted core
+    //          use cases. The app notices at runtime that the permission isn't declared and hides
+    //          the feature itself (SmsReader.isSupported), so there is no second copy of any code.
+    flavorDimensions += "distribution"
+    productFlavors {
+        full { dimension "distribution" }
+        play { dimension "distribution" }
     }
     buildTypes {
         debug {
@@ -38,6 +74,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasReleaseKey) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }

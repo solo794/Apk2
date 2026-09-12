@@ -2,3 +2,9 @@ node_modules/
 build/
 *.log
 .DS_Store
+
+# مفاتيح التوقيع وبياناتها — لا تُحفظ في المستودع أبدًا
+android/keystore.properties
+*.jks
+*.keystore
+!android/app/debug.keystore

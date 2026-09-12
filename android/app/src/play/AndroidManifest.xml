@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Play Store build. Identical to the main manifest except that bank-SMS reading is removed:
+     Google classifies SMS permissions as restricted and allows them only for a short list of core
+     use cases, which "read the bank's message and propose an expense" is not clearly one of. The
+     app detects at runtime that the permission isn't declared (SmsReader.isSupported) and hides
+     the feature from Settings by itself, so nothing else needs a separate copy.
+
+     To put the feature back into a store build later (e.g. after an approved Permissions
+     Declaration), delete this file — that's the whole change. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.RECEIVE_SMS" tools:node="remove" />
+
+    <application>
+        <receiver android:name=".SmsReceiver" tools:node="remove" />
+    </application>
+</manifest>
