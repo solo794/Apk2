@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <title data-i18n="app.title">معايا كام؟</title>
-<meta name="theme-color" content="#0E9F6E">
+<meta name="theme-color" content="#0A855D">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="معايا كام؟">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316302E'/%3E%3Ctext x='50' y='64' font-size='52' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230A855D'/%3E%3Ctext x='50' y='64' font-size='52' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
 <!-- iOS Safari doesn't support SVG apple-touch-icons (silently falls back to a screenshot
      thumbnail on the home screen) — this has to be a real opaque PNG. -->
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -27,24 +27,28 @@
      from the rest of it. --gold keeps its name (it's referenced in dozens of rules) but is now the
      primary *action* color rather than a literal gold. */
   :root{
+    /* الأخضر اتغمق شوية عن اللي اتختار في لوحة المقارنة (#0E9F6E -> #0A855D، والتيل
+       #0D9488 -> #0A7A70، وألوان النص i1..i4 معاهم): النص الأبيض فوق الأخضر القديم كان
+       تباينه 3.39 والنص الأخضر على أبيض 3.74-4.21، وكلهم تحت 4.5 المطلوبة. الأرقام دي
+       مقيسة مش مقدّرة، والهوية نفسها زي ما هي. */
     --ink:#0F2A22;
     --paper:#F0F8F4;
     --paper-dim:#E1EFE8;
-    --gold:#0E9F6E;
+    --gold:#0A855D;
     --gold-soft:#7ED9B4;
-    --teal:#0D9488;
+    --teal:#0A7A70;
     --teal-dark:#0B5F53;
-    --brick:#B23A48;
-    --sage:#0B7A5C;
+    --brick:#A8323F;
+    --sage:#0A6E53;
     --line:#DCEDE5;
     --ink-soft:#57746A;
-    --hero:#0E9F6E;
+    --hero:#0A855D;
     /* Per-card washes for the bento tiles, each with the deeper tone used by that tile's icon
        badge (b*) and the ink that reads on it (i*). */
-    --t1:#E5F5EE; --b1:#D0EBDF; --i1:#0B7A5C;
-    --t2:#F3F8E9; --b2:#E5F0D2; --i2:#5E7A26;
-    --t3:#E7F3F5; --b3:#D3E9ED; --i3:#1E7383;
-    --t4:#FDEEEE; --b4:#F8DADA; --i4:#B23A48;
+    --t1:#E5F5EE; --b1:#D0EBDF; --i1:#0A6E53;
+    --t2:#F3F8E9; --b2:#E5F0D2; --i2:#556E22;
+    --t3:#E7F3F5; --b3:#D3E9ED; --i3:#1A6775;
+    --t4:#FDEEEE; --b4:#F8DADA; --i4:#A8323F;
     /* Cards sit on a tinted ground, so they need a lift rather than an outline — one shadow,
        reused, instead of a 1px border on every surface. */
     --lift:0 1px 3px rgba(15,42,34,.05);
@@ -193,7 +197,7 @@
   }
   .qa .c svg{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
   .qa:active .c{transform:scale(.88); background:rgba(255,255,255,.28);}
-  .qa .t{font-size:10.5px; font-weight:600; color:rgba(255,255,255,.84);}
+  .qa .t{font-size:10.5px; font-weight:600; color:#fff;}
   /* Spells out what the big number actually is (your real balance, right now, across every
      account) — added after the number's meaning changed from a budget projection to something
      literal, so it needs to read unambiguously without relying on the label question alone. */
@@ -201,7 +205,7 @@
   /* شارة بيضا صريحة في الوضعين (زي زرار النسخة الكاملة فوق الكارت الغامق): الأحمر على
      الأبيض 5.85، بينما نفس الأحمر على أخضر الهيدر 1.73. */
   .hero-neg{display:inline-flex; align-items:center; gap:5px; margin-top:7px;
-    background:#fff; color:#B23A48; font-size:11px; font-weight:800;
+    background:#fff; color:#A8323F; font-size:11px; font-weight:800;
     padding:4px 11px; border-radius:999px;}
   .hero-neg[hidden]{display:none;}
   /* Shared by the hero (real balance) and the flex-card (theoretical budget) — both have a dark
@@ -487,7 +491,7 @@
     background:linear-gradient(150deg, #10362C, #0B231C);
     border-radius:22px; padding:18px; color:#fff; margin-bottom:14px;
   }
-  .pro-card.is-pro{background:linear-gradient(150deg, #0E9F6E, #0A6F4E);}
+  .pro-card.is-pro{background:linear-gradient(150deg, #0A855D, #084A38);}
   .pro-badge{
     display:inline-block; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.24);
     border-radius:999px; padding:4px 11px; font-size:10.5px; font-weight:800; margin-bottom:10px;
@@ -659,10 +663,10 @@
     width:54px; height:54px; border-radius:50%;
     display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;
     background:var(--gold); color:var(--on-accent); font-size:26px; font-weight:800;
-    box-shadow:0 10px 22px rgba(14,159,110,.45);
+    box-shadow:0 10px 22px rgba(10,133,93,.45);
     z-index:21; transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
   }
-  .fab:active{transform:translateX(-50%) scale(.88); box-shadow:0 4px 10px rgba(14,159,110,.5);}
+  .fab:active{transform:translateX(-50%) scale(.88); box-shadow:0 4px 10px rgba(10,133,93,.5);}
 
   .tabbar{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
@@ -683,7 +687,7 @@
   }
   .tabbtn .lb{font-size:9.3px; font-weight:700; transition:transform .2s ease;}
   .tabbtn.active{color:var(--teal);}
-  .tabbtn.active .ic{background:rgba(13,148,136,.14); transform:scale(1.1);}
+  .tabbtn.active .ic{background:rgba(10,122,112,.14); transform:scale(1.1);}
   .tabbtn.active .lb{transform:translateY(-1px);}
   .tabbtn:active .ic{transform:scale(.85);}
 
@@ -769,7 +773,7 @@
       && window.matchMedia("(prefers-color-scheme: dark)").matches);
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
     var meta = document.querySelector('meta[name="theme-color"]');
-    if(meta) meta.setAttribute("content", dark ? "#0B6B50" : "#0E9F6E");
+    if(meta) meta.setAttribute("content", dark ? "#0B6B50" : "#0A855D");
   })();
 </script>
 </head>
@@ -2313,7 +2317,7 @@ function applyTheme(){
   document.documentElement.setAttribute("data-theme", theme);
   // The browser chrome / Android status bar aren't styled by CSS, so they're set from the same
   // resolved value rather than left on the light hero color.
-  const hero = getComputedStyle(document.documentElement).getPropertyValue("--hero").trim() || "#0E9F6E";
+  const hero = getComputedStyle(document.documentElement).getPropertyValue("--hero").trim() || "#0A855D";
   const meta = document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute("content", hero);
   if(isNativeApp()){
@@ -5572,7 +5576,7 @@ document.getElementById("saveAdvanceAdd").onclick = async ()=>{
 // ---------- excel export styling (xlsx-js-style — see the CDN <script> comment in <head>) ----------
 // Brand palette, same hex values as the app's own CSS custom properties, so the exported report
 // reads as an extension of the app rather than a generic spreadsheet dump.
-const XL_COLOR = { teal:"1F6F6B", ink:"16302E", gold:"B8863B", sage:"4B7756", brick:"A8462E", stripe:"F3EEDD", border:"D9D0AE" };
+const XL_COLOR = { teal:"0A7A70", ink:"0F2A22", gold:"0A855D", sage:"0A6E53", brick:"A8323F", stripe:"E5F5EE", border:"DCEDE5" };
 const XL_BORDER_SIDE = { style:"thin", color:{rgb:XL_COLOR.border} };
 const XL_BORDER = { top:XL_BORDER_SIDE, bottom:XL_BORDER_SIDE, left:XL_BORDER_SIDE, right:XL_BORDER_SIDE };
 
