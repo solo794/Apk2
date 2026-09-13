@@ -37,7 +37,7 @@
     --brick:#B23A48;
     --sage:#0B7A5C;
     --line:#DCEDE5;
-    --ink-soft:#628075;
+    --ink-soft:#57746A;
     --hero:#0E9F6E;
     /* Per-card washes for the bento tiles, each with the deeper tone used by that tile's icon
        badge (b*) and the ink that reads on it (i*). */
@@ -52,6 +52,10 @@
        لتوكن. الأبيض اللي فاضل مكتوب صريح في الكود هو اللي فوق سطح ملوّن (نص على --gold/--teal،
        زرار الاشتراك، بُصلة السويتش) — وده أبيض في الوضعين عن قصد. */
     --card:#FFFFFF;
+    /* النص اللي بيتحط فوق --gold/--teal (شريحة مختارة، زرار أساسي، زرار الإضافة). أبيض في
+       الوضع الفاتح، وغامق في الليلي: هناك اللونين بيفتحوا عشان يقروا على أرضية غامقة، والأبيض
+       فوقهم بيبقى تباينه 2.5 بس — قياس فعلي، مش تقدير. */
+    --on-accent:#FFFFFF;
     /* الكارت الغامق المقصود إنه غامق (كارت المرونة، شاشة القفل) — مش بيتقلب مع الثيم، لأن نصه
        أبيض ثابت. في الوضع الفاتح هو نفسه --ink. */
     --ink-card:#0F2A22;
@@ -74,7 +78,7 @@
     --gold-soft:#0E7A5A;
     --teal:#14B8A6;
     --teal-dark:#0B4F47;
-    --brick:#F4707E;
+    --brick:#FF9BA5;
     --sage:#34D399;
     --line:#20372F;
     --ink-soft:#93B3A6;
@@ -85,6 +89,7 @@
     --t4:#37202A; --b4:#562C33; --i4:#F58A98;
     --card:#152B25;
     --ink-card:#10302A;
+    --on-accent:#07201A;
     --lift:0 1px 3px rgba(0,0,0,.4);
     --backdrop:rgba(0,0,0,.62);
     --app-shadow:0 0 40px rgba(0,0,0,.6);
@@ -193,6 +198,12 @@
      account) — added after the number's meaning changed from a budget projection to something
      literal, so it needs to read unambiguously without relying on the label question alone. */
   .hero-sub{font-size:12px; opacity:.72; font-weight:500; margin-top:3px;}
+  /* شارة بيضا صريحة في الوضعين (زي زرار النسخة الكاملة فوق الكارت الغامق): الأحمر على
+     الأبيض 5.85، بينما نفس الأحمر على أخضر الهيدر 1.73. */
+  .hero-neg{display:inline-flex; align-items:center; gap:5px; margin-top:7px;
+    background:#fff; color:#B23A48; font-size:11px; font-weight:800;
+    padding:4px 11px; border-radius:999px;}
+  .hero-neg[hidden]{display:none;}
   /* Shared by the hero (real balance) and the flex-card (theoretical budget) — both have a dark
      background, so the same semi-transparent-white pill reads fine in either place. */
   .hero .phase-chip, .flex-card .phase-chip{
@@ -256,6 +267,26 @@
   .obl-row-action .name{color:var(--teal);}
 
   .alloc-grid{display:flex; gap:8px;}
+  /* كارت مقارنة قاعدة 50/20/15/15 */
+  .rule-card{background:var(--card); border-radius:22px; padding:16px; box-shadow:var(--lift); margin-bottom:14px;}
+  .rule-row{padding:11px 0;}
+  .rule-row + .rule-row{border-top:1px solid var(--line);}
+  .rule-head{display:flex; align-items:baseline; gap:8px; justify-content:space-between;}
+  .rule-name{font-size:13px; font-weight:800; color:var(--ink);}
+  .rule-name span{display:block; font-size:10.5px; font-weight:600; color:var(--ink-soft); margin-top:2px;}
+  .rule-nums{font-size:13px; font-weight:800; color:var(--ink); white-space:nowrap; text-align:end;}
+  .rule-nums small{display:block; font-size:10.5px; font-weight:700; color:var(--ink-soft);}
+  /* الشريط بيتملّي من ناحية بداية القراءة، فعلامة الهدف لازم تتقاس من نفس الناحية (inset-inline-start)
+     عشان تفضل مظبوطة في العربي والإنجليزي. */
+  .rule-bar{position:relative; height:8px; border-radius:999px; background:var(--paper-dim); margin-top:8px;}
+  .rule-bar > i{display:block; height:100%; border-radius:999px; background:var(--i1); max-width:100%;}
+  .rule-bar > i.over{background:var(--i4);}
+  .rule-bar .tgt{position:absolute; top:-4px; width:2px; height:16px; border-radius:1px; background:var(--ink-soft);}
+  .rule-verdict{font-size:10.5px; font-weight:700; margin-top:6px; color:var(--ink-soft);}
+  .rule-verdict.bad{color:var(--brick);}
+  .rule-verdict.good{color:var(--sage);}
+  .rule-note{font-size:11px; color:var(--ink-soft); line-height:1.75; margin:10px 0 0;}
+  .alloc-card .lbl2{font-size:9.5px; color:var(--ink-soft); font-weight:700; margin-top:3px;}
   .alloc-card{flex:1; background:var(--card); border:none; border-radius:20px; padding:15px 10px; text-align:center; box-shadow:var(--lift); transition:transform .12s ease;}
   .alloc-card:active{transform:scale(.96);}
   .alloc-card .dot{width:8px;height:8px;border-radius:50%;margin:0 auto 6px;}
@@ -534,7 +565,7 @@
     font-size:12px; font-weight:700; color:var(--ink-soft); cursor:pointer; white-space:nowrap;
     transition:transform .12s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
   }
-  .fchip.sel{background:var(--gold); color:#fff; border-color:var(--gold);}
+  .fchip.sel{background:var(--gold); color:var(--on-accent); border-color:var(--gold);}
   .fchip:active{transform:scale(.94);}
 
   /* expenses list */
@@ -612,7 +643,7 @@
 
 
   .btn{display:block; width:100%; text-align:center; padding:13px; border-radius:999px; border:none; font-family:'Cairo'; font-weight:700; font-size:13.5px; cursor:pointer; transition:transform .12s ease, opacity .12s ease;}
-  .btn-primary{background:var(--gold); color:#fff;}
+  .btn-primary{background:var(--gold); color:var(--on-accent);}
   .btn-ghost{background:var(--card); color:var(--ink); box-shadow:var(--lift);}
   .btn-danger{background:none; color:var(--brick); border:1px solid var(--brick);}
   .btn:active{transform:scale(.97); opacity:.85;}
@@ -627,7 +658,7 @@
     left:50%; transform:translateX(-50%);
     width:54px; height:54px; border-radius:50%;
     display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;
-    background:var(--gold); color:#fff; font-size:26px; font-weight:800;
+    background:var(--gold); color:var(--on-accent); font-size:26px; font-weight:800;
     box-shadow:0 10px 22px rgba(14,159,110,.45);
     z-index:21; transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
   }
@@ -663,7 +694,7 @@
   .modal h2{font-size:16px; margin:0 0 16px; color:var(--ink);}
   .chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
   .chip{padding:8px 14px; border-radius:999px; background:var(--card); border:1px solid var(--line); font-size:12.5px; font-weight:700; color:var(--ink); cursor:pointer; transition:transform .12s ease, background-color .15s ease, color .15s ease, border-color .15s ease;}
-  .chip.sel{background:var(--teal); color:#fff; border-color:var(--teal);}
+  .chip.sel{background:var(--teal); color:var(--on-accent); border-color:var(--teal);}
   .chip:active{transform:scale(.94);}
   .calc-row{display:flex; gap:6px; margin-top:6px;}
   .calc-row button{
@@ -712,7 +743,7 @@
   .sms-item .si-actions{display:flex; gap:8px;}
   .sms-item .si-actions button{flex:1; padding:8px; border-radius:10px; border:none; font-family:'Cairo'; font-weight:700; font-size:12px; cursor:pointer; transition:transform .12s ease;}
   .sms-item .si-actions button:active{transform:scale(.95);}
-  .sms-item .si-add{background:var(--teal); color:#fff;}
+  .sms-item .si-add{background:var(--teal); color:var(--on-accent);}
   .sms-item .si-dismiss{background:var(--paper-dim); color:var(--ink);}
 
   @media (prefers-reduced-motion: reduce){
@@ -764,6 +795,7 @@
       <div class="label" id="heroLabel" data-i18n="hero.label">معايا كام؟</div>
       <div class="amount" id="heroAmount">0 <small data-i18n="common.currency">ج</small></div>
       <div class="hero-sub" data-i18n="hero.subLabel">رصيدك الفعلي دلوقتي في كل حساباتك</div>
+      <div class="hero-neg" id="heroNegBadge" hidden>⚠️ <span data-i18n="hero.negative">رصيدك بالسالب</span></div>
       <div class="qa-row">
         <button class="qa" id="qaExpense">
           <span class="c"><svg viewBox="0 0 24 24"><path d="M12 5.2v13.6M5.2 12h13.6"/></svg></span>
@@ -852,6 +884,9 @@
 
     <div class="section-title"><span data-i18n="allocations.suggestTitle">📦 توزيع الفائض المقترح</span> <span class="hint" id="allocSuggestionMonthLbl"></span></div>
     <div class="alloc-grid" id="allocGrid"></div>
+
+    <div class="section-title" style="margin-top:20px;"><span data-i18n="rule.title">🎯 انت فين من قاعدة 50/20/15/15؟</span> <span class="hint" id="ruleMonthLbl"></span></div>
+    <div class="rule-card" id="ruleCard"></div>
 
     <div class="section-title" style="margin-top:20px;" data-i18n="allocations.cumulativeTitle">📦 التوزيعات التراكمية (فعليًا)</div>
     <div class="stat-grid" id="allocStatGrid" style="margin-bottom:14px;"></div>
@@ -1522,6 +1557,12 @@ function defaultSettings(){
     // a fortune on one salary and a rounding error on another, so absolute cut-offs only ever fit
     // one person. Editable, since "comfortable" is personal.
     phasePct: { pressure: 25, launch: 45 },
+    // قاعدة 50/20/15/15 — مرجع للمقارنة بس، مش اللي بيوزّع (التوزيع الفعلي بيتم على الفائض
+    // الحقيقي في computeMonth). النسب قابلة للتعديل، زي ما الملف اللي جات منه بيقول بالظبط.
+    rule: { essentials: 50, lifestyle: 20, invest: 15, emergency: 15 },
+    // أي فئة مصروف تتحسب "رفاهية" بدل "أساسيات" في المقارنة دي. الباقي (والفئات اللي المستخدم
+    // بيضيفها بنفسه) بيتحسب أساسي.
+    lifestyleCats: ["تسوق", "ترفيه"],
     notif: { daily:{enabled:false, time:"21:00"}, weeklyBackup:{enabled:false}, capAlert:{enabled:true}, maintDue:{enabled:true},
              // تنبيه قبل كل قسط/بند له يوم استحقاق محدّد، بعدد أيام قابل للتعديل
              itemDue:{enabled:true, daysBefore:2} },
@@ -1570,7 +1611,7 @@ function maintItemLabel(name){ const i = MAINT_ITEMS.indexOf(name); return (stat
 const I18N = {
   ar: {
     "app.title":"💰 معايا كام؟", "undo.title":"تراجع عن آخر تغيير", "redo.title":"إعادة آخر تراجع",
-    "hero.label":"معايا كام؟", "hero.subLabel":"رصيدك الفعلي دلوقتي في كل حساباتك", "common.currency":"ج",
+    "hero.label":"معايا كام؟", "hero.negative":"رصيدك بالسالب", "hero.subLabel":"رصيدك الفعلي دلوقتي في كل حساباتك", "common.currency":"ج",
     "home.flexTitle":"🎯 مرونة الشهر ده", "home.theoreticalRemainingLabel":"الفائض النظري المتبقي", "home.spentOf":"اتصرف من أصل",
     "home.accountsTitle":"💳 أرصدة الحسابات", "home.accountsHint":'تفصيل رقم "معايا كام؟" فوق لكل حساب',
     "home.addMove":"+ تسجيل حركة (إيداع/سحب)", "home.addAdvance":"+ سلفة/دفعة ائتمانية جديدة",
@@ -1715,6 +1756,23 @@ const I18N = {
     "settings.accountSignedIn":"حساب جوجل",
     "allocations.introTitle":"التبويب ده بيقولك تعمل إيه بالفاضل من فلوسك",
     "allocations.introBody":"بعد ما نخصم التزاماتك من دخلك، الباقي مش المفروض يتصرف كله. التطبيق بيقسّمه على 3 جيوب، والنسب بتختلف حسب حالتك المالية الشهر ده.",
+    "rule.title":"🎯 انت فين من قاعدة 50/20/15/15؟",
+    "rule.intro":"قاعدة مشهورة بتقسم المرتب نفسه: نصه أساسيات، خُمسه رفاهية، والباقي استثمار وطوارئ. دي <b>مقارنة</b> بس — التطبيق بيوزّع على الفاضل الحقيقي بعد التزاماتك، مش على نسبة ثابتة، عشان النسبة الثابتة مش بتزبط مع كل مرتب.",
+    "rule.essentials":"المصاريف الأساسية", "rule.essentialsSub":"التزامات الشهر + المصاريف اللي مش محسوبة رفاهية",
+    "rule.lifestyle":"رفاهية وانبساط", "rule.lifestyleSub":"مصاريف الفئات اللي انت حاططها رفاهية",
+    "rule.invest":"استثمار ومستقبل", "rule.investSub":"اللي سجّلته فعلاً في جيب الاستثمار الشهر ده",
+    "rule.emergency":"طوارئ", "rule.emergencySub":"اللي سجّلته فعلاً في جيب الطوارئ الشهر ده",
+    "rule.target":"الهدف {0}%", "rule.over":"أعلى من الهدف بـ{0}%", "rule.under":"أقل من الهدف بـ{0}%",
+    "rule.underGood":"أقل من الهدف بـ{0}% — وده في صالحك", "rule.overGood":"فوق الهدف بـ{0}% 👏", "rule.onTarget":"في الهدف ✅",
+    "rule.emergDone":"صندوق طوارئك وصل هدفه — نسبة الطوارئ دي بقت متاحة تروح للاستثمار بدل ما تفضل مكدّسة كاش.",
+    "rule.unallocated":"لسه مش متوزّع من مرتب الشهر: {0} {cur}",
+    "rule.noAllocsHint":"مسجّلتش أي توزيع الشهر ده، فالاستثمار والطوارئ هيفضلوا صفر هنا لحد ما تسجّل من \"كل العمليات\" تحت.",
+    "rule.targetsSum":"مجموع أهدافك {0}% — القاعدة الأصلية بتتجمع على 100%.",
+    "rule.lifestyleCatsTitle":"إيه اللي بيتحسب رفاهية؟", 
+    "rule.lifestyleCatsNote":"دوس على أي فئة تنقلها بين الأساسيات والرفاهية. اللي مش مختار بيتحسب أساسي (وكمان أي فئة تضيفها بنفسك).",
+    "rule.editTargets":"عدّل النسب المستهدفة", "rule.editTargetsNote":"القاعدة نفسها بتقول غيّر النسب على اللي يناسبك — الأهم الالتزام بيها.",
+    "rule.noIncome":"حدد مرتبك الشهري من الإعدادات الأول عشان المقارنة تشتغل.",
+    "rule.ofSalary":"من المرتب",
     "allocations.pocketEmergTitle":"🛟 طوارئ", "allocations.pocketEmergSub":"كاش بتحطه جنب للمفاجآت (علاج، عطل، شغل وقف). ده أمانك.",
     "allocations.pocketInvestTitle":"📈 استثمار", "allocations.pocketInvestSub":"فلوس بتشتغل وتكبر: شهادة، ذهب، صندوق. مش بتتلمس.",
     "allocations.pocketFlexTitle":"🎯 مرونة", "allocations.pocketFlexSub":"مصروف جيبك المسموح للشهر ده — ودي بالظبط اللي شريط \"مرونة الشهر ده\" في الرئيسية بيقيس عليها.",
@@ -1878,7 +1936,7 @@ const I18N = {
   },
   en: {
     "app.title":"💰 What's Left?", "undo.title":"Undo last change", "redo.title":"Redo last undo",
-    "hero.label":"What's left?", "hero.subLabel":"Your actual balance right now, across all your accounts", "common.currency":"EGP",
+    "hero.label":"What's left?", "hero.negative":"Your balance is negative", "hero.subLabel":"Your actual balance right now, across all your accounts", "common.currency":"EGP",
     "home.flexTitle":"🎯 This Month's Flex", "home.theoreticalRemainingLabel":"Theoretical Surplus Remaining", "home.spentOf":"Spent out of",
     "home.accountsTitle":"💳 Account Balances", "home.accountsHint":'Breakdown of the "What\'s left?" number above, per account',
     "home.addMove":"+ Log a Move (Deposit/Withdraw)", "home.addAdvance":"+ New Advance/Credit Draw",
@@ -2028,6 +2086,23 @@ const I18N = {
     "settings.accountSignedIn":"Google account",
     "allocations.introTitle":"This tab tells you what to do with what's left",
     "allocations.introBody":"Once your obligations come out of your income, the rest isn't all meant to be spent. The app splits it into 3 pockets, and the shares change with where you stand this month.",
+    "rule.title":"🎯 Where are you against the 50/20/15/15 rule?",
+    "rule.intro":"A well-known rule that splits your salary itself: half essentials, a fifth lifestyle, the rest investing and emergency. This is a <b>comparison</b> only — the app allocates what is actually left after your obligations, not a fixed share, because a fixed share doesn't fit every salary.",
+    "rule.essentials":"Essentials", "rule.essentialsSub":"This month's obligations + expenses not counted as lifestyle",
+    "rule.lifestyle":"Lifestyle", "rule.lifestyleSub":"Expenses in the categories you marked as lifestyle",
+    "rule.invest":"Investing", "rule.investSub":"What you actually logged into the investing pocket this month",
+    "rule.emergency":"Emergency", "rule.emergencySub":"What you actually logged into the emergency pocket this month",
+    "rule.target":"target {0}%", "rule.over":"{0}% above target", "rule.under":"{0}% below target",
+    "rule.underGood":"{0}% below target — in your favour", "rule.overGood":"{0}% above target 👏", "rule.onTarget":"On target ✅",
+    "rule.emergDone":"Your emergency fund has reached its goal — that emergency share can go to investing instead of piling up as cash.",
+    "rule.unallocated":"Still unallocated from this month's salary: {0} {cur}",
+    "rule.noAllocsHint":"You haven't logged any allocation this month, so investing and emergency stay at zero here until you log one under \"All entries\" below.",
+    "rule.targetsSum":"Your targets add up to {0}% — the original rule adds up to 100%.",
+    "rule.lifestyleCatsTitle":"What counts as lifestyle?",
+    "rule.lifestyleCatsNote":"Tap a category to move it between essentials and lifestyle. Anything unselected counts as essential (including categories you add yourself).",
+    "rule.editTargets":"Edit the target percentages", "rule.editTargetsNote":"The rule itself says to adjust the shares to what suits you — sticking to them is what matters.",
+    "rule.noIncome":"Set your monthly salary in Settings first so the comparison can work.",
+    "rule.ofSalary":"of salary",
     "allocations.pocketEmergTitle":"🛟 Emergency", "allocations.pocketEmergSub":"Cash set aside for surprises (illness, a breakdown, work drying up). This is your safety net.",
     "allocations.pocketInvestTitle":"📈 Investing", "allocations.pocketInvestSub":"Money that works and grows: a certificate, gold, a fund. Left untouched.",
     "allocations.pocketFlexTitle":"🎯 Flex", "allocations.pocketFlexSub":"Your allowed spending money this month — exactly what the \"This Month's Flex\" bar on Home measures against.",
@@ -3182,7 +3257,7 @@ function showGoogleSignInError(msg){
 function mergeSettings(stored){
   const d = defaultSettings();
   const merged = {...d, ...(stored||{})};
-  for(const k of ["notif", "phasePct"]) merged[k] = {...d[k], ...((stored||{})[k] || {})};
+  for(const k of ["notif", "phasePct", "rule"]) merged[k] = {...d[k], ...((stored||{})[k] || {})};
   for(const k of Object.keys(d.notif)) merged.notif[k] = {...d.notif[k], ...(merged.notif[k] || {})};
   return merged;
 }
@@ -3473,6 +3548,50 @@ function expensesForMonth(monthKeyStr){ return state.expenses.filter(e=>e.date.s
 // shared by every code path that can create an expense (the regular expense modal AND the
 // maintenance modal's "سجّلها كمان كمصروف") so a monthly category cap behaves identically no
 // matter which tab the expense came from
+// قاعدة 50/20/15/15: بتقسم المرتب نفسه، والتطبيق بيقسم الفاضل بعد الالتزامات — فهي مرجع
+// للمقارنة، مش محرك بديل. لو اتحوّلت لمحرك كانت هترجع نفس مشكلة الأرقام الثابتة: حد التزاماته
+// 62% من مرتبه مستحيل يوزّع 50% أساسيات + 20% رفاهية + 30% ادخار، الأرقام مش هتتجمع أصلاً.
+//
+// كل الأربع أرقام من بيانات حقيقية مسجّلة، مش من الخطة:
+//   الأساسيات = التزامات الشهر + المصاريف اللي مش محسوبة رفاهية
+//   الرفاهية  = مصاريف الفئات اللي المستخدم حدّدها
+//   الاستثمار/الطوارئ = التوزيعات اللي اتسجّلت فعلاً الشهر ده
+// مفيش ازدواج: الالتزامات والمصاريف دفترين منفصلين في التطبيق أصلاً (شوف "الفائض النظري
+// المتبقي")، وجيب المرونة مش بيتحسب هنا لأن صرفه هو المصاريف نفسها.
+function computeRuleSplit(mk){
+  const m = computeMonth(mk);
+  // نفس مقام شريحة الالتزامات: المرتب المنتظم، ولو مفيش مرتب مسجّل نرجع لدخل الشهر.
+  const base = m.salary > 0 ? m.salary : m.income;
+  const lifeCats = state.settings.lifestyleCats || [];
+  let lifestyle = 0, essentialExp = 0;
+  state.expenses.forEach(e=>{
+    if(e.date.slice(0,7) !== mk) return;
+    const amt = Number(e.amount) || 0;
+    if(lifeCats.includes(e.cat)) lifestyle += amt; else essentialExp += amt;
+  });
+  let invest = 0, emergency = 0;
+  state.allocations.forEach(a=>{
+    if(a.date.slice(0,7) !== mk) return;
+    const v = Number(a.amount) || 0;
+    if(a.cat === "استثمار") invest += v;
+    else if(a.cat === "طوارئ") emergency += v;
+  });
+  const tg = state.settings.rule || {};
+  const rows = [
+    { key:"essentials", amount: m.obligations + essentialExp, target: Number(tg.essentials ?? 50), lower: true,  tone:1 },
+    { key:"lifestyle",  amount: lifestyle,                    target: Number(tg.lifestyle  ?? 20), lower: true,  tone:2 },
+    { key:"invest",     amount: invest,                       target: Number(tg.invest     ?? 15), lower: false, tone:3 },
+    { key:"emergency",  amount: emergency,                    target: Number(tg.emergency  ?? 15), lower: false, tone:4 },
+  ].map(r=>({ ...r, pct: base > 0 ? (r.amount / base) * 100 : 0 }));
+  const counted = rows.reduce((s,r)=>s+r.amount, 0);
+  // القاعدة الجامدة بتقول حط 15% طوارئ للأبد. التطبيق عارف هدف الطوارئ، فبيقول لما يتحقق إن
+  // النسبة دي بقت متاحة للاستثمار بدل ما تفضل مكدّسة كاش.
+  const emergGoal = Number(state.settings.emergGoal || 0);
+  const emergDone = emergGoal > 0 && Number(state.settings.emergBal || 0) >= emergGoal;
+  return { base, rows, counted, unallocated: base - counted, emergDone,
+           targetSum: rows.reduce((s,r)=>s+r.target, 0),
+           hasAllocs: (invest + emergency) > 0 };
+}
 function categoryMonthTotal(cat, mk, excludeId){
   return state.expenses.filter(e=>e.cat===cat && e.date.slice(0,7)===mk && e.id!==excludeId).reduce((s,e)=>s+Number(e.amount),0);
 }
@@ -3510,7 +3629,10 @@ function render(){
   // depending on which month you're browsing).
   const totalBalance = computeAllAccountBalances().reduce((s,b)=>s+b.balance, 0);
   document.getElementById("heroAmount").innerHTML = fmt(totalBalance) + " <small>"+cur()+"</small>";
-  document.getElementById("heroAmount").style.color = totalBalance<0 ? "var(--brick)" : "";
+  // الرقم بيفضل أبيض حتى لو سالب — الأحمر فوق أخضر الهيدر تباينه 1.73 بس (قياس)، يعني شبه
+  // مش مقروء بالظبط في اللحظة اللي لازم يتقرا فيها. الإشارة بقت شارة تحته.
+  document.getElementById("heroAmount").style.color = "";
+  document.getElementById("heroNegBadge").hidden = !(totalBalance < 0);
   document.getElementById("heroLabel").textContent = t("hero.label");
 
   const rows = [];
@@ -3552,10 +3674,16 @@ function render(){
   }
 
   document.getElementById("allocSuggestionMonthLbl").textContent = "— " + monthLabelOf(curMonthKey);
+  // النسبة الأولى من الفائض (اللي التطبيق بيوزّعه فعلاً)، والتانية من المرتب — عشان الرقم يبقى
+  // مقارن بقاعدة 50/20/15/15 اللي بتتكلم بنسب من المرتب، و"60% من الفائض" لوحدها مش بتقول
+  // كام ده من فلوسك أصلاً.
+  const salaryBase = m.salary > 0 ? m.salary : m.income;
+  const ofSalary = (v)=> salaryBase > 0
+    ? `<div class="lbl2">${Math.round((v/salaryBase)*100)}% ${t("rule.ofSalary")}</div>` : "";
   document.getElementById("allocGrid").innerHTML = `
-    <div class="alloc-card" data-key="emergency"><div class="dot" style="background:var(--sage)"></div><div class="amt">${fmt(m.emergency)}</div><div class="lbl">${catLabel(ALLOC_CATS[0])} ${m.pEPct}%${m.emergencyIsOverridden?' ✏️':''}</div></div>
-    <div class="alloc-card" data-key="invest"><div class="dot" style="background:var(--teal)"></div><div class="amt">${fmt(m.invest)}</div><div class="lbl">${catLabel(ALLOC_CATS[1])} ${m.pIPct}%${m.investIsOverridden?' ✏️':''}</div></div>
-    <div class="alloc-card" data-key="flex"><div class="dot" style="background:var(--gold)"></div><div class="amt">${fmt(m.flex)}</div><div class="lbl">${catLabel(ALLOC_CATS[2])} ${m.pFPct}%${m.flexIsOverridden?' ✏️':''}</div></div>
+    <div class="alloc-card" data-key="emergency"><div class="dot" style="background:var(--sage)"></div><div class="amt">${fmt(m.emergency)}</div><div class="lbl">${catLabel(ALLOC_CATS[0])} ${m.pEPct}%${m.emergencyIsOverridden?' ✏️':''}</div>${ofSalary(m.emergency)}</div>
+    <div class="alloc-card" data-key="invest"><div class="dot" style="background:var(--teal)"></div><div class="amt">${fmt(m.invest)}</div><div class="lbl">${catLabel(ALLOC_CATS[1])} ${m.pIPct}%${m.investIsOverridden?' ✏️':''}</div>${ofSalary(m.invest)}</div>
+    <div class="alloc-card" data-key="flex"><div class="dot" style="background:var(--gold)"></div><div class="amt">${fmt(m.flex)}</div><div class="lbl">${catLabel(ALLOC_CATS[2])} ${m.pFPct}%${m.flexIsOverridden?' ✏️':''}</div>${ofSalary(m.flex)}</div>
   `;
   document.querySelectorAll("#allocGrid .alloc-card").forEach(card=>{
     card.style.cursor = "pointer";
@@ -3753,7 +3881,104 @@ function renderExpenses(){
   });
 }
 
+// الكارت بيتولّد من جديد بعد كل تعديل جواه، فحالة فتح اللوحتين لازم تتحفظ بره الـDOM —
+// من غير كده أي دوسة على فئة بتقفل اللوحة اللي انت فاتحها.
+let ruleCatsOpen = false, ruleTargetsOpen = false;
+function renderRuleCard(){
+  const el = document.getElementById("ruleCard");
+  if(!el) return;
+  document.getElementById("ruleMonthLbl").textContent = "— " + monthLabelOf(curMonthKey);
+  const r = computeRuleSplit(curMonthKey);
+  if(r.base <= 0){
+    el.innerHTML = `<p class="rule-note">${t("rule.noIncome")}</p>`;
+    return;
+  }
+  const rowsHtml = r.rows.map(row=>{
+    const pct = Math.round(row.pct);
+    const diff = Math.round(row.pct - row.target);
+    // "أعلى من الهدف" وحش للأساسيات والرفاهية وكويس للاستثمار والطوارئ — والعكس بالعكس.
+    const bad = row.lower ? diff > 2 : diff < -2;
+    const good = row.lower ? diff <= 0 : diff >= 0;
+    // "أقل من الهدف" حاجة كويسة في الأساسيات والرفاهية ووحشة في الاستثمار والطوارئ — فاللفظ
+    // بيتغيّر مع الاتجاه، مش بس اللون.
+    const verdict = Math.abs(diff) <= 2 ? t("rule.onTarget")
+      : tf(diff > 0 ? (row.lower ? "rule.over" : "rule.overGood")
+                    : (row.lower ? "rule.underGood" : "rule.under"), Math.abs(diff));
+    return `
+      <div class="rule-row">
+        <div class="rule-head">
+          <div class="rule-name">${t("rule."+row.key)}<span>${t("rule."+row.key+"Sub")}</span></div>
+          <div class="rule-nums">${fmt(Math.round(row.amount))} ${cur()}<small>${pct}% · ${tf("rule.target", row.target)}</small></div>
+        </div>
+        <div class="rule-bar">
+          <i class="${bad?"over":""}" style="width:${Math.min(100, Math.max(0, row.pct))}%; background:var(--i${row.tone})"></i>
+          <span class="tgt" style="inset-inline-start:${Math.min(100, Math.max(0, row.target))}%"></span>
+        </div>
+        <div class="rule-verdict ${bad?"bad":(good?"good":"")}">${verdict}</div>
+      </div>`;
+  }).join("");
+
+  const cats = allCats();
+  const lifeCats = state.settings.lifestyleCats || [];
+  const tg = state.settings.rule || {};
+  el.innerHTML = `
+    <p class="rule-note">${t("rule.intro")}</p>
+    ${rowsHtml}
+    ${r.emergDone ? `<p class="rule-note">${t("rule.emergDone")}</p>` : ""}
+    ${r.unallocated > 0 ? `<p class="rule-note">${tf("rule.unallocated", fmt(Math.round(r.unallocated)))}</p>` : ""}
+    ${!r.hasAllocs ? `<p class="rule-note">${t("rule.noAllocsHint")}</p>` : ""}
+    ${Math.round(r.targetSum) !== 100 ? `<p class="rule-note" style="color:var(--brick)">${tf("rule.targetsSum", Math.round(r.targetSum))}</p>` : ""}
+    <button class="acc-header intro-more" id="ruleCatsHeader" style="width:100%; margin-top:12px;">
+      <span>${t("rule.lifestyleCatsTitle")}</span> <span class="chev">▾</span>
+    </button>
+    <div class="acc-body set-panel" id="ruleCatsBody" ${ruleCatsOpen?"":"hidden"}>
+      <p style="margin-top:0">${t("rule.lifestyleCatsNote")}</p>
+      <div class="chip-row" id="ruleCatChips" style="margin-bottom:0;">${cats.map(c=>
+        `<button class="chip ${lifeCats.includes(c.k)?"sel":""}" data-cat="${c.k}">${c.i} ${catLabel(c)}</button>`).join("")}</div>
+    </div>
+    <button class="acc-header intro-more" id="ruleTargetsHeader" style="width:100%; margin-top:8px;">
+      <span>${t("rule.editTargets")}</span> <span class="chev">▾</span>
+    </button>
+    <div class="acc-body set-panel" id="ruleTargetsBody" ${ruleTargetsOpen?"":"hidden"}>
+      ${["essentials","lifestyle","invest","emergency"].map(k=>`
+        <div class="cap-row">
+          <span class="cl">${t("rule."+k)}</span>
+          <input type="number" class="ruleTargetIn" data-key="${k}" min="0" max="100" value="${Number(tg[k] ?? 0)}">
+        </div>`).join("")}
+      <p style="margin-bottom:0">${t("rule.editTargetsNote")}</p>
+    </div>`;
+
+  // الأكورديون العام بيتربط مرة واحدة وقت التحميل على العناصر الموجودة وقتها، والكارت ده
+  // بيتولّد من جديد كل render — فبيتربط هنا بنفسه.
+  const wire = (headId, bodyId, set)=>{
+    const head = document.getElementById(headId), body = document.getElementById(bodyId);
+    head.classList.toggle("open", !body.hidden);
+    head.onclick = ()=>{ body.hidden = !body.hidden; head.classList.toggle("open", !body.hidden); set(!body.hidden); };
+  };
+  wire("ruleCatsHeader", "ruleCatsBody", v=>{ ruleCatsOpen = v; });
+  wire("ruleTargetsHeader", "ruleTargetsBody", v=>{ ruleTargetsOpen = v; });
+  el.querySelectorAll("#ruleCatChips .chip").forEach(ch=>{
+    ch.onclick = async ()=>{
+      const cat = ch.dataset.cat;
+      const list = new Set(state.settings.lifestyleCats || []);
+      if(list.has(cat)) list.delete(cat); else list.add(cat);
+      state.settings.lifestyleCats = [...list];
+      await saveSettings();
+      renderRuleCard();
+    };
+  });
+  el.querySelectorAll(".ruleTargetIn").forEach(inp=>{
+    inp.onchange = async ()=>{
+      const v = Number(inp.value);
+      state.settings.rule[inp.dataset.key] = Math.min(100, Math.max(0, isFinite(v) ? v : 0));
+      await saveSettings();
+      renderRuleCard();
+    };
+  });
+}
+
 function renderAllocations(){
+  renderRuleCard();
   // cumulative totals per category (all-time)
   const totals = {"طوارئ":0,"استثمار":0,"مرونة":0};
   state.allocations.forEach(a=>{ totals[a.cat] = (totals[a.cat]||0) + Number(a.amount); });
