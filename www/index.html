@@ -165,12 +165,17 @@
     cursor:pointer;
   }
   .month-switch button:active{background:rgba(255,255,255,.2);}
-  /* The glyphs are written for RTL: "previous month" is to the RIGHT in Arabic, so prevMonth
-     carries "›" and nextMonth "‹" — both pointing outward, away from the label. Under LTR the row
-     itself mirrors, so the glyphs have to mirror with it to keep pointing outward; that is what
-     this rule does. Measured in both directions: the result reads "‹ [month] ›" either way, with
-     the left arrow always stepping toward the month on that side. */
-  [dir="ltr"] .dir-arrow{display:inline-block; transform:scaleX(-1);}
+  /* الأسهم بقت SVG مش حروف. السبب حقيقي مش تجميلي: ‹ و › عندهم خاصية Bidi_Mirrored في
+     يونيكود، يعني المتصفح بيرسمهم مقلوبين لوحده جوه نص عربي — فالحرف ›  كان بيتعرض ‹ على
+     الجهاز، والسهمين يبانوا بيشاوروا جوه ناحية اسم الشهر. الرسمة دي مفيهاش الكلام ده، والاتجاه
+     بيتحدد من CSS بس.
+     الشيفرون مرسوم ناحية الشمال. الزرار اللي بيودّي للشهر اللي فات لازم يشاور بره ناحية حافة
+     الشاشة: في الإنجليزي هو على الشمال (زي ما هو مرسوم)، وفي العربي على اليمين فبينقلب. */
+  .month-switch button svg{width:15px; height:15px; display:block; fill:none; stroke:currentColor;
+    stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round;}
+  #nextMonth svg{transform:scaleX(-1);}
+  [dir="rtl"] #prevMonth svg{transform:scaleX(-1);}
+  [dir="rtl"] #nextMonth svg{transform:none;}
   .month-switch span{font-size:12.5px;font-weight:600;min-width:82px;text-align:center;}
   .undo-redo-pill{display:flex; align-items:center; gap:2px; background:rgba(255,255,255,.12); border-radius:999px; padding:4px 6px;}
   .undo-redo-pill button{background:none;border:none;color:#fff; font-family:'Cairo'; font-size:14px; width:26px;height:26px;border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer;}
@@ -827,9 +832,9 @@
           <button id="redoBtn" data-i18n-title="redo.title" title="إعادة آخر تراجع" disabled>↪️</button>
         </div>
         <div class="month-switch">
-          <button id="prevMonth" class="dir-arrow">›</button>
+          <button id="prevMonth"><svg viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
           <span id="monthLabel">سبتمبر 2026</span>
-          <button id="nextMonth" class="dir-arrow">‹</button>
+          <button id="nextMonth"><svg viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
         </div>
       </div>
     </div>
@@ -1568,6 +1573,33 @@
   </div>
 </div>
 
+<div class="modal-bg" id="carAddModalBg">
+  <div class="modal">
+    <h2 data-i18n="modal.carAdd.title">تسجّل إيه في العربية؟</h2>
+    <div class="set-group" style="margin-bottom:4px;">
+      <button class="set-row" id="carAddFuel" style="--sq:var(--b2)">
+        <span class="set-sq">⛽</span>
+        <span class="set-txt"><span class="n" data-i18n="car.addFuelTitle">تعبئة بنزين</span><span class="s" data-i18n="car.addFuelSub">لترات وسعر وقراءة العداد — بيحسب الاستهلاك</span></span>
+      </button>
+      <button class="set-row" id="carAddMaint" style="--sq:var(--b1)">
+        <span class="set-sq">🔧</span>
+        <span class="set-txt"><span class="n" data-i18n="car.addMaintTitle">صيانة</span><span class="s" data-i18n="car.addMaintSub">اللي اتعمل وتكلفته وكيلومترات العربية</span></span>
+      </button>
+      <button class="set-row" id="carAddFine" style="--sq:var(--b4)">
+        <span class="set-sq">🚨</span>
+        <span class="set-txt"><span class="n" data-i18n="car.addFineTitle">مخالفة</span><span class="s" data-i18n="car.addFineSub">مدفوعة أو لسه مستحقة</span></span>
+      </button>
+      <button class="set-row" id="carAddDoc" style="--sq:var(--b3)">
+        <span class="set-sq">📄</span>
+        <span class="set-txt"><span class="n" data-i18n="car.addDocTitle">ورقة أو تأمين</span><span class="s" data-i18n="car.addDocSub">بتاريخ انتهاء وتذكير قبل الموعد</span></span>
+      </button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelCarAdd" data-i18n="common.cancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="carDocModalBg">
   <div class="modal">
     <h2 id="carDocModalTitle" data-i18n="modal.doc.title">ورقة عربية</h2>
@@ -2031,6 +2063,11 @@ const I18N = {
     "settings.unitCat":"فئة|فئتين|فئات", "settings.unitCap":"حد شهري|حدّين شهريين|حدود شهرية", "settings.sumNoCaps":"من غير حدود",
     "settings.unitNotifOn":"تنبيه مفعّل|تنبيهين مفعّلين|تنبيهات مفعّلة", "settings.sumNoNotif":"كل التنبيهات مقفولة",
     "settings.sumData":"نسخة احتياطية · تصدير · استيراد",
+    "modal.carAdd.title":"تسجّل إيه في العربية؟",
+    "car.addFuelTitle":"تعبئة بنزين", "car.addFuelSub":"لترات وسعر وقراءة العداد — بيحسب الاستهلاك",
+    "car.addMaintTitle":"صيانة", "car.addMaintSub":"اللي اتعمل وتكلفته وكيلومترات العربية",
+    "car.addFineTitle":"مخالفة", "car.addFineSub":"مدفوعة أو لسه مستحقة",
+    "car.addDocTitle":"ورقة أو تأمين", "car.addDocSub":"بتاريخ انتهاء وتذكير قبل الموعد",
     "car.secStatus":"حالة العربية", "car.secDocs":"أوراق العربية ومواعيدها", "car.secFuel":"البنزين والاستهلاك",
     "car.secFines":"المخالفات", "car.secCost":"تكلفة الملكية", "car.secCard":"كارت العربية",
     "car.secSched":"جدول الصيانة الدورية", "car.secLog":"سجل الصيانة الفعلي",
@@ -2445,6 +2482,11 @@ const I18N = {
     "settings.unitCat":"category|categories", "settings.unitCap":"monthly limit|monthly limits", "settings.sumNoCaps":"no limits",
     "settings.unitNotifOn":"reminder on|reminders on", "settings.sumNoNotif":"All reminders off",
     "settings.sumData":"Backup · export · import",
+    "modal.carAdd.title":"What do you want to log?",
+    "car.addFuelTitle":"Fill-up", "car.addFuelSub":"Litres, price and odometer — works out your consumption",
+    "car.addMaintTitle":"Maintenance", "car.addMaintSub":"What was done, the cost and the odometer",
+    "car.addFineTitle":"Fine", "car.addFineSub":"Paid or still outstanding",
+    "car.addDocTitle":"Document or insurance", "car.addDocSub":"With an expiry date and a reminder",
     "car.secStatus":"Car status", "car.secDocs":"Documents & renewals", "car.secFuel":"Fuel & consumption",
     "car.secFines":"Fines", "car.secCost":"Cost of ownership", "car.secCard":"Car card",
     "car.secSched":"Service schedule", "car.secLog":"Maintenance log",
@@ -6377,7 +6419,8 @@ function openModal(existing){
 }
 document.getElementById("fabAdd").onclick = ()=>{
   if(activeTab==="allocations") openAllocModal();
-  else if(activeTab==="maintenance") openMaintModal();
+  // تبويب العربية بقى فيه أربع حاجات تتسجّل مش الصيانة بس، فالزرار بيسأل الأول
+  else if(activeTab==="maintenance") document.getElementById("carAddModalBg").classList.add("show");
   else if(activeTab==="obligations") addNewObligationItem();
   else openModal(null);
 };
@@ -6559,6 +6602,19 @@ document.getElementById("saveMaintAdd").onclick = async ()=>{
   checkMaintDueNotify();
   showToast(t("toast.maintSaved"));
 };
+
+// قايمة اختيارات زرار "+" في تبويب العربية
+(function(){
+  const sheet = document.getElementById("carAddModalBg");
+  const pick = (id, open)=>{
+    document.getElementById(id).onclick = ()=>{ sheet.classList.remove("show"); open(); };
+  };
+  pick("carAddFuel", ()=>openFuelModal());
+  pick("carAddMaint", ()=>openMaintModal());
+  pick("carAddFine", ()=>openFineModal());
+  pick("carAddDoc", ()=>openCarDocModal(null));
+  document.getElementById("cancelCarAdd").onclick = ()=>sheet.classList.remove("show");
+})();
 
 // ---------- مودالات العربية: ورقة / تعبئة بنزين / مخالفة ----------
 const carDocModalBg = document.getElementById("carDocModalBg");
@@ -7177,7 +7233,7 @@ function setupNativeApp(){
     // trapped. Listed by id rather than by variable so a newly added sheet can't be forgotten.
     const openModal = ["expenseModalBg","allocModalBg","flexModalBg","maintModalBg","accountModalBg",
                        "itemModalBg","advanceModalBg","paywallModalBg",
-                       "carDocModalBg","fuelModalBg","fineModalBg"]
+                       "carAddModalBg","carDocModalBg","fuelModalBg","fineModalBg"]
       .map(id=>document.getElementById(id))
       .find(m=>m && m.classList.contains("show"));
     if(openModal){ openModal.classList.remove("show"); return; }
