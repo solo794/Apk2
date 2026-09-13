@@ -272,25 +272,32 @@
 
   .alloc-grid{display:flex; gap:8px;}
   /* كارت مقارنة قاعدة 50/20/15/15 */
-  /* أقسام تبويب العربية: كل قسم مطوي وبيوري خلاصته في السطر التاني وانت مقفّله، فالتبويب
-     كله بقى يتقرا في شاشة واحدة بدل ما يبقى صفحة طويلة لازم تسكرول فيها عشان تعرف حاجة. */
-  .car-sec{background:var(--card); border-radius:20px; box-shadow:var(--lift); margin-bottom:10px; overflow:hidden;}
-  .car-sec-h{display:flex; align-items:center; gap:11px; width:100%; padding:13px 14px;
+  /* قسم مطوي بخلاصة — مكوّن واحد مستخدم في كل التبويبات: العنوان وتحته سطر بيقول اللي جوه
+     وانت مقفّله، فأي تبويب يتقرا في شاشة واحدة بدل ما يبقى صفحة طويلة لازم تسكرول فيها عشان
+     تعرف حاجة. */
+  .fsec{background:var(--card); border-radius:20px; box-shadow:var(--lift); margin-bottom:10px; overflow:hidden;}
+  .fsec-h{display:flex; align-items:center; gap:11px; width:100%; padding:13px 14px;
     background:none; border:none; cursor:pointer; font-family:'Cairo'; text-align:start;}
-  .car-sec-h .ic{width:34px; height:34px; border-radius:11px; display:grid; place-items:center;
+  .fsec-h .ic{width:34px; height:34px; border-radius:11px; display:grid; place-items:center;
     font-size:16px; flex:0 0 auto;}
-  .car-sec-h .tx{flex:1; min-width:0;}
-  .car-sec-h .tx b{display:block; font-size:13.5px; font-weight:800; color:var(--ink);}
-  .car-sec-h .tx .sm{display:block; font-size:11px; font-weight:700; color:var(--ink-soft);
+  .fsec-h .tx{flex:1; min-width:0;}
+  .fsec-h .tx b{display:block; font-size:13.5px; font-weight:800; color:var(--ink);}
+  .fsec-h .tx .sm{display:block; font-size:11px; font-weight:700; color:var(--ink-soft);
     margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .car-sec-h .tx .sm.bad{color:var(--i4);}
-  .car-sec-h .tx .sm:empty{display:none;}
-  .car-sec-h .chev{color:var(--ink-soft); font-size:12px; transition:transform .2s; flex:0 0 auto;}
-  .car-sec.open .car-sec-h .chev{transform:rotate(180deg);}
-  .car-sec.open .car-sec-h{padding-bottom:4px;}
-  .car-sec-b{padding:0 14px 14px;}
-  .car-sec-b[hidden]{display:none;}
-  .car-sec-b .sec-hint{font-size:11px; font-weight:700; color:var(--ink-soft); margin:0 0 8px;}
+  .fsec-h .tx .sm.bad{color:var(--i4);}
+  .fsec-h .tx .sm:empty{display:none;}
+  .fsec-h .chev{color:var(--ink-soft); font-size:12px; transition:transform .2s; flex:0 0 auto;}
+  .fsec.open .fsec-h .chev{transform:rotate(180deg);}
+  .fsec.open .fsec-h{padding-bottom:4px;}
+  .fsec-b{padding:0 14px 14px;}
+  .fsec-b[hidden]{display:none;}
+  /* بعض الأقسام محتواها كروت أصلاً (البنتو، قوايم obl-list، الكروت الإحصائية) — لو اتحطت جوه
+     كارت القسم بتبقى كارت جوه كارت. النسخة دي بتخلي الهيدر بس هو الكارت. */
+  .fsec.bare{background:none; box-shadow:none; overflow:visible; margin-bottom:8px;}
+  .fsec.bare > .fsec-h{background:var(--card); border-radius:18px; box-shadow:var(--lift);}
+  .fsec.bare.open > .fsec-h{padding-bottom:13px;}
+  .fsec.bare > .fsec-b{padding:10px 0 2px;}
+  .fsec-b .sec-hint{font-size:11px; font-weight:700; color:var(--ink-soft); margin:0 0 8px;}
   .car-alerts{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;}
   .car-alerts:empty{display:none;}
   .car-alert{display:inline-flex; align-items:center; gap:6px; padding:8px 13px; border-radius:999px;
@@ -859,37 +866,74 @@
     <!-- The flex card, the accounts list and the old "نظرة سريعة" pair all live inside the bento
          grid now; the two ghost buttons that used to sit here (تسجيل حركة / سلفة) moved up into
          the hero's quick-action circles, which are reachable from every tab. -->
-    <div class="sec-lbl" data-i18n="home.monthGlanceTitle">نظرة على الشهر</div>
-    <div class="bento" id="bentoGrid"></div>
+    <div class="fsec bare" data-sec="home.glance">
+      <button class="fsec-h"><span class="ic" style="background:var(--b1)">📊</span>
+        <span class="tx"><b data-i18n="home.monthGlanceTitle">نظرة على الشهر</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden><div class="bento" id="bentoGrid"></div></div>
+    </div>
 
-    <div class="sec-lbl" data-i18n="home.accountsTitle2">حساباتك</div>
-    <div class="obl-list" id="accountsList"></div>
+    <div class="fsec bare" data-sec="home.accounts">
+      <button class="fsec-h"><span class="ic" style="background:var(--b3)">🏦</span>
+        <span class="tx"><b data-i18n="home.accountsTitle2">حساباتك</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden><div class="obl-list" id="accountsList"></div></div>
+    </div>
 
-    <div class="sec-lbl" data-i18n="home.obligationsTitle2">التزامات الشهر</div>
-    <div class="obl-list" id="oblList"></div>
+    <div class="fsec bare" data-sec="home.obligations">
+      <button class="fsec-h"><span class="ic" style="background:var(--b2)">📊</span>
+        <span class="tx"><b data-i18n="home.obligationsTitle2">التزامات الشهر</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden><div class="obl-list" id="oblList"></div></div>
+    </div>
   </div>
 
   <div class="content" id="tab-expenses" style="display:none;">
-    <div class="section-title"><span data-i18n="expenses.byCatTitle">🥧 المصروفات حسب الفئة</span> <span id="expMonthLbl2" class="hint"></span></div>
-    <div class="cat-bars" id="catBars"></div>
-
-    <div class="section-title" style="margin-top:20px;" data-i18n="expenses.allTitle">🧾 كل المصاريف</div>
-    <div class="search-wrap">
-      <input type="text" id="searchBox" data-i18n-placeholder="expenses.searchPlaceholder" placeholder="دور بالملاحظة...">
+    <div class="fsec bare" data-sec="expenses.cats">
+      <button class="fsec-h"><span class="ic" style="background:var(--b2)">🥧</span>
+        <span class="tx"><b data-i18n="expenses.byCatTitle">🥧 المصروفات حسب الفئة</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
+        <div class="sec-hint" id="expMonthLbl2"></div>
+        <div class="cat-bars" id="catBars"></div>
+      </div>
     </div>
-    <div class="filter-scroll" id="filterChips"></div>
-    <div class="filter-scroll" id="sourceFilterChips"></div>
-    <div class="filter-scroll" id="expSortChips"></div>
-    <div class="obl-list" id="expSumWrap" style="margin-bottom:10px;"></div>
-    <div id="expList"></div>
-    <button class="btn btn-ghost" id="exportCsv" style="margin-top:6px;" data-i18n="expenses.exportCsv">⬇️ تصدير مصاريف الشهر (CSV)</button>
+
+    <div class="fsec bare" data-sec="expenses.filters">
+      <button class="fsec-h"><span class="ic" style="background:var(--b3)">🔎</span>
+        <span class="tx"><b data-i18n="common.searchFilter">بحث وفلترة</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
+        <div class="search-wrap">
+          <input type="text" id="searchBox" data-i18n-placeholder="expenses.searchPlaceholder" placeholder="دور بالملاحظة...">
+        </div>
+        <div class="filter-scroll" id="filterChips"></div>
+        <div class="filter-scroll" id="sourceFilterChips"></div>
+        <div class="filter-scroll" id="expSortChips"></div>
+      </div>
+    </div>
+
+    <div class="fsec bare" data-sec="expenses.list">
+      <button class="fsec-h"><span class="ic" style="background:var(--b1)">🧾</span>
+        <span class="tx"><b data-i18n="expenses.allTitle">🧾 كل المصاريف</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
+        <div class="obl-list" id="expSumWrap" style="margin-bottom:10px;"></div>
+        <div id="expList"></div>
+        <button class="btn btn-ghost" id="exportCsv" style="margin-top:6px;" data-i18n="expenses.exportCsv">⬇️ تصدير مصاريف الشهر (CSV)</button>
+      </div>
+    </div>
   </div>
 
   <div class="content" id="tab-allocations" style="display:none;">
     <!-- The tab was opaque to anyone who didn't build it: three numbers appeared with no
          explanation of where they came from or what you were meant to do with them. -->
+    <div class="fsec bare" data-sec="alloc.intro">
+      <button class="fsec-h"><span class="ic" style="background:var(--b3)">💡</span>
+        <span class="tx"><b data-i18n="allocations.introShort">التبويب ده بيشتغل إزاي؟</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
     <div class="intro-card">
-      <div class="intro-title" data-i18n="allocations.introTitle">التبويب ده بيقولك تعمل إيه بالفاضل من فلوسك</div>
       <p class="intro-body" data-i18n="allocations.introBody">
         بعد ما نخصم التزاماتك من دخلك، الباقي مش المفروض يتصرف كله. التطبيق بيقسّمه على
         3 جيوب، والنسب بتختلف حسب حالتك المالية الشهر ده.
@@ -917,60 +961,109 @@
       </div>
     </div>
 
-    <div class="section-title"><span data-i18n="allocations.suggestTitle">📦 توزيع الفائض المقترح</span> <span class="hint" id="allocSuggestionMonthLbl"></span></div>
-    <div class="alloc-grid" id="allocGrid"></div>
-
-    <div class="section-title" style="margin-top:20px;"><span data-i18n="rule.title">🎯 انت فين من قاعدة 50/20/15/15؟</span> <span class="hint" id="ruleMonthLbl"></span></div>
-    <div class="rule-card" id="ruleCard"></div>
-
-    <div class="section-title" style="margin-top:20px;" data-i18n="allocations.cumulativeTitle">📦 التوزيعات التراكمية (فعليًا)</div>
-    <div class="stat-grid" id="allocStatGrid" style="margin-bottom:14px;"></div>
-
-    <div class="acc-group">
-      <button class="acc-header" data-acc="allocMonthly"><span data-i18n="allocations.monthlyTitle">📅 تراكمي شهري</span> <span class="chev">▾</span></button>
-      <div class="acc-body" id="acc-allocMonthly" hidden>
-        <div class="obl-list" id="allocMonthlyList" style="margin-bottom:16px;"></div>
       </div>
     </div>
 
-    <div class="section-title" data-i18n="allocations.allTitle">🧾 كل العمليات</div>
-    <div class="filter-scroll" id="allocFilterChips"></div>
-    <div class="filter-scroll" id="allocSortChips"></div>
-    <div id="allocList"></div>
+    <div class="fsec bare" data-sec="alloc.suggest">
+      <button class="fsec-h"><span class="ic" style="background:var(--b1)">📦</span>
+        <span class="tx"><b data-i18n="allocations.suggestTitle">📦 توزيع الفائض المقترح</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
+        <div class="sec-hint" id="allocSuggestionMonthLbl"></div>
+        <div class="alloc-grid" id="allocGrid"></div>
+      </div>
+    </div>
+
+    <div class="fsec bare" data-sec="alloc.rule">
+      <button class="fsec-h"><span class="ic" style="background:var(--b2)">🎯</span>
+        <span class="tx"><b data-i18n="rule.title">🎯 انت فين من قاعدة 50/20/15/15؟</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
+        <div class="sec-hint" id="ruleMonthLbl"></div>
+        <div class="rule-card" id="ruleCard"></div>
+      </div>
+    </div>
+
+    <div class="fsec bare" data-sec="alloc.cumulative">
+      <button class="fsec-h"><span class="ic" style="background:var(--b3)">📈</span>
+        <span class="tx"><b data-i18n="allocations.cumulativeTitle">📦 التوزيعات التراكمية (فعليًا)</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
+        <div class="stat-grid" id="allocStatGrid" style="margin-bottom:14px;"></div>
+        <div class="acc-group">
+          <button class="acc-header" data-acc="allocMonthly"><span data-i18n="allocations.monthlyTitle">📅 تراكمي شهري</span> <span class="chev">▾</span></button>
+          <div class="acc-body" id="acc-allocMonthly" hidden>
+            <div class="obl-list" id="allocMonthlyList" style="margin-bottom:16px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fsec bare" data-sec="alloc.list">
+      <button class="fsec-h"><span class="ic" style="background:var(--b1)">🧾</span>
+        <span class="tx"><b data-i18n="allocations.allTitle">🧾 كل العمليات</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
+        <div class="filter-scroll" id="allocFilterChips"></div>
+        <div class="filter-scroll" id="allocSortChips"></div>
+        <div id="allocList"></div>
+      </div>
+    </div>
   </div>
 
   <div class="content" id="tab-obligations" style="display:none;">
     <!-- Restructured: a month summary card (total, split across the three kinds, and the bite it
          takes out of income) on top, then the list grouped per kind with its own subtotal, instead
          of one flat list whose only summary was a single total row. -->
-    <div class="sec-lbl"><span data-i18n="obligations.summaryTitle">التزامات</span> <span id="itemsMonthHint"></span></div>
-    <div class="obl-sum" id="oblSummary"></div>
-
-    <div class="sec-lbl" data-i18n="obligations.listTitle">البنود</div>
-    <div class="search-wrap">
-      <input type="text" id="itemsSearchBox" data-i18n-placeholder="obligations.searchPlaceholder" placeholder="دور باسم البند...">
+    <div class="fsec bare" data-sec="obl.summary">
+      <button class="fsec-h"><span class="ic" style="background:var(--b1)">📊</span>
+        <span class="tx"><b data-i18n="obligations.summaryTitle">التزامات</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
+        <div class="sec-hint" id="itemsMonthHint"></div>
+        <div class="obl-sum" id="oblSummary"></div>
+      </div>
     </div>
-    <div class="filter-scroll" id="itemsFilterChips"></div>
-    <div class="filter-scroll" id="itemsSourceFilterChips"></div>
-    <div class="filter-scroll" id="itemsSortChips"></div>
+
+    <div class="fsec bare" data-sec="obl.filters">
+      <button class="fsec-h"><span class="ic" style="background:var(--b3)">🔎</span>
+        <span class="tx"><b data-i18n="common.searchFilter">بحث وفلترة</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
+        <div class="search-wrap">
+          <input type="text" id="itemsSearchBox" data-i18n-placeholder="obligations.searchPlaceholder" placeholder="دور باسم البند...">
+        </div>
+        <div class="filter-scroll" id="itemsFilterChips"></div>
+        <div class="filter-scroll" id="itemsSourceFilterChips"></div>
+        <div class="filter-scroll" id="itemsSortChips"></div>
+      </div>
+    </div>
+
+    <div class="fsec bare" data-sec="obl.list">
+      <button class="fsec-h"><span class="ic" style="background:var(--b2)">📋</span>
+        <span class="tx"><b data-i18n="obligations.listTitle">البنود</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
     <div class="obl-list" id="itemsFilteredSumWrap" style="margin-bottom:10px;"></div>
     <div id="itemsEdit"></div>
     <div id="itemsPausedWrap" style="margin-top:10px;"></div>
     <button class="btn btn-primary" id="addItemBtn" style="margin-top:12px;" data-i18n="obligations.addItem">+ إضافة بند جديد</button>
+      </div>
+    </div>
 
-    <button class="set-row acc-header" data-acc="oblHelp" style="background:var(--card); border-radius:18px; box-shadow:var(--lift); margin-top:14px;">
-      <span class="set-sq" style="--sq:var(--b3)">❓</span>
-      <span class="set-txt"><span class="n" data-i18n="obligations.knowMore">إزاي التعديل الشهري بيشتغل؟</span></span>
-      <span class="chev">▾</span>
-    </button>
-    <div class="acc-body set-panel" id="acc-oblHelp" style="border-radius:0 0 18px 18px; margin-top:-6px;" hidden>
-      <p style="font-size:11px; color:var(--ink-soft); margin:10px 0 0; line-height:1.75;" data-i18n-html="obligations.helpFull">
+    <div class="fsec bare" data-sec="obl.help">
+      <button class="fsec-h"><span class="ic" style="background:var(--b3)">❓</span>
+        <span class="tx"><b data-i18n="obligations.knowMore">إزاي التعديل الشهري بيشتغل؟</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
+      <p style="font-size:11px; color:var(--ink-soft); margin:2px 0 0; line-height:1.75;" data-i18n-html="obligations.helpFull">
         تعديل مبلغ بند أو تفعيله/إيقافه وانت شايف شهر معيّن مبيأثرش على باقي الشهور. أول مرة تحط
         فيها مبلغ لبند جديد بتبقى قيمته العادية لكل الشهور، وأي تعديل بعد كده بيبقى خاص بالشهر
         اللي انت فيه بس. "✕ الشهر ده" بيشيل البند من الشهر اللي انت فيه بس (زي ما توقف السويتش
         بالظبط). "⏸️ كل الشهور" بيشغّل أو يوقف البند في <b>كل الشهور</b> مرة واحدة (وبيشيل أي
         استثناءات شهرية كانت متسجلة له). و"🗑️ حذف" بيمسحه نهائي من كل الشهور.
       </p>
+      </div>
     </div>
   </div>
 
@@ -979,11 +1072,11 @@
          دوسة على أي واحدة بتفتح قسمها وتوديك له. القسم بيختفي خالص لو مفيش حاجة. -->
     <div class="car-alerts" id="carAlerts"></div>
 
-    <div class="car-sec" data-sec="status">
-      <button class="car-sec-h"><span class="ic" style="background:var(--b1)">🚗</span>
+    <div class="fsec" data-sec="car.status">
+      <button class="fsec-h"><span class="ic" style="background:var(--b1)">🚗</span>
         <span class="tx"><b data-i18n="car.secStatus">حالة العربية</b><span class="sm"></span></span>
         <span class="chev">▾</span></button>
-      <div class="car-sec-b" hidden>
+      <div class="fsec-b" hidden>
         <div class="section-title" style="margin:0 0 8px;"><span data-i18n="maintenance.budgetTitle">⛽ مصاريف العربية الشهر ده</span></div>
         <div class="flex-card" id="carBudgetCard" style="margin-bottom:14px;"></div>
         <div class="field"><label data-i18n="maintenance.odometerLabel">الكيلومترات الحالية (KM)</label><input type="number" id="inOdometer" data-i18n-placeholder="maintenance.odometerPlaceholder" placeholder="مثال: 15000"></div>
@@ -993,21 +1086,21 @@
       </div>
     </div>
 
-    <div class="car-sec" data-sec="docs">
-      <button class="car-sec-h"><span class="ic" style="background:var(--b3)">📄</span>
+    <div class="fsec" data-sec="car.docs">
+      <button class="fsec-h"><span class="ic" style="background:var(--b3)">📄</span>
         <span class="tx"><b data-i18n="car.secDocs">أوراق العربية ومواعيدها</b><span class="sm"></span></span>
         <span class="chev">▾</span></button>
-      <div class="car-sec-b" hidden>
+      <div class="fsec-b" hidden>
         <div id="carDocsList"></div>
         <button class="btn btn-ghost" id="addCarDocBtn" style="margin-top:8px;" data-i18n="car.addDoc">+ إضافة ورقة</button>
       </div>
     </div>
 
-    <div class="car-sec" data-sec="fuel">
-      <button class="car-sec-h"><span class="ic" style="background:var(--b2)">⛽</span>
+    <div class="fsec" data-sec="car.fuel">
+      <button class="fsec-h"><span class="ic" style="background:var(--b2)">⛽</span>
         <span class="tx"><b data-i18n="car.secFuel">البنزين والاستهلاك</b><span class="sm"></span></span>
         <span class="chev">▾</span></button>
-      <div class="car-sec-b" hidden>
+      <div class="fsec-b" hidden>
         <div class="stat-grid" id="fuelStatGrid" style="margin-bottom:10px;"></div>
         <div class="sec-hint" id="fuelHint"></div>
         <div id="fuelList"></div>
@@ -1015,32 +1108,32 @@
       </div>
     </div>
 
-    <div class="car-sec" data-sec="fines">
-      <button class="car-sec-h"><span class="ic" style="background:var(--b4)">🚨</span>
+    <div class="fsec" data-sec="car.fines">
+      <button class="fsec-h"><span class="ic" style="background:var(--b4)">🚨</span>
         <span class="tx"><b data-i18n="car.secFines">المخالفات</b><span class="sm"></span></span>
         <span class="chev">▾</span></button>
-      <div class="car-sec-b" hidden>
+      <div class="fsec-b" hidden>
         <div class="sec-hint" id="finesHint"></div>
         <div id="finesList"></div>
         <button class="btn btn-ghost" id="addFineBtn" style="margin-top:8px;" data-i18n="car.addFine">+ تسجيل مخالفة</button>
       </div>
     </div>
 
-    <div class="car-sec" data-sec="cost">
-      <button class="car-sec-h"><span class="ic" style="background:var(--b1)">💰</span>
+    <div class="fsec" data-sec="car.cost">
+      <button class="fsec-h"><span class="ic" style="background:var(--b1)">💰</span>
         <span class="tx"><b data-i18n="car.secCost">تكلفة الملكية</b><span class="sm"></span></span>
         <span class="chev">▾</span></button>
-      <div class="car-sec-b" hidden>
+      <div class="fsec-b" hidden>
         <div class="obl-list" id="carCostList" style="margin-bottom:6px;"></div>
         <p class="rule-note" data-i18n="car.costNote">كل مصدر بيتحسب مرة واحدة بس: اللي سجّلته كصيانة أو تعبئة أو مخالفة مش بيتعدّ تاني لو اتسجّل كمصروف كمان.</p>
       </div>
     </div>
 
-    <div class="car-sec" data-sec="card">
-      <button class="car-sec-h"><span class="ic" style="background:var(--b3)">📇</span>
+    <div class="fsec" data-sec="car.card">
+      <button class="fsec-h"><span class="ic" style="background:var(--b3)">📇</span>
         <span class="tx"><b data-i18n="car.secCard">كارت العربية</b><span class="sm"></span></span>
         <span class="chev">▾</span></button>
-      <div class="car-sec-b" hidden>
+      <div class="fsec-b" hidden>
         <p class="rule-note" style="margin-top:0" data-i18n="car.cardNote">البيانات دي محفوظة على جهازك زي باقي بياناتك، ومفيدة وقت التجديد أو بيع العربية.</p>
         <div class="field"><label data-i18n="car.make">الماركة والموديل</label><input type="text" id="carMake" data-i18n-placeholder="car.makePh" placeholder="مثال: هيونداي إلنترا"></div>
         <div class="field"><label data-i18n="car.year">سنة الصنع</label><input type="number" id="carYear" placeholder="2020"></div>
@@ -1053,22 +1146,22 @@
       </div>
     </div>
 
-    <div class="car-sec" data-sec="sched">
-      <button class="car-sec-h"><span class="ic" style="background:var(--b2)">📋</span>
+    <div class="fsec" data-sec="car.sched">
+      <button class="fsec-h"><span class="ic" style="background:var(--b2)">📋</span>
         <span class="tx"><b data-i18n="car.secSched">جدول الصيانة الدورية</b><span class="sm"></span></span>
         <span class="chev">▾</span></button>
-      <div class="car-sec-b" hidden>
+      <div class="fsec-b" hidden>
         <p class="rule-note" style="margin-top:0" data-i18n="maintenance.scheduleHint">حسب موقع الوكيل الرسمي</p>
         <div id="maintSchedule"></div>
         <button class="btn btn-ghost" id="addSchedBtn" style="margin-top:8px;" data-i18n="maintenance.addSched">+ إضافة نقطة صيانة</button>
       </div>
     </div>
 
-    <div class="car-sec" data-sec="log">
-      <button class="car-sec-h"><span class="ic" style="background:var(--b1)">🧾</span>
+    <div class="fsec" data-sec="car.log">
+      <button class="fsec-h"><span class="ic" style="background:var(--b1)">🧾</span>
         <span class="tx"><b data-i18n="car.secLog">سجل الصيانة الفعلي</b><span class="sm"></span></span>
         <span class="chev">▾</span></button>
-      <div class="car-sec-b" hidden>
+      <div class="fsec-b" hidden>
         <div class="filter-scroll" id="maintSortChips"></div>
         <div id="maintLog"></div>
       </div>
@@ -1081,12 +1174,22 @@
          their row; anything with a list or a note behind it opens in place, so the whole screen
          stays one scroll instead of five accordions of bordered cards each with its own heading. -->
 
-    <div class="sec-lbl" data-i18n="settings.groupAccount">حسابك</div>
+    <div class="fsec bare" data-sec="settings.account">
+      <button class="fsec-h"><span class="ic" style="background:var(--b3)">👤</span>
+        <span class="tx"><b data-i18n="settings.groupAccount">حسابك</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
     <div class="set-group" id="accountGroup"></div>
+      </div>
+    </div>
 
     <div class="pro-card" id="proCard"></div>
 
-    <div class="sec-lbl" data-i18n="settings.groupMoney">فلوسك</div>
+    <div class="fsec bare" data-sec="settings.money">
+      <button class="fsec-h"><span class="ic" style="background:var(--b1)">💰</span>
+        <span class="tx"><b data-i18n="settings.groupMoney">فلوسك</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
     <div class="set-group">
       <div class="set-row" data-static style="--sq:var(--b1)">
         <span class="set-sq">💵</span>
@@ -1155,8 +1258,14 @@
         <div id="accountMovesList"></div>
       </div>
     </div>
+      </div>
+    </div>
 
-    <div class="sec-lbl" data-i18n="settings.groupCats">الفئات والحدود</div>
+    <div class="fsec bare" data-sec="settings.cats">
+      <button class="fsec-h"><span class="ic" style="background:var(--b2)">🏷️</span>
+        <span class="tx"><b data-i18n="settings.groupCats">الفئات والحدود</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
     <div class="set-group">
       <button class="set-row acc-header" data-acc="cats" style="--sq:var(--b2)">
         <span class="set-sq">🏷️</span>
@@ -1180,8 +1289,14 @@
         <div id="capsEdit"></div>
       </div>
     </div>
+      </div>
+    </div>
 
-    <div class="sec-lbl" data-i18n="settings.groupAutomation">التنبيهات والأتمتة</div>
+    <div class="fsec bare" data-sec="settings.notif">
+      <button class="fsec-h"><span class="ic" style="background:var(--b1)">🔔</span>
+        <span class="tx"><b data-i18n="settings.groupAutomation">التنبيهات والأتمتة</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
     <div class="set-group">
       <div class="set-row" data-static style="--sq:var(--b1)">
         <span class="set-sq">🔔</span>
@@ -1239,8 +1354,14 @@
         <p data-i18n="settings.remindersNote">بعض الأجهزة بتأخر التذكيرات المجدولة بسبب إعدادات توفير البطارية — لو التذكير مش بيوصل، جرّب تستثني التطبيق من توفير البطارية من إعدادات الأندرويد.</p>
       </div>
     </div>
+      </div>
+    </div>
 
-    <div class="sec-lbl" data-i18n="settings.groupData">بياناتك</div>
+    <div class="fsec bare" data-sec="settings.data">
+      <button class="fsec-h"><span class="ic" style="background:var(--b3)">💾</span>
+        <span class="tx"><b data-i18n="settings.groupData">بياناتك</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
     <div class="set-group">
       <button class="set-row acc-header" data-acc="google" style="--sq:var(--b3)">
         <span class="set-sq">☁️</span>
@@ -1271,8 +1392,14 @@
         <span class="set-val" id="exportExcelMonthLbl">الشهر الحالي</span>
       </button>
     </div>
+      </div>
+    </div>
 
-    <div class="sec-lbl" data-i18n="settings.groupGeneral">عام</div>
+    <div class="fsec bare" data-sec="settings.general">
+      <button class="fsec-h"><span class="ic" style="background:var(--b2)">⚙️</span>
+        <span class="tx"><b data-i18n="settings.groupGeneral">عام</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="fsec-b" hidden>
     <div class="set-group">
       <button class="set-row acc-header" data-acc="lang" style="--sq:var(--b3)">
         <span class="set-sq">🌐</span>
@@ -1302,6 +1429,8 @@
         <span class="set-sq">🚗</span>
         <span class="set-txt"><span class="n" data-i18n="settings.carToggle">تتبع صيانة العربية</span><span class="s" data-i18n="settings.carToggleSub">بيظهر/يخفي تبويب السيارة</span></span>
         <label class="switch"><input type="checkbox" id="inHasCar"><span class="slider"></span></label>
+      </div>
+    </div>
       </div>
     </div>
 
@@ -1883,19 +2012,36 @@ const I18N = {
     "obligations.addItem":"+ إضافة بند جديد",
     "obligations.grandTotalLabel":"إجمالي كل الالتزامات الشهر ده", "obligations.filteredSumLabel":"الإجمالي ({0} بند)",
     "obligations.searchPlaceholder":"دور باسم البند...",
+    "home.sumGlance":"{0} · فاضل نظريًا {1} {2}",
+    "home.sumAccounts":"الإجمالي {0} {1} · {2}", "home.unitAccount":"حساب|حسابين|حسابات",
+    "home.sumObl":"التزامات {0} {1} · الفائض {2}",
+    "common.searchFilter":"بحث وفلترة", "common.noFilter":"من غير فلتر",
+    "expenses.sumTopCat":"أكتر فئة: {0} {1} {2}",
+    "expenses.unitEntry":"عملية|عمليتين|عمليات",
+    "expenses.sumMonth":"{0} · {1} {2} الشهر ده", "expenses.sumFiltered":"مفلتر: {0} · {1} {2}",
+    "obligations.sumHead":"{0} {1} · {2}% من المرتب", "obligations.sumHeadNoIncome":"{0} {1} الشهر ده",
+    "obligations.unitItemActive":"بند شغال|بندين شغالين|بنود شغالة", "obligations.unitItemPaused":"بند موقوف|بندين موقوفين|بنود موقوفة",
+    "allocations.introShort":"التبويب ده بيشتغل إزاي؟", "allocations.sumIntro":"الجيوب التلاتة والنِسَب بتتحدد إزاي",
+    "allocations.sumSuggest":"طوارئ {0} · استثمار {1} · مرونة {2} {3}",
+    "allocations.sumCumulative":"وزّعت {0} {1} لحد دلوقتي", "allocations.sumCumulativeEmpty":"لسه موزّعتش حاجة",
+    "allocations.unitEntry":"عملية|عمليتين|عمليات", "allocations.sumListEmpty":"مفيش عمليات",
+    "rule.sumEssentials":"الأساسيات {0}% مقابل هدف {1}%",
+    "settings.sumPro":"النسخة الكاملة ✨", "settings.sumFree":"النسخة المجانية",
+    "settings.sumSalary":"المرتب {0} {1}", "settings.unitSource":"مصدر دفع|مصدرين دفع|مصادر دفع",
+    "settings.unitCat":"فئة|فئتين|فئات", "settings.unitCap":"حد شهري|حدّين شهريين|حدود شهرية", "settings.sumNoCaps":"من غير حدود",
+    "settings.unitNotifOn":"تنبيه مفعّل|تنبيهين مفعّلين|تنبيهات مفعّلة", "settings.sumNoNotif":"كل التنبيهات مقفولة",
+    "settings.sumData":"نسخة احتياطية · تصدير · استيراد",
     "car.secStatus":"حالة العربية", "car.secDocs":"أوراق العربية ومواعيدها", "car.secFuel":"البنزين والاستهلاك",
     "car.secFines":"المخالفات", "car.secCost":"تكلفة الملكية", "car.secCard":"كارت العربية",
     "car.secSched":"جدول الصيانة الدورية", "car.secLog":"سجل الصيانة الفعلي",
     "car.sumOdo":"العداد {0} كم", "car.sumNextSvc":"الصيانة الجاية بعد {0} كم",
-    "car.sumNoDocs":"مفيش أوراق مسجّلة", "car.sumDocsCount":"{0} {1} مسجّلة", "car.sumDocsOne":"ورقة واحدة مسجّلة",
-    "car.unitDoc":"ورقة|ورقتين|أوراق",
+    "car.sumNoDocs":"مفيش أوراق مسجّلة", "car.sumDocsCount":"{0} مسجّلة", "car.unitDoc":"ورقة|ورقتين|أوراق",
     "car.sumDocExpired":"{0} منتهية ⚠️", "car.sumDocNext":"أقرب موعد: {0} بعد {1} يوم",
     "car.sumFuel":"{0} كم/لتر · {1} {2} للكيلومتر", "car.sumFuelNeed":"سجّل تعبئتين ونحسبلك استهلاكك",
     "car.sumNoFines":"مفيش مخالفات مسجّلة", "car.sumFinesDue":"مستحق عليك {0} {1}",
     "car.sumCost":"{0} {1} · متوسط {2} في الشهر", "car.sumCostShort":"{0} {1} لحد دلوقتي", "car.sumNoCard":"اكتب بيانات عربيتك",
-    "car.sumSched":"{0} {1}", "car.sumSchedOne":"نقطة صيانة واحدة",
     "car.unitSchedPoint":"نقطة صيانة|نقطتين صيانة|نقط صيانة",
-    "car.sumLog":"{0} {1} · آخرها {2}", "car.sumLogOne":"عملية واحدة · {0}",
+    "car.sumLog":"{0} · آخرها {1}",
     "car.unitLogEntry":"عملية صيانة|عمليتين صيانة|عمليات صيانة",
     "car.sumNoLog":"مفيش صيانة متسجّلة",
     "car.alertDocExpired":"⚠️ {0} منتهية", "car.alertDocSoon":"⏳ {0} بتنتهي بعد {1} يوم",
@@ -2280,18 +2426,36 @@ const I18N = {
     "obligations.addItem":"+ Add New Item",
     "obligations.grandTotalLabel":"Total of All This Month's Obligations", "obligations.filteredSumLabel":"Total ({0} items)",
     "obligations.searchPlaceholder":"Search by item name...",
+    "home.sumGlance":"{0} · {1} {2} left in theory",
+    "home.sumAccounts":"total {0} {1} · {2}", "home.unitAccount":"account|accounts",
+    "home.sumObl":"obligations {0} {1} · surplus {2}",
+    "common.searchFilter":"Search & filter", "common.noFilter":"No filter",
+    "expenses.sumTopCat":"top category: {0} {1} {2}",
+    "expenses.unitEntry":"entry|entries",
+    "expenses.sumMonth":"{0} · {1} {2} this month", "expenses.sumFiltered":"filtered: {0} · {1} {2}",
+    "obligations.sumHead":"{0} {1} · {2}% of salary", "obligations.sumHeadNoIncome":"{0} {1} this month",
+    "obligations.unitItemActive":"active item|active items", "obligations.unitItemPaused":"paused item|paused items",
+    "allocations.introShort":"How does this tab work?", "allocations.sumIntro":"What the three pockets are and how the shares are decided",
+    "allocations.sumSuggest":"emergency {0} · investing {1} · flex {2} {3}",
+    "allocations.sumCumulative":"{0} {1} allocated so far", "allocations.sumCumulativeEmpty":"Nothing allocated yet",
+    "allocations.unitEntry":"entry|entries", "allocations.sumListEmpty":"No entries",
+    "rule.sumEssentials":"essentials {0}% vs a {1}% target",
+    "settings.sumPro":"Full version ✨", "settings.sumFree":"Free version",
+    "settings.sumSalary":"salary {0} {1}", "settings.unitSource":"payment source|payment sources",
+    "settings.unitCat":"category|categories", "settings.unitCap":"monthly limit|monthly limits", "settings.sumNoCaps":"no limits",
+    "settings.unitNotifOn":"reminder on|reminders on", "settings.sumNoNotif":"All reminders off",
+    "settings.sumData":"Backup · export · import",
     "car.secStatus":"Car status", "car.secDocs":"Documents & renewals", "car.secFuel":"Fuel & consumption",
     "car.secFines":"Fines", "car.secCost":"Cost of ownership", "car.secCard":"Car card",
     "car.secSched":"Service schedule", "car.secLog":"Maintenance log",
     "car.sumOdo":"odometer {0} km", "car.sumNextSvc":"next service in {0} km",
-    "car.sumNoDocs":"No documents yet", "car.sumDocsCount":"{0} {1}", "car.sumDocsOne":"1 document",
-    "car.unitDoc":"documents",
+    "car.sumNoDocs":"No documents yet", "car.sumDocsCount":"{0}", "car.unitDoc":"document|documents",
     "car.sumDocExpired":"{0} has expired ⚠️", "car.sumDocNext":"next up: {0} in {1} days",
     "car.sumFuel":"{0} km/L · {1} {2} per km", "car.sumFuelNeed":"Log two fill-ups and we work out your consumption",
     "car.sumNoFines":"No fines logged", "car.sumFinesDue":"{0} {1} outstanding",
     "car.sumCost":"{0} {1} · {2} a month on average", "car.sumCostShort":"{0} {1} so far", "car.sumNoCard":"Add your car details",
-    "car.sumSched":"{0} {1}", "car.sumSchedOne":"1 service point", "car.unitSchedPoint":"service points",
-    "car.sumLog":"{0} {1} · last on {2}", "car.sumLogOne":"1 entry · {0}", "car.unitLogEntry":"entries",
+    "car.unitSchedPoint":"service point|service points",
+    "car.sumLog":"{0} · last on {1}", "car.unitLogEntry":"entry|entries",
     "car.sumNoLog":"No maintenance logged",
     "car.alertDocExpired":"⚠️ {0} has expired", "car.alertDocSoon":"⏳ {0} expires in {1} days",
     "car.alertFines":"🚨 {0} {1} in unpaid fines", "car.alertService":"🔧 Service due soon ({0} km)",
@@ -2641,6 +2805,17 @@ function t(key){
 }
 // t() with {0},{1}... placeholders filled in — for the toast/confirm messages that interpolate a
 // name or number into an otherwise-fixed sentence.
+// العربي بيفرّق بين مفرد/مثنى/جمع والرقم نفسه بيتشال في المفرد والمثنى ("حسابين" مش
+// "2 حسابين")، والإنجليزي مفرد/جمع بس والرقم بيتكتب دايمًا. كل لغة بتوصف وحداتها بصيغها هي
+// في ملف الترجمة (مفصولة بـ|)، والدالة دي بتختار الصيغة وبتقرر الرقم يتكتب ولا لأ.
+function countedText(spec, n){
+  const forms = String(spec).split("|");
+  if(!isRTL()) return n + " " + (n === 1 ? forms[0] : (forms[1] || forms[0]));
+  if(n === 1) return forms[0];
+  if(n === 2) return forms[1] || forms[0];
+  if(n <= 10) return n + " " + (forms[2] || forms[0]);
+  return n + " " + forms[0];   // 11 فأكتر بترجع للمفرد في العربي: "11 بند"
+}
 function countedUnit(spec, n){
   const forms = String(spec).split("|");
   if(n === 2 && forms[1]) return forms[1];
@@ -4168,6 +4343,18 @@ function render(){
   renderAccountMoves();
   renderSettings();
   renderPendingSms();
+  // خلاصات أقسام الرئيسية — من نفس الأرقام اللي اتحسبت فوق في render() بالظبط، مفيش حساب تاني
+  const balances = computeAllAccountBalances();
+  const balTotal = balances.reduce((sum,b)=>sum+b.balance, 0);
+  renderFoldSections({
+    "home.glance": { text: tf("home.sumGlance", phaseLabel(m.phase), fmt(theoreticalRemaining), cur()),
+                     bad: theoreticalRemaining < 0 },
+    "home.accounts": { text: balances.length
+        ? tf("home.sumAccounts", fmt(balTotal), cur(), countedText(t("home.unitAccount"), balances.length))
+        : t("home.addSourceFirst"), bad: balTotal < 0 },
+    "home.obligations": { text: tf("home.sumObl", fmt(m.obligations), cur(), fmt(m.recurringSurplus)),
+                          bad: m.recurringSurplus < 0 },
+  });
   updateTabsVisibility();
   applyStaticI18n();
 }
@@ -4212,6 +4399,14 @@ function renderCategoryBars(monthExpenses){
   }).join("");
 }
 
+// وصف الفلتر الشغّال — عشان القسم وهو مقفول يقول لك انت شايف إيه بالظبط، مش بس "بحث وفلترة"
+function activeFilterText(cat, src, search){
+  const parts = [];
+  if(cat && cat !== "الكل") parts.push(catLabel(allCats().find(c=>c.k===cat) || {k:cat}));
+  if(src && src !== "الكل") parts.push(src === "__NONE__" ? t("expenses.noSource") : src);
+  if((search||"").trim()) parts.push(`"${search.trim()}"`);
+  return parts.length ? parts.join(" · ") : t("common.noFilter");
+}
 function renderExpenses(){
   const el = document.getElementById("expList");
   const filterEntries = [{k:"الكل"}, ...allCats()];
@@ -4252,11 +4447,28 @@ function renderExpenses(){
   // just the visible page (collapseSlice below only limits how many *rows* render, the sum always
   // reflects the full filtered set, matching what "كل المصاريف" implies once you've filtered it).
   const sumWrap = document.getElementById("expSumWrap");
+  const filteredSum = list.reduce((s,e)=>s+Number(e.amount),0);
   if(list.length===0){ sumWrap.innerHTML = ""; }
   else {
-    const filteredSum = list.reduce((s,e)=>s+Number(e.amount),0);
     sumWrap.innerHTML = `<div class="obl-row total"><span class="name">${tf("expenses.filteredSumLabel", list.length)}</span><span class="val">${fmt(filteredSum)} ${cur()}</span></div>`;
   }
+
+  // خلاصات أقسام المصاريف — من نفس القايمة المفلترة اللي بتترسم تحت
+  const monthAll = expensesForMonth(curMonthKey);
+  const monthTotal = monthAll.reduce((sum,e)=>sum+Number(e.amount), 0);
+  const catTotals = {};
+  monthAll.forEach(e=>{ catTotals[e.cat] = (catTotals[e.cat]||0) + Number(e.amount); });
+  const topCat = Object.entries(catTotals).sort((a,b)=>b[1]-a[1])[0];
+  const filtered = filterCat!=="الكل" || filterSource!=="الكل" || !!searchTerm.trim();
+  renderFoldSections({
+    "expenses.cats": { text: topCat
+        ? tf("expenses.sumTopCat", catLabel(allCats().find(c=>c.k===topCat[0]) || {k:topCat[0]}), fmt(topCat[1]), cur())
+        : t("expenses.emptyMonth") },
+    "expenses.filters": { text: activeFilterText(filterCat, filterSource, searchTerm), bad: filtered },
+    "expenses.list": { text: filtered
+        ? tf("expenses.sumFiltered", countedText(t("expenses.unitEntry"), list.length), fmt(filteredSum), cur())
+        : tf("expenses.sumMonth", countedText(t("expenses.unitEntry"), monthAll.length), fmt(monthTotal), cur()) },
+  });
 
   if(list.length===0){
     el.innerHTML = `<div class="empty-state"><div class="big">🧾</div><p>${t("expenses.emptyList")}</p></div>`;
@@ -4389,6 +4601,27 @@ function renderRuleCard(){
 
 function renderAllocations(){
   renderRuleCard();
+  // خلاصات أقسام الاستثمار — نفس الدوال اللي بترسم المحتوى (computeMonth/computeRuleSplit)
+  const mAlloc = computeMonth(curMonthKey);
+  const ruleSplit = computeRuleSplit(curMonthKey);
+  const essentials = ruleSplit.rows.find(r=>r.key==="essentials");
+  const allocTotals = {"طوارئ":0,"استثمار":0,"مرونة":0};
+  state.allocations.forEach(a=>{ allocTotals[a.cat] = (allocTotals[a.cat]||0) + Number(a.amount); });
+  const allocSum = Object.values(allocTotals).reduce((s,v)=>s+v, 0);
+  renderFoldSections({
+    "alloc.intro": { text: t("allocations.sumIntro") },
+    "alloc.suggest": { text: tf("allocations.sumSuggest", fmt(mAlloc.emergency), fmt(mAlloc.invest), fmt(mAlloc.flex), cur()) },
+    "alloc.rule": { text: ruleSplit.base > 0 && essentials
+        ? tf("rule.sumEssentials", Math.round(essentials.pct), essentials.target)
+        : t("rule.noIncome"),
+      bad: !!(essentials && essentials.pct - essentials.target > 2) },
+    "alloc.cumulative": { text: allocSum > 0
+        ? tf("allocations.sumCumulative", fmt(allocSum), cur())
+        : t("allocations.sumCumulativeEmpty") },
+    "alloc.list": { text: state.allocations.length
+        ? countedText(t("allocations.unitEntry"), state.allocations.length)
+        : t("allocations.sumListEmpty") },
+  });
   // cumulative totals per category (all-time)
   const totals = {"طوارئ":0,"استثمار":0,"مرونة":0};
   state.allocations.forEach(a=>{ totals[a.cat] = (totals[a.cat]||0) + Number(a.amount); });
@@ -4459,10 +4692,34 @@ function renderAllocations(){
   }
 }
 
+// خلاصة كل مجموعة إعدادات: أهم قيمتين جواها، عشان تعرف اللي جوه من غير ما تفتح
+function renderSettingsSections(){
+  const notif = state.settings.notif || {};
+  const onCount = [notif.daily, notif.weeklyBackup, notif.capAlert, notif.maintDue, notif.itemDue]
+    .filter(x=>x && x.enabled).length;
+  const capsCount = Object.values(state.settings.caps || {}).filter(v=>Number(v) > 0).length;
+  const theme = state.settings.theme || "auto";
+  renderFoldSections({
+    "settings.account": { text: isPro() ? t("settings.sumPro") : t("settings.sumFree") },
+    "settings.money": { text: [tf("settings.sumSalary", fmt(state.settings.salary||0), cur()),
+                               countedText(t("settings.unitSource"), state.settings.sources.length)]
+                              .join(" · ") },
+    "settings.cats": { text: [countedText(t("settings.unitCat"), allCats().length),
+                              capsCount ? countedText(t("settings.unitCap"), capsCount) : t("settings.sumNoCaps")]
+                             .join(" · ") },
+    "settings.notif": { text: onCount ? countedText(t("settings.unitNotifOn"), onCount) : t("settings.sumNoNotif") },
+    "settings.data": { text: t("settings.sumData") },
+    "settings.general": { text: [state.settings.lang === "en" ? "English" : "العربية",
+                                 t(theme === "dark" ? "settings.themeDark" : theme === "light" ? "settings.themeLight" : "settings.themeAuto")]
+                                .join(" · ") },
+  });
+}
+
 function renderSettings(){
   renderGoogleAccountCard();
   renderProCard();
   renderAccountRow();
+  renderSettingsSections();
   // Row summaries: each collapsed row says what's behind it, so the screen is readable without
   // opening anything (the reference's settings rows do the same with a value on the row).
   document.getElementById("sourcesCountLbl").textContent = tf("settings.sourcesCount", state.settings.sources.length);
@@ -4795,6 +5052,20 @@ function renderSettings(){
       `<div class="obl-list">${pausedItems.map(itemRowHtml).join("")}</div>`;
     document.getElementById("hidePausedItemsBtn").onclick = ()=>{ listExpanded["itemsPaused"] = false; render(); };
   }
+
+  // خلاصات أقسام الالتزامات — من نفس المتغيّرات اللي اتبنت بيها القوايم فوق
+  renderFoldSections({
+    "obl.summary": { text: shareBase > 0
+        ? tf("obligations.sumHead", fmt(grandTotal), cur(), sharePct)
+        : tf("obligations.sumHeadNoIncome", fmt(grandTotal), cur()),
+      bad: sharePct >= 60 },
+    "obl.filters": { text: activeFilterText(itemFilterCat, itemFilterSource, itemsSearchTerm),
+      bad: itemFilterCat!=="الكل" || itemFilterSource!=="الكل" || !!itemsSearchTerm.trim() },
+    "obl.list": { text: [countedText(t("obligations.unitItemActive"), visibleItems.length),
+                         pausedItems.length ? countedText(t("obligations.unitItemPaused"), pausedItems.length) : ""]
+                        .filter(Boolean).join(" · ") },
+    "obl.help": { text: "" },
+  });
 
   document.querySelectorAll("#itemsEdit .item-row-edit, #itemsPausedWrap .item-row-edit").forEach(row=>{
     const id = row.dataset.id;
@@ -5253,25 +5524,52 @@ function renderCarCard(){
   });
 }
 
-// أي قسم مفتوح — محفوظ عشان التبويب يفتح زي ما سايبه، مش يرجع لحالته الأصلية كل مرة.
-// "حالة العربية" مفتوح افتراضيًا لأنه الملخّص اليومي، والباقي مطوي.
-let carSecOpen = { status:true, docs:false, fuel:false, fines:false, cost:false, card:false, sched:false, log:false };
+// ---------- الأقسام المطوية: مكوّن واحد لكل التبويبات ----------
+// المفتاح شكله "tab.section". المفتوح افتراضيًا هو اللي بيلخّص التبويب (نظرة الشهر، قايمة
+// المصاريف، التوزيع المقترح...) والباقي مطوي. وحالة الفتح محفوظة فكل تبويب بيفتح زي ما سابه.
+const FOLD_DEFAULT_OPEN = new Set([
+  "car.status", "home.glance", "expenses.list", "alloc.suggest", "obl.list",
+]);
+let foldOpen = {};
 try{
-  const saved = JSON.parse(localStorage.getItem("carSections") || "null");
-  if(saved && typeof saved === "object") carSecOpen = {...carSecOpen, ...saved};
+  const saved = JSON.parse(localStorage.getItem("foldSections") || "null");
+  if(saved && typeof saved === "object") foldOpen = saved;
+  // أول نسخة كانت بتحفظ أقسام العربية لوحدها بمفاتيح من غير بادئة — بنرحّلها بدل ما المستخدم
+  // يلاقي التبويب رجع لحالته الأصلية
+  const old = JSON.parse(localStorage.getItem("carSections") || "null");
+  if(old && typeof old === "object"){
+    Object.entries(old).forEach(([k,v])=>{ if(foldOpen["car."+k] === undefined) foldOpen["car."+k] = v; });
+    localStorage.removeItem("carSections");
+  }
 }catch(e){}
-function setCarSection(key, open){
-  carSecOpen[key] = open;
-  try{ localStorage.setItem("carSections", JSON.stringify(carSecOpen)); }catch(e){}
-  const sec = document.querySelector(`.car-sec[data-sec="${key}"]`);
+function isFoldOpen(key){ return foldOpen[key] !== undefined ? !!foldOpen[key] : FOLD_DEFAULT_OPEN.has(key); }
+function setFoldSection(key, open){
+  foldOpen[key] = open;
+  try{ localStorage.setItem("foldSections", JSON.stringify(foldOpen)); }catch(e){}
+  const sec = document.querySelector(`.fsec[data-sec="${key}"]`);
   if(!sec) return;
   sec.classList.toggle("open", open);
-  sec.querySelector(".car-sec-b").hidden = !open;
+  sec.querySelector(".fsec-b").hidden = !open;
 }
-function openCarSection(key){
-  setCarSection(key, true);
-  const sec = document.querySelector(`.car-sec[data-sec="${key}"]`);
+function openFoldSection(key){
+  setFoldSection(key, true);
+  const sec = document.querySelector(`.fsec[data-sec="${key}"]`);
   if(sec) sec.scrollIntoView({ block:"start", behavior:"smooth" });
+}
+// بتتنادى من رندرر كل تبويب ومعاها خلاصة كل قسم: {key:{text, bad}} — وبتربط الضغط وتطبّق
+// حالة الفتح كمان، فأي قسم جديد بيشتغل بمجرد ما يتضاف للـHTML وياخد سطر خلاصة هنا.
+function renderFoldSections(summaries){
+  Object.entries(summaries).forEach(([key, sum])=>{
+    const sec = document.querySelector(`.fsec[data-sec="${key}"]`);
+    if(!sec) return;
+    const sm = sec.querySelector(".fsec-h .sm");
+    sm.textContent = (sum && sum.text) || "";
+    sm.classList.toggle("bad", !!(sum && sum.bad));
+    const open = isFoldOpen(key);
+    sec.classList.toggle("open", open);
+    sec.querySelector(".fsec-b").hidden = !open;
+    sec.querySelector(".fsec-h").onclick = ()=>setFoldSection(key, !isFoldOpen(key));
+  });
 }
 // خلاصة كل قسم (السطر اللي تحت العنوان) + شريط التنبيهات. الاتنين بيتحسبوا من نفس الدوال
 // اللي بترسم المحتوى، فمستحيل الخلاصة تقول حاجة والقسم جواه حاجة تانية.
@@ -5295,8 +5593,7 @@ function renderCarSections(){
     status: { text: [tf("car.sumOdo", fmt(odometer)),
                      nextSvc ? tf("car.sumNextSvc", fmt(nextSvc.km - odometer)) : ""].filter(Boolean).join(" · ") },
     docs: !state.carDocs.length ? { text: t("car.sumNoDocs") }
-        : !worstDoc ? { text: state.carDocs.length === 1 ? t("car.sumDocsOne")
-              : tf("car.sumDocsCount", state.carDocs.length, countedUnit(t("car.unitDoc"), state.carDocs.length)) }
+        : !worstDoc ? { text: tf("car.sumDocsCount", countedText(t("car.unitDoc"), state.carDocs.length)) }
         : worstDoc.left < 0 ? { text: tf("car.sumDocExpired", carDocLabel(worstDoc.doc)), bad:true }
         : { text: tf("car.sumDocNext", carDocLabel(worstDoc.doc), worstDoc.left),
             bad: worstDoc.left <= Number(worstDoc.doc.remindDays ?? 30) },
@@ -5314,29 +5611,14 @@ function renderCarSections(){
     card: (state.car.make || state.car.plate)
         ? { text: [state.car.make, state.car.plate].filter(Boolean).join(" · ") }
         : { text: t("car.sumNoCard") },
-    sched: { text: schedule.length === 1
-        ? t("car.sumSchedOne")
-        : tf("car.sumSched", schedule.length, countedUnit(t("car.unitSchedPoint"), schedule.length)) },
+    sched: { text: countedText(t("car.unitSchedPoint"), schedule.length) },
     log: state.maintenanceLog.length
-        ? { text: tf(state.maintenanceLog.length === 1 ? "car.sumLogOne" : "car.sumLog",
-              ...(state.maintenanceLog.length === 1
-                  ? [[...state.maintenanceLog].sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0].date]
-                  : [state.maintenanceLog.length, countedUnit(t("car.unitLogEntry"), state.maintenanceLog.length),
-                     [...state.maintenanceLog].sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0].date])) }
+        ? { text: tf("car.sumLog", countedText(t("car.unitLogEntry"), state.maintenanceLog.length),
+              [...state.maintenanceLog].sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0].date) }
         : { text: t("car.sumNoLog") },
   };
 
-  tab.querySelectorAll(".car-sec").forEach(sec=>{
-    const key = sec.dataset.sec;
-    const sum = summaries[key] || { text:"" };
-    const sm = sec.querySelector(".car-sec-h .sm");
-    sm.textContent = sum.text || "";
-    sm.classList.toggle("bad", !!sum.bad);
-    sec.classList.toggle("open", !!carSecOpen[key]);
-    sec.querySelector(".car-sec-b").hidden = !carSecOpen[key];
-    const head = sec.querySelector(".car-sec-h");
-    head.onclick = ()=>setCarSection(key, !carSecOpen[key]);
-  });
+  renderFoldSections(Object.fromEntries(Object.entries(summaries).map(([k,v])=>["car."+k, v])));
 
   // التنبيهات: بس اللي محتاج تصرّف دلوقتي
   const alerts = [];
@@ -5350,7 +5632,7 @@ function renderCarSections(){
   alertsEl.innerHTML = alerts.map((a,i)=>
     `<button class="car-alert ${a.cls}" data-i="${i}">${a.text}</button>`).join("");
   alertsEl.querySelectorAll(".car-alert").forEach(btn=>{
-    btn.onclick = ()=>openCarSection(alerts[Number(btn.dataset.i)].sec);
+    btn.onclick = ()=>openFoldSection("car." + alerts[Number(btn.dataset.i)].sec);
   });
 }
 
