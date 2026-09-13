@@ -272,6 +272,11 @@
 
   .alloc-grid{display:flex; gap:8px;}
   /* كارت مقارنة قاعدة 50/20/15/15 */
+  .doc-chip{display:inline-block; font-size:10px; font-weight:800; padding:3px 9px; border-radius:999px;
+    background:var(--t1); color:var(--i1); margin-top:4px;}
+  .doc-chip.warn{background:var(--t2); color:var(--i2);}
+  .doc-chip.bad{background:var(--t4); color:var(--i4);}
+  .fuel-hint{font-size:10.5px; color:var(--ink-soft); margin:6px 0 0; font-weight:600;}
   .rule-card{background:var(--card); border-radius:22px; padding:16px; box-shadow:var(--lift); margin-bottom:14px;}
   .rule-row{padding:11px 0;}
   .rule-row + .rule-row{border-top:1px solid var(--line);}
@@ -956,6 +961,42 @@
       <div class="flex-card" id="nextMaintCard"></div>
     </div>
 
+    <div class="section-title" style="margin-top:20px;"><span data-i18n="car.docsTitle">📄 أوراق العربية ومواعيدها</span></div>
+    <div id="carDocsList"></div>
+    <button class="btn btn-ghost" id="addCarDocBtn" style="margin-top:8px;" data-i18n="car.addDoc">+ إضافة ورقة</button>
+
+    <div class="section-title" style="margin-top:20px;"><span data-i18n="car.fuelTitle">⛽ البنزين والاستهلاك</span> <span class="hint" id="fuelHint"></span></div>
+    <div class="stat-grid" id="fuelStatGrid" style="margin-bottom:10px;"></div>
+    <div id="fuelList"></div>
+    <button class="btn btn-ghost" id="addFuelBtn" style="margin-top:8px;" data-i18n="car.addFuel">+ تسجيل تعبئة</button>
+
+    <div class="section-title" style="margin-top:20px;"><span data-i18n="car.finesTitle">🚨 المخالفات</span> <span class="hint" id="finesHint"></span></div>
+    <div id="finesList"></div>
+    <button class="btn btn-ghost" id="addFineBtn" style="margin-top:8px;" data-i18n="car.addFine">+ تسجيل مخالفة</button>
+
+    <div class="acc-group" style="margin-top:20px;">
+      <button class="acc-header" data-acc="carCost"><span data-i18n="car.costTitle">💰 تكلفة الملكية</span> <span class="chev">▾</span></button>
+      <div class="acc-body" id="acc-carCost" hidden>
+        <div class="obl-list" id="carCostList" style="margin-bottom:6px;"></div>
+        <p class="rule-note" data-i18n="car.costNote">كل مصدر بيتحسب مرة واحدة بس: اللي سجّلته كصيانة أو تعبئة أو مخالفة مش بيتعدّ تاني لو اتسجّل كمصروف كمان.</p>
+      </div>
+    </div>
+
+    <div class="acc-group">
+      <button class="acc-header" data-acc="carCard"><span data-i18n="car.cardTitle">📇 كارت العربية</span> <span class="chev">▾</span></button>
+      <div class="acc-body set-panel" id="acc-carCard" hidden>
+        <p style="margin-top:0" data-i18n="car.cardNote">البيانات دي محفوظة على جهازك زي باقي بياناتك، ومفيدة وقت التجديد أو بيع العربية.</p>
+        <div class="field"><label data-i18n="car.make">الماركة والموديل</label><input type="text" id="carMake" data-i18n-placeholder="car.makePh" placeholder="مثال: هيونداي إلنترا"></div>
+        <div class="field"><label data-i18n="car.year">سنة الصنع</label><input type="number" id="carYear" placeholder="2020"></div>
+        <div class="field"><label data-i18n="car.plate">رقم اللوحة</label><input type="text" id="carPlate" data-i18n-placeholder="car.platePh" placeholder="مثال: أ ب ج ١٢٣"></div>
+        <div class="field"><label data-i18n="car.vin">رقم الشاسيه</label><input type="text" id="carVin"></div>
+        <div class="field"><label data-i18n="car.engineNo">رقم الموتور</label><input type="text" id="carEngineNo"></div>
+        <div class="field"><label data-i18n="car.purchaseDate">تاريخ الشراء</label><input type="date" id="carPurchaseDate"></div>
+        <div class="field"><label data-i18n="car.purchaseOdo">قراءة العداد وقت الشراء (KM)</label><input type="number" id="carPurchaseOdo" placeholder="0"></div>
+        <div class="field" style="margin-bottom:0;"><label data-i18n="car.purchasePrice">سعر الشراء</label><input type="number" id="carPurchasePrice"></div>
+      </div>
+    </div>
+
     <div class="section-title" style="margin-top:20px;"><span data-i18n="maintenance.scheduleTitle">📋 جدول الصيانة الدورية</span> <span class="hint" data-i18n="maintenance.scheduleHint">حسب موقع الوكيل الرسمي</span></div>
     <div id="maintSchedule"></div>
     <button class="btn btn-ghost" id="addSchedBtn" style="margin-top:8px;" data-i18n="maintenance.addSched">+ إضافة نقطة صيانة</button>
@@ -1329,6 +1370,113 @@
   </div>
 </div>
 
+<div class="modal-bg" id="carDocModalBg">
+  <div class="modal">
+    <h2 id="carDocModalTitle" data-i18n="modal.doc.title">ورقة عربية</h2>
+    <div class="field">
+      <label data-i18n="modal.doc.kindLabel">النوع</label>
+      <div class="chip-row" id="docKindChips"></div>
+    </div>
+    <div class="field">
+      <label data-i18n="modal.doc.nameLabel">اسم مخصص (اختياري)</label>
+      <input type="text" id="docName" data-i18n-placeholder="modal.doc.namePh" placeholder="مثال: تأمين شامل - مصر للتأمين">
+    </div>
+    <div class="field">
+      <label data-i18n="modal.doc.expiryLabel">تاريخ الانتهاء</label>
+      <input type="date" id="docExpiry">
+    </div>
+    <div class="field">
+      <label data-i18n="modal.doc.costLabel">تكلفة التجديد (اختياري)</label>
+      <input type="number" id="docCost" placeholder="0">
+    </div>
+    <div class="field">
+      <label data-i18n="modal.doc.remindLabel">فكّرني قبل الانتهاء بكام يوم؟</label>
+      <input type="number" id="docRemind" min="0" max="180" value="30">
+    </div>
+    <div class="field">
+      <label data-i18n="common.noteOptional">ملاحظة (اختياري)</label>
+      <input type="text" id="docNote">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelCarDoc" data-i18n="common.cancel">إلغاء</button>
+      <button class="btn btn-primary" id="saveCarDoc" data-i18n="common.save">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="fuelModalBg">
+  <div class="modal">
+    <h2 data-i18n="modal.fuel.title">تسجيل تعبئة بنزين</h2>
+    <div class="field">
+      <label data-i18n="modal.fuel.odoLabel">قراءة العداد وقت التعبئة (KM)</label>
+      <input type="number" id="fuOdo" data-i18n-placeholder="modal.fuel.odoPh" placeholder="مثال: 41250">
+    </div>
+    <div class="field">
+      <label data-i18n="modal.fuel.litersLabel">عدد اللترات</label>
+      <input type="number" id="fuLiters" step="0.01" placeholder="40">
+    </div>
+    <div class="field">
+      <label id="fuPriceLbl" data-i18n="modal.fuel.priceLabel">سعر اللتر</label>
+      <input type="number" id="fuPrice" step="0.01" placeholder="15.25">
+    </div>
+    <div class="field">
+      <label id="fuTotalLbl" data-i18n="modal.fuel.totalLabel">الإجمالي المدفوع</label>
+      <input type="number" id="fuTotal" step="0.01" placeholder="610">
+      <p class="fuel-hint" data-i18n="modal.fuel.autoNote">اكتب اتنين من التلاتة والتالت بيتحسب لوحده.</p>
+    </div>
+    <div class="field">
+      <label data-i18n="modal.sourceLabel">المصدر (هيتخصم منين)</label>
+      <div class="chip-row" id="fuelSourceChips"></div>
+    </div>
+    <div class="field">
+      <label data-i18n="common.date">التاريخ</label>
+      <input type="date" id="fuDate">
+    </div>
+    <div class="toggle-row">
+      <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="modal.fuel.fullLabel">ملّيت الخزان؟ (مهم لحساب الاستهلاك)</span>
+      <label class="switch"><input type="checkbox" id="fuFull" checked><span class="slider"></span></label>
+    </div>
+    <div class="toggle-row" style="border-bottom:none; padding-top:2px;">
+      <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="modal.fuel.linkExpense">سجّلها كمان كمصروف الشهر (فئة عربية)</span>
+      <label class="switch"><input type="checkbox" id="fuLinkExpense" checked><span class="slider"></span></label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelFuelAdd" data-i18n="common.cancel">إلغاء</button>
+      <button class="btn btn-primary" id="saveFuelAdd" data-i18n="common.save">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="fineModalBg">
+  <div class="modal">
+    <h2 data-i18n="modal.fine.title">تسجيل مخالفة</h2>
+    <div class="field">
+      <label data-i18n="modal.fine.reasonLabel">السبب</label>
+      <input type="text" id="fnReason" data-i18n-placeholder="modal.fine.reasonPh" placeholder="مثال: تجاوز سرعة">
+    </div>
+    <div class="field">
+      <label data-i18n="modal.fine.amountLabel">المبلغ</label>
+      <input type="number" id="fnAmount" placeholder="500">
+    </div>
+    <div class="field">
+      <label data-i18n="modal.fine.refLabel">رقم المخالفة (اختياري)</label>
+      <input type="text" id="fnRef">
+    </div>
+    <div class="field">
+      <label data-i18n="common.date">التاريخ</label>
+      <input type="date" id="fnDate">
+    </div>
+    <div class="toggle-row" style="border-bottom:none; padding-top:2px;">
+      <span style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink);" data-i18n="modal.fine.paidLabel">مدفوعة خلاص؟ (هتتسجّل كمصروف عربية)</span>
+      <label class="switch"><input type="checkbox" id="fnPaid"><span class="slider"></span></label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelFineAdd" data-i18n="common.cancel">إلغاء</button>
+      <button class="btn btn-primary" id="saveFineAdd" data-i18n="common.save">حفظ</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="accountModalBg">
   <div class="modal">
     <h2 data-i18n="modal.account.title">تسجيل حركة على حساب</h2>
@@ -1579,6 +1727,9 @@ const NOTIF_IDS = { daily: 1001, weeklyBackup: 1002 };
 // (مش من ترتيبه في القايمة، عشان إضافة/حذف بند ميحرّكش إشعارات باقي البنود). المدى مفصول
 // تمامًا عن المعرّفات الثابتة فوق فمستحيل يتصادم معاها.
 const ITEM_NOTIF_BASE = 20000, ITEM_NOTIF_SPAN = 5000;
+// أوراق العربية ليها مدى مستقل: دي مواعيد لمرة واحدة (تاريخ انتهاء)، مش تكرار شهري، وبتتلغي
+// وتتجدول من الأول مع أي تعديل — فلازم تكون قابلة للإلغاء لوحدها من غير ما تلمس تذكيرات البنود.
+const DOC_NOTIF_BASE = 30000, DOC_NOTIF_SPAN = 5000;
 function itemNotifId(itemId){
   let h = 0;
   for(let i=0; i<String(itemId).length; i++) h = (h*31 + String(itemId).charCodeAt(i)) % ITEM_NOTIF_SPAN;
@@ -1663,6 +1814,58 @@ const I18N = {
     "obligations.addItem":"+ إضافة بند جديد",
     "obligations.grandTotalLabel":"إجمالي كل الالتزامات الشهر ده", "obligations.filteredSumLabel":"الإجمالي ({0} بند)",
     "obligations.searchPlaceholder":"دور باسم البند...",
+    "car.docsTitle":"📄 أوراق العربية ومواعيدها", "car.addDoc":"+ إضافة ورقة",
+    "car.emptyDocs":"مفيش أوراق مسجّلة. ضيف رخصة التسيير والتأمين والفحص عشان التطبيق يفكّرك قبل ما تنتهي.",
+    "car.noExpiry":"من غير تاريخ انتهاء", "car.expiresToday":"بتنتهي النهاردة ⚠️",
+    "car.daysLeft":"باقي {0} يوم", "car.expiredSince":"منتهية من {0} يوم ⚠️",
+    "car.renewCost":"تجديدها {0} {cur}", "car.renewYear":"جدّد سنة",
+    "car.fuelTitle":"⛽ البنزين والاستهلاك", "car.addFuel":"+ تسجيل تعبئة",
+    "car.emptyFuel":"سجّل تعبئتين كاملتين والتطبيق هيحسب استهلاك عربيتك الحقيقي.",
+    "car.kmPerL":"الاستهلاك الفعلي", "car.costPerKm":"تكلفة الكيلومتر", "car.avgKmDay":"متوسط يومي", "car.fuelTotal":"إجمالي البنزين",
+    "car.fuelHintOk":"محسوب من {0} فترة كاملة", "car.fuelHintNeedTwo":"محتاج تعبئتين بخزان مليان",
+    "car.litersShort":"{0} لتر", "car.odoShort":"العداد {0}", "car.partial":"تعبئة جزئية",
+    "car.segKmPerL":"{0} كم/لتر على {1} كم",
+    "car.fuelExpenseNote":"بنزين {0} لتر",
+    "car.finesTitle":"🚨 المخالفات", "car.addFine":"+ تسجيل مخالفة",
+    "car.emptyFines":"مفيش مخالفات مسجّلة 👌",
+    "car.finesUnpaid":"مستحق عليك {0} {1}", "car.finesAllPaid":"كلها مدفوعة ✅",
+    "car.fineNoReason":"مخالفة", "car.fineRef":"رقم {0}", "car.fineUnpaid":"لسه مدفوعة ❌",
+    "car.finePaidOn":"اتدفعت {0}", "car.markPaid":"دفعتها", "car.fineExpenseNote":"مخالفة مرور",
+    "car.costTitle":"💰 تكلفة الملكية",
+    "car.costNote":"كل مصدر بيتحسب مرة واحدة بس: اللي سجّلته كصيانة أو تعبئة أو مخالفة مش بيتعدّ تاني لو اتسجّل كمصروف كمان.",
+    "car.costFuel":"بنزين", "car.costMaint":"صيانة", "car.costDocs":"أوراق وتأمين", "car.costFines":"مخالفات مدفوعة",
+    "car.costOther":"مصاريف عربية تانية", "car.costEmpty":"لسه مفيش حاجة متسجّلة",
+    "car.costPerMonth":"متوسط شهري", "car.costPerKmOwned":"تكلفة الكيلومتر من يوم الشرا",
+    "car.cardTitle":"📇 كارت العربية",
+    "car.cardNote":"البيانات دي محفوظة على جهازك زي باقي بياناتك، ومفيدة وقت التجديد أو بيع العربية.",
+    "car.make":"الماركة والموديل", "car.makePh":"مثال: هيونداي إلنترا", "car.year":"سنة الصنع",
+    "car.plate":"رقم اللوحة", "car.platePh":"مثال: أ ب ج ١٢٣", "car.vin":"رقم الشاسيه", "car.engineNo":"رقم الموتور",
+    "car.purchaseDate":"تاريخ الشراء", "car.purchaseOdo":"قراءة العداد وقت الشراء (KM)", "car.purchasePrice":"سعر الشراء",
+    "common.kmPerLUnit":"كم/لتر", "common.edit":"تعديل", "common.delete":"حذف",
+    "maintenance.etaDate":"تقريبًا بعد {0} يوم ({1})",
+    "modal.doc.title":"ورقة عربية جديدة", "modal.doc.titleEdit":"تعديل ورقة",
+    "modal.doc.kindLabel":"النوع", "modal.doc.nameLabel":"اسم مخصص (اختياري)",
+    "modal.doc.namePh":"مثال: تأمين شامل - مصر للتأمين", "modal.doc.expiryLabel":"تاريخ الانتهاء",
+    "modal.doc.costLabel":"تكلفة التجديد (اختياري)", "modal.doc.remindLabel":"فكّرني قبل الانتهاء بكام يوم؟",
+    "modal.fuel.title":"تسجيل تعبئة بنزين", "modal.fuel.odoLabel":"قراءة العداد وقت التعبئة (KM)",
+    "modal.fuel.odoPh":"مثال: 41250", "modal.fuel.litersLabel":"عدد اللترات",
+    "modal.fuel.priceLabel":"سعر اللتر", "modal.fuel.priceLabelCur":"سعر اللتر ({0})",
+    "modal.fuel.totalLabel":"الإجمالي المدفوع", "modal.fuel.totalLabelCur":"الإجمالي المدفوع ({0})",
+    "modal.fuel.autoNote":"اكتب اتنين من التلاتة والتالت بيتحسب لوحده.",
+    "modal.fuel.fullLabel":"ملّيت الخزان؟ (مهم لحساب الاستهلاك)",
+    "modal.fuel.linkExpense":"سجّلها كمان كمصروف الشهر (فئة عربية)",
+    "modal.fine.title":"تسجيل مخالفة", "modal.fine.reasonLabel":"السبب", "modal.fine.reasonPh":"مثال: تجاوز سرعة",
+    "modal.fine.amountLabel":"المبلغ", "modal.fine.refLabel":"رقم المخالفة (اختياري)",
+    "modal.fine.paidLabel":"مدفوعة خلاص؟ (هتتسجّل كمصروف عربية)",
+    "notif.docTitle":"ورقة عربية قربت تنتهي 📄", "notif.docBody":"{0} بتنتهي {1} — فاضل {2} يوم",
+    "toast.docSaved":"اتسجّلت الورقة ✅", "toast.docEdited":"اتعدّلت الورقة ✅", "toast.docDeleted":"اتشالت الورقة",
+    "toast.docRenewed":"{0} اتجدّدت لحد {1} ✅", "toast.docNeedsExpiry":"حدد تاريخ الانتهاء الأول",
+    "toast.fuelSaved":"اتسجّلت التعبئة ✅", "toast.fuelDeleted":"اتشالت التعبئة",
+    "toast.enterValidLiters":"اكتب عدد لترات صحيح",
+    "toast.fineSaved":"اتسجّلت المخالفة ✅", "toast.fineDeleted":"اتشالت المخالفة",
+    "toast.finePaid":"اتسجّلت مدفوعة، و{0} {1} اتحسبوا مصروف عربية ✅",
+    "confirm.deleteDoc":"تمسح «{0}» نهائي؟", "confirm.deleteFuel":"تمسح التعبئة دي؟",
+    "confirm.deleteFine":"تمسح المخالفة دي؟",
     "maintenance.statusTitle":"🚗 حالة العربية", "maintenance.budgetTitle":"⛽ مصاريف العربية الشهر ده",
     "maintenance.budgetHint":"بنزين، جراج، صيانة... كل حاجة فئة عربية",
     "maintenance.odometerLabel":"الكيلومترات الحالية (KM)", "maintenance.odometerPlaceholder":"مثال: 15000",
@@ -1991,6 +2194,58 @@ const I18N = {
     "obligations.addItem":"+ Add New Item",
     "obligations.grandTotalLabel":"Total of All This Month's Obligations", "obligations.filteredSumLabel":"Total ({0} items)",
     "obligations.searchPlaceholder":"Search by item name...",
+    "car.docsTitle":"📄 Car documents & renewals", "car.addDoc":"+ Add a document",
+    "car.emptyDocs":"No documents yet. Add the vehicle licence, insurance and inspection so the app reminds you before they expire.",
+    "car.noExpiry":"No expiry date", "car.expiresToday":"Expires today ⚠️",
+    "car.daysLeft":"{0} days left", "car.expiredSince":"Expired {0} days ago ⚠️",
+    "car.renewCost":"renewal {0} {cur}", "car.renewYear":"Renew 1 year",
+    "car.fuelTitle":"⛽ Fuel & consumption", "car.addFuel":"+ Log a fill-up",
+    "car.emptyFuel":"Log two full-tank fill-ups and the app works out your car's real consumption.",
+    "car.kmPerL":"Real consumption", "car.costPerKm":"Cost per km", "car.avgKmDay":"Daily average", "car.fuelTotal":"Fuel total",
+    "car.fuelHintOk":"from {0} complete tanks", "car.fuelHintNeedTwo":"needs two full-tank fill-ups",
+    "car.litersShort":"{0} L", "car.odoShort":"odo {0}", "car.partial":"partial fill",
+    "car.segKmPerL":"{0} km/L over {1} km",
+    "car.fuelExpenseNote":"Fuel {0} L",
+    "car.finesTitle":"🚨 Fines", "car.addFine":"+ Log a fine",
+    "car.emptyFines":"No fines logged 👌",
+    "car.finesUnpaid":"{0} {1} outstanding", "car.finesAllPaid":"All paid ✅",
+    "car.fineNoReason":"Fine", "car.fineRef":"ref {0}", "car.fineUnpaid":"Unpaid ❌",
+    "car.finePaidOn":"paid {0}", "car.markPaid":"Mark paid", "car.fineExpenseNote":"Traffic fine",
+    "car.costTitle":"💰 Cost of ownership",
+    "car.costNote":"Each source counts exactly once: anything logged as maintenance, a fill-up or a fine is not counted again if it was also logged as an expense.",
+    "car.costFuel":"Fuel", "car.costMaint":"Maintenance", "car.costDocs":"Documents & insurance", "car.costFines":"Fines paid",
+    "car.costOther":"Other car expenses", "car.costEmpty":"Nothing logged yet",
+    "car.costPerMonth":"Monthly average", "car.costPerKmOwned":"Cost per km since purchase",
+    "car.cardTitle":"📇 Car card",
+    "car.cardNote":"Stored on your device like the rest of your data - handy at renewal time or when selling the car.",
+    "car.make":"Make & model", "car.makePh":"e.g. Hyundai Elantra", "car.year":"Year",
+    "car.plate":"Plate number", "car.platePh":"e.g. ABC 123", "car.vin":"Chassis (VIN)", "car.engineNo":"Engine number",
+    "car.purchaseDate":"Purchase date", "car.purchaseOdo":"Odometer at purchase (KM)", "car.purchasePrice":"Purchase price",
+    "common.kmPerLUnit":"km/L", "common.edit":"Edit", "common.delete":"Delete",
+    "maintenance.etaDate":"roughly in {0} days ({1})",
+    "modal.doc.title":"New car document", "modal.doc.titleEdit":"Edit document",
+    "modal.doc.kindLabel":"Type", "modal.doc.nameLabel":"Custom name (optional)",
+    "modal.doc.namePh":"e.g. Comprehensive - Misr Insurance", "modal.doc.expiryLabel":"Expiry date",
+    "modal.doc.costLabel":"Renewal cost (optional)", "modal.doc.remindLabel":"Remind me how many days before?",
+    "modal.fuel.title":"Log a fill-up", "modal.fuel.odoLabel":"Odometer at fill-up (KM)",
+    "modal.fuel.odoPh":"e.g. 41250", "modal.fuel.litersLabel":"Litres",
+    "modal.fuel.priceLabel":"Price per litre", "modal.fuel.priceLabelCur":"Price per litre ({0})",
+    "modal.fuel.totalLabel":"Total paid", "modal.fuel.totalLabelCur":"Total paid ({0})",
+    "modal.fuel.autoNote":"Enter any two of the three and the third is worked out for you.",
+    "modal.fuel.fullLabel":"Did you fill the tank? (needed for consumption)",
+    "modal.fuel.linkExpense":"Also log it as this month's expense (Car category)",
+    "modal.fine.title":"Log a fine", "modal.fine.reasonLabel":"Reason", "modal.fine.reasonPh":"e.g. Speeding",
+    "modal.fine.amountLabel":"Amount", "modal.fine.refLabel":"Fine reference (optional)",
+    "modal.fine.paidLabel":"Already paid? (will be logged as a car expense)",
+    "notif.docTitle":"A car document is about to expire 📄", "notif.docBody":"{0} expires on {1} - {2} days left",
+    "toast.docSaved":"Document saved ✅", "toast.docEdited":"Document updated ✅", "toast.docDeleted":"Document removed",
+    "toast.docRenewed":"{0} renewed until {1} ✅", "toast.docNeedsExpiry":"Set the expiry date first",
+    "toast.fuelSaved":"Fill-up saved ✅", "toast.fuelDeleted":"Fill-up removed",
+    "toast.enterValidLiters":"Enter a valid number of litres",
+    "toast.fineSaved":"Fine saved ✅", "toast.fineDeleted":"Fine removed",
+    "toast.finePaid":"Marked paid, and {0} {1} counted as a car expense ✅",
+    "confirm.deleteDoc":"Delete this document \u2014 {0} \u2014 permanently?", "confirm.deleteFuel":"Delete this fill-up?",
+    "confirm.deleteFine":"Delete this fine?",
     "maintenance.statusTitle":"🚗 Car Status", "maintenance.budgetTitle":"⛽ This Month's Car Spending",
     "maintenance.budgetHint":"Gas, garage, maintenance... anything in the Car category",
     "maintenance.odometerLabel":"Current Odometer (KM)", "maintenance.odometerPlaceholder":"e.g. 15000",
@@ -2387,7 +2642,10 @@ function renderLangChips(){
 }
 
 let state = { settings: defaultSettings(), items: [...DEFAULT_ITEMS], expenses: [], allocations: [],
-  car: {odometer:0, odometerDate:null}, maintenanceSchedule: [...DEFAULT_MAINT_SCHEDULE], maintenanceLog: [], accountMoves: [] };
+  car: {odometer:0, odometerDate:null}, maintenanceSchedule: [...DEFAULT_MAINT_SCHEDULE], maintenanceLog: [], accountMoves: [],
+  // أوراق العربية (رخصة/تأمين/فحص...)، تعبئات البنزين، والمخالفات — كل واحدة قايمة مستقلة
+  // بمفتاح تخزين خاص بيها، زي باقي الشرايح.
+  carDocs: [], fuelLog: [], fines: [] };
 let curDate = new Date();
 let curMonthKey = monthKey(curDate);
 let activeTab = "home";
@@ -2452,7 +2710,8 @@ function renderSortChips(containerId, options, current, onChange){
 
 // ---------- collapsible long lists (expenses / allocations / obligations / maintenance / account moves) ----------
 const LIST_COLLAPSE_THRESHOLD = 8;
-let listExpanded = { expenses:false, allocations:false, items:false, itemsPaused:false, maintenance:false, accountMoves:false };
+let listExpanded = { expenses:false, allocations:false, items:false, itemsPaused:false, maintenance:false, accountMoves:false,
+                     fuel:false, fines:false };
 // returns the slice to actually render; call appendCollapseToggle() after inserting that HTML
 function collapseSlice(list, key){
   if(listExpanded[key] || list.length <= LIST_COLLAPSE_THRESHOLD) return list;
@@ -2617,6 +2876,43 @@ async function rescheduleItemDueReminders(){
     };
   });
   if(!notifications.length) return;
+  try{ await LocalNotifications.schedule({ notifications }); }catch(e){}
+}
+
+// تذكير قبل انتهاء كل ورقة من أوراق العربية. على عكس تذكير الأقساط ده موعد لمرة واحدة
+// (at)، مش تكرار شهري — التاريخ اللي عدّى مبيتجدولش أصلاً، والتجديد بيعيد الجدولة تلقائيًا
+// لأن أي تعديل على الأوراق بينادي الدالة دي.
+async function rescheduleCarDocReminders(){
+  if(!isNativeApp()) return;
+  let LocalNotifications;
+  try{ LocalNotifications = window.Capacitor.Plugins.LocalNotifications; }catch(e){ return; }
+  if(!LocalNotifications) return;
+  try{
+    const pending = await LocalNotifications.getPending();
+    const ours = (pending.notifications||[])
+      .filter(n=>n.id >= DOC_NOTIF_BASE && n.id < DOC_NOTIF_BASE + DOC_NOTIF_SPAN)
+      .map(n=>({id:n.id}));
+    if(ours.length) await LocalNotifications.cancel({ notifications: ours });
+  }catch(e){}
+  if(!state.settings.hasCar) return;
+
+  const due = state.carDocs.filter(d=>{
+    if(!d.expiry) return false;
+    const days = daysUntil(d.expiry) - Number(d.remindDays ?? 30);
+    return days > 0;                       // الموعد اللي عدّى مبيتجدولش (الشارة الحمرا في التبويب بتقوله)
+  });
+  if(!due.length) return;
+  if(!(await ensureNotifPermission())) return;
+
+  const notifications = due.map(d=>{
+    const fireAt = new Date(new Date(d.expiry + "T10:00:00") - Number(d.remindDays ?? 30)*86400000);
+    return {
+      id: DOC_NOTIF_BASE + (itemNotifId(d.id) - ITEM_NOTIF_BASE),
+      title: t("notif.docTitle"),
+      body: tf("notif.docBody", carDocLabel(d), d.expiry, Number(d.remindDays ?? 30)),
+      schedule: { at: fireAt, allowWhileIdle: true }
+    };
+  });
   try{ await LocalNotifications.schedule({ notifications }); }catch(e){}
 }
 
@@ -3276,6 +3572,9 @@ async function loadState(){
   try{ const ms = localStorage.getItem("maintenanceSchedule"); if(ms) state.maintenanceSchedule = JSON.parse(ms); }catch(e){}
   try{ const ml = localStorage.getItem("maintenanceLog"); if(ml) state.maintenanceLog = JSON.parse(ml); }catch(e){}
   try{ const am = localStorage.getItem("accountMoves"); if(am) state.accountMoves = JSON.parse(am); }catch(e){}
+  try{ const cd = localStorage.getItem("carDocs"); if(cd) state.carDocs = JSON.parse(cd); }catch(e){}
+  try{ const fl = localStorage.getItem("fuelLog"); if(fl) state.fuelLog = JSON.parse(fl); }catch(e){}
+  try{ const fn = localStorage.getItem("fines"); if(fn) state.fines = JSON.parse(fn); }catch(e){}
 }
 async function saveSettings(){ try{ localStorage.setItem("settings", JSON.stringify(state.settings)); }catch(e){} }
 async function saveItems(){ try{ localStorage.setItem("items", JSON.stringify(state.items)); }catch(e){} }
@@ -3285,6 +3584,9 @@ async function saveCar(){ try{ localStorage.setItem("car", JSON.stringify(state.
 async function saveMaintSchedule(){ try{ localStorage.setItem("maintenanceSchedule", JSON.stringify(state.maintenanceSchedule)); }catch(e){} }
 async function saveMaintLog(){ try{ localStorage.setItem("maintenanceLog", JSON.stringify(state.maintenanceLog)); }catch(e){} }
 async function saveAccountMoves(){ try{ localStorage.setItem("accountMoves", JSON.stringify(state.accountMoves)); }catch(e){} }
+async function saveCarDocs(){ try{ localStorage.setItem("carDocs", JSON.stringify(state.carDocs)); }catch(e){} }
+async function saveFuelLog(){ try{ localStorage.setItem("fuelLog", JSON.stringify(state.fuelLog)); }catch(e){} }
+async function saveFines(){ try{ localStorage.setItem("fines", JSON.stringify(state.fines)); }catch(e){} }
 
 // ---------- undo/redo ----------
 // One general mechanism instead of hand-wiring every single button that changes something:
@@ -3308,6 +3610,7 @@ function snapshotState(){
     settings: state.settings, items: state.items, expenses: state.expenses,
     allocations: state.allocations, car: state.car, maintenanceSchedule: state.maintenanceSchedule,
     maintenanceLog: state.maintenanceLog, accountMoves: state.accountMoves,
+    carDocs: state.carDocs, fuelLog: state.fuelLog, fines: state.fines,
   });
 }
 function applySnapshot(json){
@@ -3316,10 +3619,12 @@ function applySnapshot(json){
   state.allocations = d.allocations; state.car = d.car;
   state.maintenanceSchedule = d.maintenanceSchedule; state.maintenanceLog = d.maintenanceLog;
   state.accountMoves = d.accountMoves;
+  state.carDocs = d.carDocs; state.fuelLog = d.fuelLog; state.fines = d.fines;
 }
 async function persistAllSlices(){
   await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
   await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
+  await saveCarDocs(); await saveFuelLog(); await saveFines();
 }
 document.addEventListener("click", ()=>{ if(!undoRedoInProgress) pendingUndoSnapshot = snapshotState(); }, {capture:true});
 document.addEventListener("change", ()=>{ if(!undoRedoInProgress) pendingUndoSnapshot = snapshotState(); }, {capture:true});
@@ -4524,9 +4829,333 @@ function renderCarBudget(){
   };
 }
 
+// ---------- حسابات العربية (بنزين، أوراق، مخالفات، تكلفة الملكية) ----------
+const CAR_DOC_KINDS = [
+  {k:"license",       i:"📗", l:"رخصة التسيير",  lEn:"Vehicle licence"},
+  {k:"insurance",     i:"🛡️", l:"التأمين",       lEn:"Insurance"},
+  {k:"inspection",    i:"🔍", l:"الفحص الفني",   lEn:"Technical inspection"},
+  {k:"driverLicense", i:"🪪", l:"رخصة القيادة",  lEn:"Driving licence"},
+  {k:"other",         i:"📄", l:"ورقة تانية",    lEn:"Other document"},
+];
+function carDocKind(k){ return CAR_DOC_KINDS.find(x=>x.k===k) || CAR_DOC_KINDS[4]; }
+function carDocLabel(doc){
+  const kind = carDocKind(doc.kind);
+  const base = (state.settings.lang==="en" && kind.lEn) ? kind.lEn : kind.l;
+  return (doc.name||"").trim() || base;
+}
+// عدد الأيام لحد تاريخ (سالب = عدّى). بنقارن بالتاريخ المحلي بس (من غير وقت) عشان "النهاردة"
+// تبقى صفر مش جزء من يوم.
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr + "T00:00:00");
+  if(isNaN(d)) return null;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((d - today) / 86400000);
+}
+
+// استهلاك البنزين بطريقة "من خزان مليان لخزان مليان" — دي الطريقة الوحيدة الدقيقة: اللترات
+// اللي دخلت في التعبئة الحالية هي اللي اتصرفت من آخر تعبئة كاملة لحد دلوقتي. التعبئة الجزئية
+// (مش مليان) بتتحسب في التكلفة بس، ومش بتقفل فترة استهلاك — لأن مش عارفين الخزان كان فيه كام.
+function computeFuelStats(){
+  const list = [...state.fuelLog]
+    .filter(f=>Number(f.odometer) > 0)
+    .sort((a,b)=> Number(a.odometer) - Number(b.odometer) || String(a.date).localeCompare(String(b.date)));
+  const totalCost = state.fuelLog.reduce((s,f)=>s + (Number(f.total)||0), 0);
+  const totalLiters = state.fuelLog.reduce((s,f)=>s + (Number(f.liters)||0), 0);
+  const stats = { fills: state.fuelLog.length, totalCost, totalLiters,
+                  kmPerL:null, costPerKm:null, distance:0, avgKmPerDay:null, lastFill:null, segments:[] };
+  if(list.length) stats.lastFill = [...state.fuelLog].sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0];
+
+  // كل قطعة = من تعبئة كاملة للي بعدها كاملة، وبنجمع اللترات والتكلفة اللي بينهم
+  let anchor = null, pendingL = 0, pendingCost = 0;
+  let sumDist = 0, sumL = 0, sumCost = 0;
+  list.forEach(f=>{
+    const odo = Number(f.odometer), L = Number(f.liters)||0, cost = Number(f.total)||0;
+    if(anchor === null){ if(f.full !== false) anchor = odo; return; }
+    pendingL += L; pendingCost += cost;
+    if(f.full === false) return;                 // تعبئة جزئية: تتجمّع وتتقفل مع أول تعبئة كاملة
+    const dist = odo - anchor;
+    if(dist > 0 && pendingL > 0){
+      stats.segments.push({ from:anchor, to:odo, dist, liters:pendingL, cost:pendingCost,
+                            kmPerL: dist/pendingL, date:f.date });
+      sumDist += dist; sumL += pendingL; sumCost += pendingCost;
+    }
+    anchor = odo; pendingL = 0; pendingCost = 0;
+  });
+  if(sumDist > 0 && sumL > 0){
+    stats.distance = sumDist;
+    stats.kmPerL = sumDist / sumL;
+    stats.costPerKm = sumCost / sumDist;
+  }
+  // متوسط الكيلومترات اليومية من أول لآخر تعبئة (مسافة حقيقية على زمن حقيقي)
+  if(list.length >= 2){
+    const dates = list.map(f=>f.date).filter(Boolean).sort();
+    const days = dates.length >= 2
+      ? Math.max(1, Math.round((new Date(dates[dates.length-1]) - new Date(dates[0]))/86400000)) : 0;
+    const span = Number(list[list.length-1].odometer) - Number(list[0].odometer);
+    if(days > 0 && span > 0) stats.avgKmPerDay = span / days;
+  }
+  return stats;
+}
+
+// تكلفة الملكية: كل مصدر مرة واحدة بالظبط. اللي اتسجّل كمصروف كمان (linkedExpenseId) بيتحسب من
+// سجله الأصلي، ومصاريف فئة "عربية" اليدوية (جراج، غسيل، ركنة) بتتحسب من غير ما تتكرر.
+function computeCarOwnership(){
+  const fuel = state.fuelLog.reduce((s,f)=>s + (Number(f.total)||0), 0);
+  const maint = state.maintenanceLog.reduce((s,m)=>s + (Number(m.cost)||0), 0);
+  const docs = state.carDocs.reduce((s,d)=>s + (Number(d.cost)||0), 0);
+  const finesPaid = state.fines.filter(f=>f.paid).reduce((s,f)=>s + (Number(f.amount)||0), 0);
+  const linked = new Set([
+    ...state.maintenanceLog.map(m=>m.linkedExpenseId),
+    ...state.fuelLog.map(f=>f.linkedExpenseId),
+    ...state.fines.map(f=>f.linkedExpenseId),
+    ...state.carDocs.map(d=>d.linkedExpenseId),
+  ].filter(Boolean));
+  const other = state.expenses
+    .filter(e=>e.cat==="عربية" && !linked.has(e.id))
+    .reduce((s,e)=>s + (Number(e.amount)||0), 0);
+  const total = fuel + maint + docs + finesPaid + other;
+  // الفترة: من تاريخ الشراء لو متسجّل، وإلا من أقدم عملية مسجّلة على العربية
+  const dates = [
+    state.car.purchaseDate,
+    ...state.fuelLog.map(f=>f.date), ...state.maintenanceLog.map(m=>m.date),
+    ...state.fines.map(f=>f.date),
+  ].filter(Boolean).sort();
+  const firstDate = dates[0] || null;
+  const months = firstDate
+    ? Math.max(1, Math.round((new Date() - new Date(firstDate))/86400000/30.44)) : 0;
+  const kmDriven = state.car.purchaseOdometer != null
+    ? Math.max(0, Number(state.car.odometer||0) - Number(state.car.purchaseOdometer||0))
+    : 0;
+  return { fuel, maint, docs, finesPaid, other, total, firstDate, months,
+           perMonth: months > 0 ? total/months : 0,
+           kmDriven, perKm: kmDriven > 0 ? total/kmDriven : 0 };
+}
+
+function addYears(dateStr, n){
+  const d = new Date(dateStr + "T00:00:00");
+  if(isNaN(d)) return dateStr;
+  d.setFullYear(d.getFullYear() + n);
+  return d.toISOString().slice(0,10);
+}
+function renderCarDocs(){
+  const el = document.getElementById("carDocsList");
+  if(!el) return;
+  const docs = [...state.carDocs].sort((a,b)=>String(a.expiry||"9999").localeCompare(String(b.expiry||"9999")));
+  if(!docs.length){
+    el.innerHTML = `<div class="empty-state"><div class="big">📄</div><p>${t("car.emptyDocs")}</p></div>`;
+    return;
+  }
+  el.innerHTML = docs.map(d=>{
+    const kind = carDocKind(d.kind);
+    const left = daysUntil(d.expiry);
+    let chip = "", tone = 1;
+    if(left === null){ chip = `<span class="doc-chip">${t("car.noExpiry")}</span>`; }
+    else if(left < 0){ chip = `<span class="doc-chip bad">${tf("car.expiredSince", Math.abs(left))}</span>`; tone = 4; }
+    else if(left === 0){ chip = `<span class="doc-chip bad">${t("car.expiresToday")}</span>`; tone = 4; }
+    else if(left <= Number(d.remindDays ?? 30)){ chip = `<span class="doc-chip warn">${tf("car.daysLeft", left)}</span>`; tone = 2; }
+    else { chip = `<span class="doc-chip">${tf("car.daysLeft", left)}</span>`; }
+    const meta = [d.expiry || "", Number(d.cost) > 0 ? tf("car.renewCost", fmt(d.cost)) : "", (d.note||"").trim()]
+      .filter(Boolean).join(" · ");
+    return `
+    <div class="item-row-edit oi" data-id="${d.id}" style="--sq:var(--b${tone})">
+      <span class="oi-sq">${kind.i}</span>
+      <div class="oi-body">
+        <div class="oi-head"><div class="oi-name docEdit">${carDocLabel(d)}</div></div>
+        <div class="oi-meta">${meta}</div>
+        ${chip}
+        <div class="oi-acts">
+          <span class="docEdit">✏️ ${t("common.edit")}</span>
+          <span class="docRenew">🔄 ${t("car.renewYear")}</span>
+          <span class="docDelete">🗑️ ${t("common.delete")}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+  el.querySelectorAll(".oi").forEach(row=>{
+    const id = row.dataset.id;
+    row.querySelectorAll(".docEdit").forEach(x=>x.onclick = ()=>openCarDocModal(state.carDocs.find(d=>d.id===id)));
+    row.querySelector(".docRenew").onclick = async ()=>{
+      const doc = state.carDocs.find(d=>d.id===id);
+      if(!doc.expiry){ showToast(t("toast.docNeedsExpiry")); return; }
+      doc.expiry = addYears(doc.expiry, 1);
+      await saveCarDocs(); rescheduleCarDocReminders(); render();
+      showToast(tf("toast.docRenewed", carDocLabel(doc), doc.expiry));
+    };
+    row.querySelector(".docDelete").onclick = async ()=>{
+      const doc = state.carDocs.find(d=>d.id===id);
+      if(!confirm(tf("confirm.deleteDoc", carDocLabel(doc)))) return;
+      state.carDocs = state.carDocs.filter(d=>d.id!==id);
+      await saveCarDocs(); rescheduleCarDocReminders(); render();
+      showToast(t("toast.docDeleted"));
+    };
+  });
+}
+
+function renderFuel(){
+  const el = document.getElementById("fuelList");
+  if(!el) return;
+  const st = computeFuelStats();
+  const cards = [
+    { k: t("car.kmPerL"),   v: st.kmPerL   ? st.kmPerL.toFixed(1)    : "—", u: t("common.kmPerLUnit") },
+    { k: t("car.costPerKm"),v: st.costPerKm? st.costPerKm.toFixed(2) : "—", u: cur() },
+    { k: t("car.avgKmDay"), v: st.avgKmPerDay ? Math.round(st.avgKmPerDay) : "—", u: t("common.km") },
+    { k: t("car.fuelTotal"),v: fmt(Math.round(st.totalCost)), u: cur() },
+  ];
+  document.getElementById("fuelStatGrid").innerHTML = cards.map(c=>
+    `<div class="stat-card"><div class="k">${c.k}</div><div class="v">${c.v} <span>${c.u}</span></div></div>`).join("");
+  document.getElementById("fuelHint").textContent = st.kmPerL
+    ? tf("car.fuelHintOk", st.segments.length)
+    : t("car.fuelHintNeedTwo");
+
+  const fullList = [...state.fuelLog].sort((a,b)=>String(b.date).localeCompare(String(a.date)) || Number(b.odometer)-Number(a.odometer));
+  if(!fullList.length){
+    el.innerHTML = `<div class="empty-state"><div class="big">⛽</div><p>${t("car.emptyFuel")}</p></div>`;
+    return;
+  }
+  const list = collapseSlice(fullList, "fuel");
+  // استهلاك القطعة اللي بتنتهي عند كل تعبئة (لو اتحسبت)
+  const segByTo = {};
+  st.segments.forEach(sg=>{ segByTo[sg.to] = sg; });
+  el.innerHTML = list.map(f=>{
+    const sg = segByTo[Number(f.odometer)];
+    const meta = [f.date, tf("car.litersShort", Number(f.liters||0).toFixed(2)),
+      tf("car.odoShort", fmt(Number(f.odometer||0))),
+      f.full === false ? t("car.partial") : ""].filter(Boolean).join(" · ");
+    return `
+    <div class="item-row-edit oi" data-id="${f.id}" style="--sq:var(--b2)">
+      <span class="oi-sq">⛽</span>
+      <div class="oi-body">
+        <div class="oi-head">
+          <div class="oi-name">${fmt(Math.round(Number(f.total)||0))} ${cur()}</div>
+        </div>
+        <div class="oi-meta">${meta}</div>
+        ${sg ? `<span class="doc-chip">${tf("car.segKmPerL", sg.kmPerL.toFixed(1), fmt(sg.dist))}</span>` : ""}
+        <div class="oi-acts"><span class="fuelDelete">🗑️ ${t("common.delete")}</span></div>
+      </div>
+    </div>`;
+  }).join("");
+  appendCollapseToggle(el, "fuel", fullList.length, renderFuel);
+  el.querySelectorAll(".oi").forEach(row=>{
+    row.querySelector(".fuelDelete").onclick = async ()=>{
+      const f = state.fuelLog.find(x=>x.id===row.dataset.id);
+      if(!confirm(t("confirm.deleteFuel"))) return;
+      state.fuelLog = state.fuelLog.filter(x=>x.id!==row.dataset.id);
+      // المصروف المربوط بيتشال معاها — سايبه هيبقى مصروف من غير تعبئة وراه
+      if(f && f.linkedExpenseId){
+        state.expenses = state.expenses.filter(e=>e.id!==f.linkedExpenseId);
+        await saveExpenses();
+      }
+      await saveFuelLog(); render(); showToast(t("toast.fuelDeleted"));
+    };
+  });
+}
+
+function renderFines(){
+  const el = document.getElementById("finesList");
+  if(!el) return;
+  const unpaid = state.fines.filter(f=>!f.paid).reduce((s,f)=>s + (Number(f.amount)||0), 0);
+  document.getElementById("finesHint").textContent = unpaid > 0
+    ? tf("car.finesUnpaid", fmt(unpaid), cur()) : t("car.finesAllPaid");
+  const fullList = [...state.fines].sort((a,b)=> (a.paid?1:0)-(b.paid?1:0) || String(b.date).localeCompare(String(a.date)));
+  if(!fullList.length){
+    el.innerHTML = `<div class="empty-state"><div class="big">🚨</div><p>${t("car.emptyFines")}</p></div>`;
+    return;
+  }
+  const list = collapseSlice(fullList, "fines");
+  el.innerHTML = list.map(f=>`
+    <div class="item-row-edit oi" data-id="${f.id}" style="--sq:var(--b${f.paid?1:4})">
+      <span class="oi-sq">${f.paid?"✅":"🚨"}</span>
+      <div class="oi-body">
+        <div class="oi-head"><div class="oi-name">${f.reason || t("car.fineNoReason")}</div>
+          <div class="oi-name" style="flex:0 0 auto; font-size:13px;">${fmt(Number(f.amount)||0)} ${cur()}</div></div>
+        <div class="oi-meta">${[f.date, (f.ref||"").trim() ? tf("car.fineRef", f.ref) : ""].filter(Boolean).join(" · ")}</div>
+        <span class="doc-chip ${f.paid?"":"bad"}">${f.paid ? tf("car.finePaidOn", f.paidDate||f.date) : t("car.fineUnpaid")}</span>
+        <div class="oi-acts">
+          ${f.paid ? "" : `<span class="finePay">✅ ${t("car.markPaid")}</span>`}
+          <span class="fineDelete">🗑️ ${t("common.delete")}</span>
+        </div>
+      </div>
+    </div>`).join("");
+  appendCollapseToggle(el, "fines", fullList.length, renderFines);
+  el.querySelectorAll(".oi").forEach(row=>{
+    const id = row.dataset.id;
+    const payBtn = row.querySelector(".finePay");
+    if(payBtn) payBtn.onclick = async ()=>{
+      const f = state.fines.find(x=>x.id===id);
+      f.paid = true;
+      f.paidDate = new Date().toISOString().slice(0,10);
+      await logFineExpense(f);
+      await saveFines(); render();
+      showToast(tf("toast.finePaid", fmt(Number(f.amount)||0), cur()));
+    };
+    row.querySelector(".fineDelete").onclick = async ()=>{
+      const f = state.fines.find(x=>x.id===id);
+      if(!confirm(t("confirm.deleteFine"))) return;
+      if(f && f.linkedExpenseId){
+        state.expenses = state.expenses.filter(e=>e.id!==f.linkedExpenseId);
+        await saveExpenses();
+      }
+      state.fines = state.fines.filter(x=>x.id!==id);
+      await saveFines(); render(); showToast(t("toast.fineDeleted"));
+    };
+  });
+}
+// المخالفة المدفوعة فلوس خرجت فعلاً، فبتتسجّل مصروف "عربية" ومربوطة بالـid عشان تكلفة
+// الملكية متعدّهاش مرتين.
+async function logFineExpense(f){
+  if(f.linkedExpenseId) return;
+  const date = f.paidDate || f.date || new Date().toISOString().slice(0,10);
+  const mk = date.slice(0,7);
+  const cap = Number(state.settings.caps["عربية"]||0);
+  const prevTotal = cap>0 ? categoryMonthTotal("عربية", mk, null) : 0;
+  const exp = { id:"e"+Date.now(), amount:Number(f.amount)||0, cat:"عربية",
+    source: state.settings.sources[0]||"", note: t("car.fineExpenseNote") + (f.reason?": "+f.reason:""), date };
+  state.expenses.push(exp);
+  f.linkedExpenseId = exp.id;
+  await saveExpenses();
+  maybeNotifyCapExceeded("عربية", mk, prevTotal);
+}
+
+function renderCarCost(){
+  const el = document.getElementById("carCostList");
+  if(!el) return;
+  const c = computeCarOwnership();
+  const rows = [
+    ["car.costFuel", c.fuel], ["car.costMaint", c.maint], ["car.costDocs", c.docs],
+    ["car.costFines", c.finesPaid], ["car.costOther", c.other],
+  ].filter(([,v])=>v > 0);
+  el.innerHTML = (rows.length
+      ? rows.map(([k,v])=>`<div class="obl-row"><span class="name">${t(k)}</span><span class="val">${fmt(Math.round(v))} ${cur()}</span></div>`).join("")
+      : `<div class="obl-row"><span class="name">${t("car.costEmpty")}</span></div>`)
+    + `<div class="obl-row total"><span class="name">${t("common.total")}</span><span class="val">${fmt(Math.round(c.total))} ${cur()}</span></div>`
+    + (c.perMonth > 0 ? `<div class="obl-row"><span class="name">${t("car.costPerMonth")}</span><span class="val">${fmt(Math.round(c.perMonth))} ${cur()}</span></div>` : "")
+    + (c.perKm > 0 ? `<div class="obl-row"><span class="name">${t("car.costPerKmOwned")}</span><span class="val">${c.perKm.toFixed(2)} ${cur()}</span></div>` : "");
+}
+
+function renderCarCard(){
+  const map = { carMake:"make", carYear:"year", carPlate:"plate", carVin:"vin",
+                carEngineNo:"engineNo", carPurchaseDate:"purchaseDate",
+                carPurchaseOdo:"purchaseOdometer", carPurchasePrice:"purchasePrice" };
+  Object.entries(map).forEach(([elId, key])=>{
+    const input = document.getElementById(elId);
+    if(!input) return;
+    input.value = state.car[key] ?? "";
+    input.onchange = async ()=>{
+      const raw = input.value;
+      const numeric = ["year","purchaseOdometer","purchasePrice"].includes(key);
+      state.car[key] = raw === "" ? null : (numeric ? Number(raw) : raw.trim());
+      await saveCar();
+      if(key === "purchaseOdometer" || key === "purchaseDate") renderCarCost();
+    };
+  });
+}
+
 function renderMaintenance(){
   const odoEl = document.getElementById("inOdometer");
   if(!odoEl) return;
+  renderCarDocs(); renderFuel(); renderFines(); renderCarCost(); renderCarCard();
   odoEl.value = state.car.odometer || "";
   document.getElementById("odometerDateLbl").textContent = state.car.odometerDate
     ? tf("maintenance.lastUpdated", state.car.odometerDate)
@@ -4538,12 +5167,21 @@ function renderMaintenance(){
   const nextCard = document.getElementById("nextMaintCard");
   if(next){
     const remaining = next.km - odometer;
+    // بدل ما الموعد يفضل رقم كيلومترات مجرّد: بنحوّله لتاريخ تقريبي من متوسط الكيلومترات
+    // اليومية الحقيقي (بيتحسب من تواريخ وقراءات عداد تعبئات البنزين).
+    const fuelStats = computeFuelStats();
+    let etaText = "";
+    if(fuelStats.avgKmPerDay > 0){
+      const days = Math.round(remaining / fuelStats.avgKmPerDay);
+      const eta = new Date(Date.now() + days*86400000).toISOString().slice(0,10);
+      etaText = " · " + tf("maintenance.etaDate", days, eta);
+    }
     nextCard.innerHTML = `
       <div class="flex-top">
         <div><div class="t1">${t("maintenance.dueAt")}</div><div class="t2">${fmt(next.km)} ${t("common.km")}</div></div>
         <div style="text-align:left;"><div class="t3">${t("maintenance.expectedPrice")}</div><div class="t2" style="font-size:16px;">${fmt(next.price)} ${cur()}</div></div>
       </div>
-      <div style="margin-top:10px; font-size:12px; opacity:.8;">${tf("maintenance.remainingKm", fmt(remaining))}</div>`;
+      <div style="margin-top:10px; font-size:12px; opacity:.8;">${tf("maintenance.remainingKm", fmt(remaining))}${etaText}</div>`;
   } else {
     nextCard.innerHTML = `
       <div class="flex-top"><div><div class="t1">${t("maintenance.scheduleTitle")}</div><div class="t2" style="font-size:15px;">${tf("maintenance.noPointYet", fmt(odometer))}</div></div></div>
@@ -5084,7 +5722,7 @@ document.getElementById("obSkip").onclick = ()=>{ hideOnboarding(); render(); };
 function buildBackupPayload(){
   return { settings: state.settings, items: state.items, expenses: state.expenses, allocations: state.allocations,
     car: state.car, maintenanceSchedule: state.maintenanceSchedule, maintenanceLog: state.maintenanceLog,
-    accountMoves: state.accountMoves,
+    accountMoves: state.accountMoves, carDocs: state.carDocs, fuelLog: state.fuelLog, fines: state.fines,
     // Carried so the owner's own unlock survives a reinstall or a move to another phone — a real
     // Play subscription doesn't need this (Play restores it), but the local unlock would be lost.
     ownerUnlock: !!proState.devUnlock,
@@ -5099,11 +5737,18 @@ async function applyBackupData(data){
   if(data.maintenanceSchedule) state.maintenanceSchedule = data.maintenanceSchedule;
   if(data.maintenanceLog) state.maintenanceLog = data.maintenanceLog;
   if(data.accountMoves) state.accountMoves = data.accountMoves;
+  if(data.carDocs) state.carDocs = data.carDocs;
+  if(data.fuelLog) state.fuelLog = data.fuelLog;
+  if(data.fines) state.fines = data.fines;
   if(data.ownerUnlock){ proState.devUnlock = true; saveProState(); }
   await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
   await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
+  // الشرايح دي كانت ناقصة هنا: الاسترجاع كان بيحطّ بيانات العربية في الشاشة وتضيع أول ما
+  // التطبيق يتقفل، لأن اللي بيتقرا وقت التشغيل هو localStorage مش الحالة في الذاكرة.
+  await saveCarDocs(); await saveFuelLog(); await saveFines();
   localStorage.setItem("onboarded", "1");
   rescheduleItemDueReminders();
+  rescheduleCarDocReminders();
   applyTheme();
   render();
 }
@@ -5131,11 +5776,14 @@ document.getElementById("importFile").onchange = async (e)=>{
 document.getElementById("resetBtn").onclick = async ()=>{
   if(!confirm(t("confirm.resetAll"))) return;
   state = { settings:{...defaultSettings(), caps:{}}, items:[...DEFAULT_ITEMS], expenses:[], allocations:[],
-    car:{odometer:0, odometerDate:null}, maintenanceSchedule:[...DEFAULT_MAINT_SCHEDULE], maintenanceLog:[], accountMoves:[] };
+    car:{odometer:0, odometerDate:null}, maintenanceSchedule:[...DEFAULT_MAINT_SCHEDULE], maintenanceLog:[], accountMoves:[],
+    carDocs:[], fuelLog:[], fines:[] };
   await saveSettings(); await saveItems(); await saveExpenses(); await saveAllocations();
   await saveCar(); await saveMaintSchedule(); await saveMaintLog(); await saveAccountMoves();
+  await saveCarDocs(); await saveFuelLog(); await saveFines();
   await cancelDailyReminder(); await cancelWeeklyBackupReminder();
   await rescheduleItemDueReminders();
+  await rescheduleCarDocReminders();
   pendingSms = [];
   localStorage.removeItem("onboarded");
   applyTheme();
@@ -5425,6 +6073,166 @@ document.getElementById("saveMaintAdd").onclick = async ()=>{
   render();
   checkMaintDueNotify();
   showToast(t("toast.maintSaved"));
+};
+
+// ---------- مودالات العربية: ورقة / تعبئة بنزين / مخالفة ----------
+const carDocModalBg = document.getElementById("carDocModalBg");
+const fuelModalBg = document.getElementById("fuelModalBg");
+const fineModalBg = document.getElementById("fineModalBg");
+let editingCarDocId = null;
+let selectedDocKind = "license";
+let selectedFuelSource = null;
+
+function renderDocKindChips(){
+  const el = document.getElementById("docKindChips");
+  el.innerHTML = CAR_DOC_KINDS.map(k=>
+    `<button class="chip ${k.k===selectedDocKind?"sel":""}" data-kind="${k.k}">${k.i} ${
+      (state.settings.lang==="en" && k.lEn) ? k.lEn : k.l}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(ch=>{
+    ch.onclick = ()=>{ selectedDocKind = ch.dataset.kind; renderDocKindChips(); };
+  });
+}
+function openCarDocModal(doc){
+  editingCarDocId = doc ? doc.id : null;
+  selectedDocKind = doc ? doc.kind : "license";
+  renderDocKindChips();
+  document.getElementById("carDocModalTitle").textContent = t(doc ? "modal.doc.titleEdit" : "modal.doc.title");
+  document.getElementById("docName").value = doc ? (doc.name||"") : "";
+  document.getElementById("docExpiry").value = doc ? (doc.expiry||"") : "";
+  document.getElementById("docCost").value = doc && Number(doc.cost) ? doc.cost : "";
+  document.getElementById("docRemind").value = doc ? (doc.remindDays ?? 30) : 30;
+  document.getElementById("docNote").value = doc ? (doc.note||"") : "";
+  carDocModalBg.classList.add("show");
+}
+document.getElementById("addCarDocBtn").onclick = ()=>openCarDocModal(null);
+document.getElementById("cancelCarDoc").onclick = ()=>carDocModalBg.classList.remove("show");
+document.getElementById("saveCarDoc").onclick = async ()=>{
+  const expiry = document.getElementById("docExpiry").value || null;
+  if(!expiry){ showToast(t("toast.docNeedsExpiry")); return; }
+  const remindRaw = Number(document.getElementById("docRemind").value);
+  const payload = {
+    kind: selectedDocKind,
+    name: document.getElementById("docName").value.trim(),
+    expiry,
+    cost: Number(document.getElementById("docCost").value) || 0,
+    remindDays: Math.min(180, Math.max(0, isFinite(remindRaw) ? Math.round(remindRaw) : 30)),
+    note: document.getElementById("docNote").value.trim(),
+  };
+  if(editingCarDocId){
+    const doc = state.carDocs.find(d=>d.id===editingCarDocId);
+    Object.assign(doc, payload);
+  } else {
+    state.carDocs.push({ id:"cd"+Date.now(), linkedExpenseId:null, ...payload });
+  }
+  await saveCarDocs();
+  rescheduleCarDocReminders();
+  carDocModalBg.classList.remove("show");
+  render();
+  showToast(t(editingCarDocId ? "toast.docEdited" : "toast.docSaved"));
+};
+
+function renderFuelSourceChips(){
+  const el = document.getElementById("fuelSourceChips");
+  el.innerHTML = state.settings.sources.map(src=>
+    `<button class="chip ${src===selectedFuelSource?"sel":""}" data-src="${src}">💳 ${src}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(ch=>{
+    ch.onclick = ()=>{ selectedFuelSource = ch.dataset.src; renderFuelSourceChips(); };
+  });
+}
+function openFuelModal(){
+  document.getElementById("fuOdo").value = state.car.odometer || "";
+  document.getElementById("fuLiters").value = "";
+  document.getElementById("fuPrice").value = "";
+  document.getElementById("fuTotal").value = "";
+  document.getElementById("fuDate").value = new Date().toISOString().slice(0,10);
+  document.getElementById("fuFull").checked = true;
+  document.getElementById("fuLinkExpense").checked = true;
+  document.getElementById("fuPriceLbl").textContent = tf("modal.fuel.priceLabelCur", cur());
+  document.getElementById("fuTotalLbl").textContent = tf("modal.fuel.totalLabelCur", cur());
+  selectedFuelSource = state.settings.sources[0] || null;
+  renderFuelSourceChips();
+  fuelModalBg.classList.add("show");
+}
+// أي اتنين من (لترات / سعر اللتر / الإجمالي) بيحسبوا التالت — عشان المستخدم يكتب اللي على
+// الفاتورة قدامه مش اللي التطبيق عايزه.
+function syncFuelFields(changed){
+  const L = Number(document.getElementById("fuLiters").value);
+  const P = Number(document.getElementById("fuPrice").value);
+  const T = Number(document.getElementById("fuTotal").value);
+  const has = (v)=> isFinite(v) && v > 0;
+  if(changed !== "total" && has(L) && has(P)) document.getElementById("fuTotal").value = (L*P).toFixed(2);
+  else if(changed !== "price" && has(L) && has(T)) document.getElementById("fuPrice").value = (T/L).toFixed(2);
+  else if(changed !== "liters" && has(P) && has(T)) document.getElementById("fuLiters").value = (T/P).toFixed(2);
+}
+["fuLiters","fuPrice","fuTotal"].forEach(id=>{
+  document.getElementById(id).oninput = ()=>syncFuelFields(id.replace("fu","").toLowerCase());
+});
+document.getElementById("addFuelBtn").onclick = openFuelModal;
+document.getElementById("cancelFuelAdd").onclick = ()=>fuelModalBg.classList.remove("show");
+document.getElementById("saveFuelAdd").onclick = async ()=>{
+  const odometer = Number(document.getElementById("fuOdo").value);
+  const liters = Number(document.getElementById("fuLiters").value);
+  const total = Number(document.getElementById("fuTotal").value);
+  if(!odometer || odometer <= 0){ showToast(t("toast.enterValidKm")); return; }
+  if(!liters || liters <= 0){ showToast(t("toast.enterValidLiters")); return; }
+  if(!total || total <= 0){ showToast(t("toast.enterValidAmount")); return; }
+  const date = document.getElementById("fuDate").value || new Date().toISOString().slice(0,10);
+  const full = document.getElementById("fuFull").checked;
+  const rec = { id:"fu"+Date.now(), date, odometer, liters, total,
+    pricePerL: Number(document.getElementById("fuPrice").value) || (total/liters),
+    full, source: selectedFuelSource, linkedExpenseId:null };
+  if(document.getElementById("fuLinkExpense").checked){
+    const mk = date.slice(0,7);
+    const cap = Number(state.settings.caps["عربية"]||0);
+    const prevTotal = cap>0 ? categoryMonthTotal("عربية", mk, null) : 0;
+    const exp = { id:"e"+Date.now(), amount:total, cat:"عربية",
+      source: selectedFuelSource || state.settings.sources[0] || "",
+      note: tf("car.fuelExpenseNote", liters.toFixed(2)), date };
+    state.expenses.push(exp);
+    rec.linkedExpenseId = exp.id;
+    await saveExpenses();
+    maybeNotifyCapExceeded("عربية", mk, prevTotal);
+  }
+  state.fuelLog.push(rec);
+  await saveFuelLog();
+  // التعبئة بتحدّث العداد لوحدها — ده أكتر مصدر موثوق لقراءة حديثة
+  if(odometer > Number(state.car.odometer||0)){
+    state.car.odometer = odometer;
+    state.car.odometerDate = date;
+    await saveCar();
+  }
+  fuelModalBg.classList.remove("show");
+  curMonthKey = date.slice(0,7);
+  render();
+  checkMaintDueNotify();
+  showToast(t("toast.fuelSaved"));
+};
+
+function openFineModal(){
+  document.getElementById("fnReason").value = "";
+  document.getElementById("fnAmount").value = "";
+  document.getElementById("fnRef").value = "";
+  document.getElementById("fnDate").value = new Date().toISOString().slice(0,10);
+  document.getElementById("fnPaid").checked = false;
+  fineModalBg.classList.add("show");
+}
+document.getElementById("addFineBtn").onclick = openFineModal;
+document.getElementById("cancelFineAdd").onclick = ()=>fineModalBg.classList.remove("show");
+document.getElementById("saveFineAdd").onclick = async ()=>{
+  const amount = Number(document.getElementById("fnAmount").value);
+  if(!amount || amount <= 0){ showToast(t("toast.enterValidAmount")); return; }
+  const date = document.getElementById("fnDate").value || new Date().toISOString().slice(0,10);
+  const paid = document.getElementById("fnPaid").checked;
+  const rec = { id:"fn"+Date.now(), date, amount,
+    reason: document.getElementById("fnReason").value.trim(),
+    ref: document.getElementById("fnRef").value.trim(),
+    paid, paidDate: paid ? date : null, linkedExpenseId:null };
+  if(paid) await logFineExpense(rec);
+  state.fines.push(rec);
+  await saveFines();
+  fineModalBg.classList.remove("show");
+  render();
+  showToast(t("toast.fineSaved"));
 };
 
 // account movement modal (deposit/withdraw against a payment source)
@@ -5883,7 +6691,8 @@ function setupNativeApp(){
     // Every sheet in the app, so back always closes the top one instead of leaving the user
     // trapped. Listed by id rather than by variable so a newly added sheet can't be forgotten.
     const openModal = ["expenseModalBg","allocModalBg","flexModalBg","maintModalBg","accountModalBg",
-                       "itemModalBg","advanceModalBg","paywallModalBg"]
+                       "itemModalBg","advanceModalBg","paywallModalBg",
+                       "carDocModalBg","fuelModalBg","fineModalBg"]
       .map(id=>document.getElementById(id))
       .find(m=>m && m.classList.contains("show"));
     if(openModal){ openModal.classList.remove("show"); return; }
@@ -5961,6 +6770,7 @@ function checkQuickAddUrlParam(){
   // belongs to the OS and has to be re-registered after a reinstall / a restore from backup / an
   // item reaching its end month — and it must not be skippable by a throw from any plugin below.
   rescheduleItemDueReminders();
+  rescheduleCarDocReminders();
   await syncLinkedItemWithdrawals();
   render();
   setupNativeApp();
