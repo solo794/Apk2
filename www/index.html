@@ -272,6 +272,32 @@
 
   .alloc-grid{display:flex; gap:8px;}
   /* كارت مقارنة قاعدة 50/20/15/15 */
+  /* أقسام تبويب العربية: كل قسم مطوي وبيوري خلاصته في السطر التاني وانت مقفّله، فالتبويب
+     كله بقى يتقرا في شاشة واحدة بدل ما يبقى صفحة طويلة لازم تسكرول فيها عشان تعرف حاجة. */
+  .car-sec{background:var(--card); border-radius:20px; box-shadow:var(--lift); margin-bottom:10px; overflow:hidden;}
+  .car-sec-h{display:flex; align-items:center; gap:11px; width:100%; padding:13px 14px;
+    background:none; border:none; cursor:pointer; font-family:'Cairo'; text-align:start;}
+  .car-sec-h .ic{width:34px; height:34px; border-radius:11px; display:grid; place-items:center;
+    font-size:16px; flex:0 0 auto;}
+  .car-sec-h .tx{flex:1; min-width:0;}
+  .car-sec-h .tx b{display:block; font-size:13.5px; font-weight:800; color:var(--ink);}
+  .car-sec-h .tx .sm{display:block; font-size:11px; font-weight:700; color:var(--ink-soft);
+    margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .car-sec-h .tx .sm.bad{color:var(--i4);}
+  .car-sec-h .tx .sm:empty{display:none;}
+  .car-sec-h .chev{color:var(--ink-soft); font-size:12px; transition:transform .2s; flex:0 0 auto;}
+  .car-sec.open .car-sec-h .chev{transform:rotate(180deg);}
+  .car-sec.open .car-sec-h{padding-bottom:4px;}
+  .car-sec-b{padding:0 14px 14px;}
+  .car-sec-b[hidden]{display:none;}
+  .car-sec-b .sec-hint{font-size:11px; font-weight:700; color:var(--ink-soft); margin:0 0 8px;}
+  .car-alerts{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;}
+  .car-alerts:empty{display:none;}
+  .car-alert{display:inline-flex; align-items:center; gap:6px; padding:8px 13px; border-radius:999px;
+    font-size:11.5px; font-weight:800; border:none; cursor:pointer; font-family:'Cairo';
+    background:var(--t4); color:var(--i4);}
+  .car-alert.warn{background:var(--t2); color:var(--i2);}
+  .car-alert:active{transform:scale(.96);}
   .doc-chip{display:inline-block; font-size:10px; font-weight:800; padding:3px 9px; border-radius:999px;
     background:var(--t1); color:var(--i1); margin-top:4px;}
   .doc-chip.warn{background:var(--t2); color:var(--i2);}
@@ -949,43 +975,73 @@
   </div>
 
   <div class="content" id="tab-maintenance" style="display:none;">
-    <div class="set-card">
-      <h3 data-i18n="maintenance.statusTitle">🚗 حالة العربية</h3>
-      <div class="section-title" style="margin:0 4px 8px;"><span data-i18n="maintenance.budgetTitle">⛽ مصاريف العربية الشهر ده</span> <span class="hint" data-i18n="maintenance.budgetHint">بنزين، جراج، صيانة... كل حاجة فئة عربية</span></div>
-      <div class="flex-card" id="carBudgetCard" style="margin-bottom:14px;"></div>
+    <!-- أي حاجة محتاجة تصرّف دلوقتي بتطلع هنا فوق: ورقة منتهية، مخالفة مستحقة، صيانة قربت.
+         دوسة على أي واحدة بتفتح قسمها وتوديك له. القسم بيختفي خالص لو مفيش حاجة. -->
+    <div class="car-alerts" id="carAlerts"></div>
 
-      <div class="field"><label data-i18n="maintenance.odometerLabel">الكيلومترات الحالية (KM)</label><input type="number" id="inOdometer" data-i18n-placeholder="maintenance.odometerPlaceholder" placeholder="مثال: 15000"></div>
-      <div class="field" style="margin-bottom:14px;"><label id="odometerDateLbl" style="font-weight:500;"></label></div>
-
-      <div class="section-title" style="margin:0 4px 8px;" data-i18n="maintenance.nextTitle">⏭️ الصيانة الجاية</div>
-      <div class="flex-card" id="nextMaintCard"></div>
+    <div class="car-sec" data-sec="status">
+      <button class="car-sec-h"><span class="ic" style="background:var(--b1)">🚗</span>
+        <span class="tx"><b data-i18n="car.secStatus">حالة العربية</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="car-sec-b" hidden>
+        <div class="section-title" style="margin:0 0 8px;"><span data-i18n="maintenance.budgetTitle">⛽ مصاريف العربية الشهر ده</span></div>
+        <div class="flex-card" id="carBudgetCard" style="margin-bottom:14px;"></div>
+        <div class="field"><label data-i18n="maintenance.odometerLabel">الكيلومترات الحالية (KM)</label><input type="number" id="inOdometer" data-i18n-placeholder="maintenance.odometerPlaceholder" placeholder="مثال: 15000"></div>
+        <div class="field" style="margin-bottom:14px;"><label id="odometerDateLbl" style="font-weight:500;"></label></div>
+        <div class="section-title" style="margin:0 0 8px;" data-i18n="maintenance.nextTitle">⏭️ الصيانة الجاية</div>
+        <div class="flex-card" id="nextMaintCard"></div>
+      </div>
     </div>
 
-    <div class="section-title" style="margin-top:20px;"><span data-i18n="car.docsTitle">📄 أوراق العربية ومواعيدها</span></div>
-    <div id="carDocsList"></div>
-    <button class="btn btn-ghost" id="addCarDocBtn" style="margin-top:8px;" data-i18n="car.addDoc">+ إضافة ورقة</button>
+    <div class="car-sec" data-sec="docs">
+      <button class="car-sec-h"><span class="ic" style="background:var(--b3)">📄</span>
+        <span class="tx"><b data-i18n="car.secDocs">أوراق العربية ومواعيدها</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="car-sec-b" hidden>
+        <div id="carDocsList"></div>
+        <button class="btn btn-ghost" id="addCarDocBtn" style="margin-top:8px;" data-i18n="car.addDoc">+ إضافة ورقة</button>
+      </div>
+    </div>
 
-    <div class="section-title" style="margin-top:20px;"><span data-i18n="car.fuelTitle">⛽ البنزين والاستهلاك</span> <span class="hint" id="fuelHint"></span></div>
-    <div class="stat-grid" id="fuelStatGrid" style="margin-bottom:10px;"></div>
-    <div id="fuelList"></div>
-    <button class="btn btn-ghost" id="addFuelBtn" style="margin-top:8px;" data-i18n="car.addFuel">+ تسجيل تعبئة</button>
+    <div class="car-sec" data-sec="fuel">
+      <button class="car-sec-h"><span class="ic" style="background:var(--b2)">⛽</span>
+        <span class="tx"><b data-i18n="car.secFuel">البنزين والاستهلاك</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="car-sec-b" hidden>
+        <div class="stat-grid" id="fuelStatGrid" style="margin-bottom:10px;"></div>
+        <div class="sec-hint" id="fuelHint"></div>
+        <div id="fuelList"></div>
+        <button class="btn btn-ghost" id="addFuelBtn" style="margin-top:8px;" data-i18n="car.addFuel">+ تسجيل تعبئة</button>
+      </div>
+    </div>
 
-    <div class="section-title" style="margin-top:20px;"><span data-i18n="car.finesTitle">🚨 المخالفات</span> <span class="hint" id="finesHint"></span></div>
-    <div id="finesList"></div>
-    <button class="btn btn-ghost" id="addFineBtn" style="margin-top:8px;" data-i18n="car.addFine">+ تسجيل مخالفة</button>
+    <div class="car-sec" data-sec="fines">
+      <button class="car-sec-h"><span class="ic" style="background:var(--b4)">🚨</span>
+        <span class="tx"><b data-i18n="car.secFines">المخالفات</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="car-sec-b" hidden>
+        <div class="sec-hint" id="finesHint"></div>
+        <div id="finesList"></div>
+        <button class="btn btn-ghost" id="addFineBtn" style="margin-top:8px;" data-i18n="car.addFine">+ تسجيل مخالفة</button>
+      </div>
+    </div>
 
-    <div class="acc-group" style="margin-top:20px;">
-      <button class="acc-header" data-acc="carCost"><span data-i18n="car.costTitle">💰 تكلفة الملكية</span> <span class="chev">▾</span></button>
-      <div class="acc-body" id="acc-carCost" hidden>
+    <div class="car-sec" data-sec="cost">
+      <button class="car-sec-h"><span class="ic" style="background:var(--b1)">💰</span>
+        <span class="tx"><b data-i18n="car.secCost">تكلفة الملكية</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="car-sec-b" hidden>
         <div class="obl-list" id="carCostList" style="margin-bottom:6px;"></div>
         <p class="rule-note" data-i18n="car.costNote">كل مصدر بيتحسب مرة واحدة بس: اللي سجّلته كصيانة أو تعبئة أو مخالفة مش بيتعدّ تاني لو اتسجّل كمصروف كمان.</p>
       </div>
     </div>
 
-    <div class="acc-group">
-      <button class="acc-header" data-acc="carCard"><span data-i18n="car.cardTitle">📇 كارت العربية</span> <span class="chev">▾</span></button>
-      <div class="acc-body set-panel" id="acc-carCard" hidden>
-        <p style="margin-top:0" data-i18n="car.cardNote">البيانات دي محفوظة على جهازك زي باقي بياناتك، ومفيدة وقت التجديد أو بيع العربية.</p>
+    <div class="car-sec" data-sec="card">
+      <button class="car-sec-h"><span class="ic" style="background:var(--b3)">📇</span>
+        <span class="tx"><b data-i18n="car.secCard">كارت العربية</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="car-sec-b" hidden>
+        <p class="rule-note" style="margin-top:0" data-i18n="car.cardNote">البيانات دي محفوظة على جهازك زي باقي بياناتك، ومفيدة وقت التجديد أو بيع العربية.</p>
         <div class="field"><label data-i18n="car.make">الماركة والموديل</label><input type="text" id="carMake" data-i18n-placeholder="car.makePh" placeholder="مثال: هيونداي إلنترا"></div>
         <div class="field"><label data-i18n="car.year">سنة الصنع</label><input type="number" id="carYear" placeholder="2020"></div>
         <div class="field"><label data-i18n="car.plate">رقم اللوحة</label><input type="text" id="carPlate" data-i18n-placeholder="car.platePh" placeholder="مثال: أ ب ج ١٢٣"></div>
@@ -997,13 +1053,26 @@
       </div>
     </div>
 
-    <div class="section-title" style="margin-top:20px;"><span data-i18n="maintenance.scheduleTitle">📋 جدول الصيانة الدورية</span> <span class="hint" data-i18n="maintenance.scheduleHint">حسب موقع الوكيل الرسمي</span></div>
-    <div id="maintSchedule"></div>
-    <button class="btn btn-ghost" id="addSchedBtn" style="margin-top:8px;" data-i18n="maintenance.addSched">+ إضافة نقطة صيانة</button>
+    <div class="car-sec" data-sec="sched">
+      <button class="car-sec-h"><span class="ic" style="background:var(--b2)">📋</span>
+        <span class="tx"><b data-i18n="car.secSched">جدول الصيانة الدورية</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="car-sec-b" hidden>
+        <p class="rule-note" style="margin-top:0" data-i18n="maintenance.scheduleHint">حسب موقع الوكيل الرسمي</p>
+        <div id="maintSchedule"></div>
+        <button class="btn btn-ghost" id="addSchedBtn" style="margin-top:8px;" data-i18n="maintenance.addSched">+ إضافة نقطة صيانة</button>
+      </div>
+    </div>
 
-    <div class="section-title" style="margin-top:20px;" data-i18n="maintenance.logTitle">🧾 سجل الصيانة الفعلي</div>
-    <div class="filter-scroll" id="maintSortChips"></div>
-    <div id="maintLog"></div>
+    <div class="car-sec" data-sec="log">
+      <button class="car-sec-h"><span class="ic" style="background:var(--b1)">🧾</span>
+        <span class="tx"><b data-i18n="car.secLog">سجل الصيانة الفعلي</b><span class="sm"></span></span>
+        <span class="chev">▾</span></button>
+      <div class="car-sec-b" hidden>
+        <div class="filter-scroll" id="maintSortChips"></div>
+        <div id="maintLog"></div>
+      </div>
+    </div>
   </div>
 
   <div class="content" id="tab-settings" style="display:none;">
@@ -1814,6 +1883,23 @@ const I18N = {
     "obligations.addItem":"+ إضافة بند جديد",
     "obligations.grandTotalLabel":"إجمالي كل الالتزامات الشهر ده", "obligations.filteredSumLabel":"الإجمالي ({0} بند)",
     "obligations.searchPlaceholder":"دور باسم البند...",
+    "car.secStatus":"حالة العربية", "car.secDocs":"أوراق العربية ومواعيدها", "car.secFuel":"البنزين والاستهلاك",
+    "car.secFines":"المخالفات", "car.secCost":"تكلفة الملكية", "car.secCard":"كارت العربية",
+    "car.secSched":"جدول الصيانة الدورية", "car.secLog":"سجل الصيانة الفعلي",
+    "car.sumOdo":"العداد {0} كم", "car.sumNextSvc":"الصيانة الجاية بعد {0} كم",
+    "car.sumNoDocs":"مفيش أوراق مسجّلة", "car.sumDocsCount":"{0} {1} مسجّلة", "car.sumDocsOne":"ورقة واحدة مسجّلة",
+    "car.unitDoc":"ورقة|ورقتين|أوراق",
+    "car.sumDocExpired":"{0} منتهية ⚠️", "car.sumDocNext":"أقرب موعد: {0} بعد {1} يوم",
+    "car.sumFuel":"{0} كم/لتر · {1} {2} للكيلومتر", "car.sumFuelNeed":"سجّل تعبئتين ونحسبلك استهلاكك",
+    "car.sumNoFines":"مفيش مخالفات مسجّلة", "car.sumFinesDue":"مستحق عليك {0} {1}",
+    "car.sumCost":"{0} {1} · متوسط {2} في الشهر", "car.sumCostShort":"{0} {1} لحد دلوقتي", "car.sumNoCard":"اكتب بيانات عربيتك",
+    "car.sumSched":"{0} {1}", "car.sumSchedOne":"نقطة صيانة واحدة",
+    "car.unitSchedPoint":"نقطة صيانة|نقطتين صيانة|نقط صيانة",
+    "car.sumLog":"{0} {1} · آخرها {2}", "car.sumLogOne":"عملية واحدة · {0}",
+    "car.unitLogEntry":"عملية صيانة|عمليتين صيانة|عمليات صيانة",
+    "car.sumNoLog":"مفيش صيانة متسجّلة",
+    "car.alertDocExpired":"⚠️ {0} منتهية", "car.alertDocSoon":"⏳ {0} بتنتهي بعد {1} يوم",
+    "car.alertFines":"🚨 مخالفات مستحقة {0} {1}", "car.alertService":"🔧 الصيانة قربت ({0} كم)",
     "car.docsTitle":"📄 أوراق العربية ومواعيدها", "car.addDoc":"+ إضافة ورقة",
     "car.emptyDocs":"مفيش أوراق مسجّلة. ضيف رخصة التسيير والتأمين والفحص عشان التطبيق يفكّرك قبل ما تنتهي.",
     "car.noExpiry":"من غير تاريخ انتهاء", "car.expiresToday":"بتنتهي النهاردة ⚠️",
@@ -2194,6 +2280,21 @@ const I18N = {
     "obligations.addItem":"+ Add New Item",
     "obligations.grandTotalLabel":"Total of All This Month's Obligations", "obligations.filteredSumLabel":"Total ({0} items)",
     "obligations.searchPlaceholder":"Search by item name...",
+    "car.secStatus":"Car status", "car.secDocs":"Documents & renewals", "car.secFuel":"Fuel & consumption",
+    "car.secFines":"Fines", "car.secCost":"Cost of ownership", "car.secCard":"Car card",
+    "car.secSched":"Service schedule", "car.secLog":"Maintenance log",
+    "car.sumOdo":"odometer {0} km", "car.sumNextSvc":"next service in {0} km",
+    "car.sumNoDocs":"No documents yet", "car.sumDocsCount":"{0} {1}", "car.sumDocsOne":"1 document",
+    "car.unitDoc":"documents",
+    "car.sumDocExpired":"{0} has expired ⚠️", "car.sumDocNext":"next up: {0} in {1} days",
+    "car.sumFuel":"{0} km/L · {1} {2} per km", "car.sumFuelNeed":"Log two fill-ups and we work out your consumption",
+    "car.sumNoFines":"No fines logged", "car.sumFinesDue":"{0} {1} outstanding",
+    "car.sumCost":"{0} {1} · {2} a month on average", "car.sumCostShort":"{0} {1} so far", "car.sumNoCard":"Add your car details",
+    "car.sumSched":"{0} {1}", "car.sumSchedOne":"1 service point", "car.unitSchedPoint":"service points",
+    "car.sumLog":"{0} {1} · last on {2}", "car.sumLogOne":"1 entry · {0}", "car.unitLogEntry":"entries",
+    "car.sumNoLog":"No maintenance logged",
+    "car.alertDocExpired":"⚠️ {0} has expired", "car.alertDocSoon":"⏳ {0} expires in {1} days",
+    "car.alertFines":"🚨 {0} {1} in unpaid fines", "car.alertService":"🔧 Service due soon ({0} km)",
     "car.docsTitle":"📄 Car documents & renewals", "car.addDoc":"+ Add a document",
     "car.emptyDocs":"No documents yet. Add the vehicle licence, insurance and inspection so the app reminds you before they expire.",
     "car.noExpiry":"No expiry date", "car.expiresToday":"Expires today ⚠️",
@@ -5152,6 +5253,107 @@ function renderCarCard(){
   });
 }
 
+// أي قسم مفتوح — محفوظ عشان التبويب يفتح زي ما سايبه، مش يرجع لحالته الأصلية كل مرة.
+// "حالة العربية" مفتوح افتراضيًا لأنه الملخّص اليومي، والباقي مطوي.
+let carSecOpen = { status:true, docs:false, fuel:false, fines:false, cost:false, card:false, sched:false, log:false };
+try{
+  const saved = JSON.parse(localStorage.getItem("carSections") || "null");
+  if(saved && typeof saved === "object") carSecOpen = {...carSecOpen, ...saved};
+}catch(e){}
+function setCarSection(key, open){
+  carSecOpen[key] = open;
+  try{ localStorage.setItem("carSections", JSON.stringify(carSecOpen)); }catch(e){}
+  const sec = document.querySelector(`.car-sec[data-sec="${key}"]`);
+  if(!sec) return;
+  sec.classList.toggle("open", open);
+  sec.querySelector(".car-sec-b").hidden = !open;
+}
+function openCarSection(key){
+  setCarSection(key, true);
+  const sec = document.querySelector(`.car-sec[data-sec="${key}"]`);
+  if(sec) sec.scrollIntoView({ block:"start", behavior:"smooth" });
+}
+// خلاصة كل قسم (السطر اللي تحت العنوان) + شريط التنبيهات. الاتنين بيتحسبوا من نفس الدوال
+// اللي بترسم المحتوى، فمستحيل الخلاصة تقول حاجة والقسم جواه حاجة تانية.
+function renderCarSections(){
+  const tab = document.getElementById("tab-maintenance");
+  if(!tab) return;
+  const odometer = Number(state.car.odometer||0);
+  const schedule = [...state.maintenanceSchedule].sort((a,b)=>a.km-b.km);
+  const nextSvc = schedule.find(x=>x.km > odometer);
+  const fuelSt = computeFuelStats();
+  const cost = computeCarOwnership();
+  const unpaidFines = state.fines.filter(f=>!f.paid);
+  const unpaidTotal = unpaidFines.reduce((s,f)=>s + (Number(f.amount)||0), 0);
+  // أقرب ورقة للانتهاء (والمنتهية بتسبق دايمًا)
+  const dated = state.carDocs.filter(d=>d.expiry)
+    .map(d=>({doc:d, left:daysUntil(d.expiry)}))
+    .sort((a,b)=>a.left-b.left);
+  const worstDoc = dated[0] || null;
+
+  const summaries = {
+    status: { text: [tf("car.sumOdo", fmt(odometer)),
+                     nextSvc ? tf("car.sumNextSvc", fmt(nextSvc.km - odometer)) : ""].filter(Boolean).join(" · ") },
+    docs: !state.carDocs.length ? { text: t("car.sumNoDocs") }
+        : !worstDoc ? { text: state.carDocs.length === 1 ? t("car.sumDocsOne")
+              : tf("car.sumDocsCount", state.carDocs.length, countedUnit(t("car.unitDoc"), state.carDocs.length)) }
+        : worstDoc.left < 0 ? { text: tf("car.sumDocExpired", carDocLabel(worstDoc.doc)), bad:true }
+        : { text: tf("car.sumDocNext", carDocLabel(worstDoc.doc), worstDoc.left),
+            bad: worstDoc.left <= Number(worstDoc.doc.remindDays ?? 30) },
+    fuel: fuelSt.kmPerL
+        ? { text: tf("car.sumFuel", fuelSt.kmPerL.toFixed(1), fuelSt.costPerKm.toFixed(2), cur()) }
+        : { text: t("car.sumFuelNeed") },
+    fines: !state.fines.length ? { text: t("car.sumNoFines") }
+        : unpaidTotal > 0 ? { text: tf("car.sumFinesDue", fmt(unpaidTotal), cur()), bad:true }
+        : { text: t("car.finesAllPaid") },
+    cost: cost.total > 0
+        ? { text: cost.months >= 2
+              ? tf("car.sumCost", fmt(Math.round(cost.total)), cur(), fmt(Math.round(cost.perMonth)))
+              : tf("car.sumCostShort", fmt(Math.round(cost.total)), cur()) }
+        : { text: t("car.costEmpty") },
+    card: (state.car.make || state.car.plate)
+        ? { text: [state.car.make, state.car.plate].filter(Boolean).join(" · ") }
+        : { text: t("car.sumNoCard") },
+    sched: { text: schedule.length === 1
+        ? t("car.sumSchedOne")
+        : tf("car.sumSched", schedule.length, countedUnit(t("car.unitSchedPoint"), schedule.length)) },
+    log: state.maintenanceLog.length
+        ? { text: tf(state.maintenanceLog.length === 1 ? "car.sumLogOne" : "car.sumLog",
+              ...(state.maintenanceLog.length === 1
+                  ? [[...state.maintenanceLog].sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0].date]
+                  : [state.maintenanceLog.length, countedUnit(t("car.unitLogEntry"), state.maintenanceLog.length),
+                     [...state.maintenanceLog].sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0].date])) }
+        : { text: t("car.sumNoLog") },
+  };
+
+  tab.querySelectorAll(".car-sec").forEach(sec=>{
+    const key = sec.dataset.sec;
+    const sum = summaries[key] || { text:"" };
+    const sm = sec.querySelector(".car-sec-h .sm");
+    sm.textContent = sum.text || "";
+    sm.classList.toggle("bad", !!sum.bad);
+    sec.classList.toggle("open", !!carSecOpen[key]);
+    sec.querySelector(".car-sec-b").hidden = !carSecOpen[key];
+    const head = sec.querySelector(".car-sec-h");
+    head.onclick = ()=>setCarSection(key, !carSecOpen[key]);
+  });
+
+  // التنبيهات: بس اللي محتاج تصرّف دلوقتي
+  const alerts = [];
+  dated.forEach(({doc, left})=>{
+    if(left < 0) alerts.push({ sec:"docs", cls:"", text: tf("car.alertDocExpired", carDocLabel(doc)) });
+    else if(left <= Number(doc.remindDays ?? 30)) alerts.push({ sec:"docs", cls:"warn", text: tf("car.alertDocSoon", carDocLabel(doc), left) });
+  });
+  if(unpaidTotal > 0) alerts.push({ sec:"fines", cls:"", text: tf("car.alertFines", fmt(unpaidTotal), cur()) });
+  if(nextSvc && (nextSvc.km - odometer) <= 500) alerts.push({ sec:"status", cls:"warn", text: tf("car.alertService", fmt(nextSvc.km - odometer)) });
+  const alertsEl = document.getElementById("carAlerts");
+  alertsEl.innerHTML = alerts.map((a,i)=>
+    `<button class="car-alert ${a.cls}" data-i="${i}">${a.text}</button>`).join("");
+  alertsEl.querySelectorAll(".car-alert").forEach(btn=>{
+    btn.onclick = ()=>openCarSection(alerts[Number(btn.dataset.i)].sec);
+  });
+}
+
 function renderMaintenance(){
   const odoEl = document.getElementById("inOdometer");
   if(!odoEl) return;
@@ -5218,6 +5420,7 @@ function renderMaintenance(){
     };
   });
 
+  renderCarSections();
   renderSortChips("maintSortChips", SORT_OPTIONS_DATE_AMOUNT, maintSortBy, (k)=>{ maintSortBy = k; renderMaintenance(); });
   const logEl = document.getElementById("maintLog");
   const log = sortList(state.maintenanceLog, maintSortBy, "date", "cost");
