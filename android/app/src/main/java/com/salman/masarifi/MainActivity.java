@@ -6,8 +6,13 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Display;
+import android.view.View;
 import android.view.WindowManager;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
+import java.util.Locale;
 
 public class MainActivity extends BridgeActivity {
 
@@ -22,6 +27,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(BillingPlugin.class);
         super.onCreate(savedInstanceState);
         requestHighestRefreshRate();
+        bridgeSystemBarInsets();
         handleQuickAddIntent(getIntent());
     }
 
@@ -30,6 +36,34 @@ public class MainActivity extends BridgeActivity {
         super.onNewIntent(intent);
         setIntent(intent);
         handleQuickAddIntent(intent);
+    }
+
+    /**
+     * Passes the system bars' size down to CSS as --sa-top / --sa-bottom.
+     *
+     * Why this exists: from Android 15 (API 35) the system forces every app to draw edge-to-edge
+     * and there is no way to opt out on API 36, which Play now requires. The page already pads
+     * itself with env(safe-area-inset-*), but a WebView reports those reliably for a display
+     * cutout, not necessarily for the status/navigation bars — so the header could end up under
+     * the clock. These variables are the dependable source, and the CSS takes whichever of the
+     * two is bigger, so nothing changes on a device where env() already reports the right value
+     * and nothing breaks if this listener never fires (the variables default to 0px).
+     */
+    private void bridgeSystemBarInsets() {
+        final View webView = getBridge().getWebView();
+        if (webView == null) return;
+        ViewCompat.setOnApplyWindowInsetsListener(webView, (v, windowInsets) -> {
+            Insets bars = windowInsets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            float density = getResources().getDisplayMetrics().density;
+            final String js = String.format(Locale.US,
+                    "document.documentElement.style.setProperty('--sa-top','%.0fpx');"
+                    + "document.documentElement.style.setProperty('--sa-bottom','%.0fpx');",
+                    bars.top / density, bars.bottom / density);
+            webView.post(() -> getBridge().getWebView().evaluateJavascript(js, null));
+            return windowInsets;   // passed on, not consumed — other views still get their insets
+        });
+        ViewCompat.requestApplyInsets(webView);
     }
 
     // Stashes which widget button was tapped (if any) for JS to pick up once the app's own state

@@ -133,7 +133,7 @@
   .topbar{
     background:var(--hero);
     color:#fff;
-    padding:calc(14px + env(safe-area-inset-top)) 18px 20px;
+    padding:calc(14px + max(env(safe-area-inset-top), var(--sa-top, 0px))) 18px 20px;
     flex-shrink:0;
   }
   .topbar-fade{
@@ -701,7 +701,7 @@
      backing card. bottom is pinned clear of the bar's own 67px row so it can never cover a tab
      icon — the bug this arrangement caused twice before. */
   .fab{
-    position:fixed; bottom:calc(89px + env(safe-area-inset-bottom));
+    position:fixed; bottom:calc(89px + max(env(safe-area-inset-bottom), var(--sa-bottom, 0px)));
     left:50%; transform:translateX(-50%);
     width:54px; height:54px; border-radius:50%;
     display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;
@@ -714,7 +714,7 @@
   .tabbar{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
     background:var(--card); border-top:1px solid var(--line); display:flex;
-    padding:8px 8px calc(8px + env(safe-area-inset-bottom)); z-index:20;
+    padding:8px 8px calc(8px + max(env(safe-area-inset-bottom), var(--sa-bottom, 0px))); z-index:20;
   }
   .tabbtn{flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; cursor:pointer; color:var(--ink-soft); font-family:'Cairo'; transition:color .2s ease;}
   .tabbtn .ic{
@@ -736,7 +736,7 @@
 
   .modal-bg{position:fixed; inset:0; background:var(--backdrop); display:none; align-items:flex-end; justify-content:center; z-index:50;}
   .modal-bg.show{display:flex;}
-  .modal{position:relative; background:var(--paper); width:100%; max-width:460px; border-radius:26px 26px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom)); animation:slideUp .25s ease; max-height:88vh; overflow-y:auto;}
+  .modal{position:relative; background:var(--paper); width:100%; max-width:460px; border-radius:26px 26px 0 0; padding:20px 20px calc(20px + max(env(safe-area-inset-bottom), var(--sa-bottom, 0px))); animation:slideUp .25s ease; max-height:88vh; overflow-y:auto;}
   @keyframes slideUp{from{transform:translateY(30px); opacity:0} to{transform:translateY(0); opacity:1}}
   .modal h2{font-size:16px; margin:0 0 16px; color:var(--ink);}
   .chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
@@ -761,13 +761,60 @@
   .onboard-overlay{
     position:fixed; inset:0; z-index:90; background:var(--paper);
     display:none; flex-direction:column; overflow-y:auto;
-    padding:calc(28px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+    padding:calc(28px + max(env(safe-area-inset-top), var(--sa-top, 0px))) 20px calc(24px + max(env(safe-area-inset-bottom), var(--sa-bottom, 0px)));
   }
   .onboard-overlay.show{display:flex;}
   .onboard-hero{text-align:center; margin-bottom:20px;}
   .onboard-hero .emoji{font-size:40px;}
   .onboard-hero h2{font-size:19px; margin:10px 0 8px; color:var(--ink);}
   .onboard-hero p{font-size:12.5px; color:var(--ink-soft); line-height:1.8; margin:0;}
+
+  /* ---------- شاشة البداية واختيار اللغة ---------- */
+  .splash{
+    position:fixed; inset:0; z-index:120; background:var(--hero);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+    animation:splashOut .45s ease .95s forwards;
+  }
+  .splash[hidden]{display:none;}
+  .splash-mark, .lang-mark{position:relative; width:104px; height:104px;}
+  .splash-mark svg, .lang-mark svg{width:100%; height:100%; transform:rotate(-90deg);}
+  .sp-track{fill:none; stroke:rgba(255,255,255,.28); stroke-width:11;}
+  /* المحيط = 2πr ≈ 213.6. بنبدأ بالحلقة فاضية وبنرسم 74% منها (نفس نسبة اللوجو). */
+  .sp-arc{fill:none; stroke:#fff; stroke-width:11; stroke-linecap:round;
+    stroke-dasharray:213.6; stroke-dashoffset:213.6; animation:spDraw .85s cubic-bezier(.4,0,.2,1) .1s forwards;}
+  .sp-arc.done{stroke-dashoffset:55.5;}
+  .splash-q{position:absolute; inset:0; display:grid; place-items:center; color:#fff;
+    font-size:34px; font-weight:800; opacity:0; animation:spFade .4s ease .55s forwards;}
+  .lang-mark .splash-q{opacity:1; animation:none;}
+  .splash-name{color:#fff; font-size:17px; font-weight:800; opacity:0;
+    animation:spFade .4s ease .7s forwards;}
+  @keyframes spDraw{to{stroke-dashoffset:55.5;}}
+  @keyframes spFade{to{opacity:1;}}
+  @keyframes splashOut{to{opacity:0; visibility:hidden;}}
+  /* الحركة اختيارية: لو المستخدم مفعّل "تقليل الحركة" الشاشة بتظهر ثابتة وتمشي من غير رسم */
+  @media (prefers-reduced-motion: reduce){
+    .splash{animation:splashOut .2s ease .5s forwards;}
+    .sp-arc{animation:none; stroke-dashoffset:55.5;}
+    .splash-q, .splash-name{animation:none; opacity:1;}
+  }
+
+  .lang-gate{
+    position:fixed; inset:0; z-index:110; display:none; flex-direction:column;
+    align-items:center; justify-content:center; gap:10px; text-align:center;
+    padding:24px calc(20px + env(safe-area-inset-left)) calc(24px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-right));
+    background:linear-gradient(170deg, var(--hero), var(--ink-card));
+  }
+  .lang-gate.show{display:flex;}
+  .lang-gate h2{color:#fff; font-size:19px; margin:14px 0 0; font-weight:800;}
+  .lang-gate p{color:rgba(255,255,255,.85); font-size:13px; margin:2px 0 18px; font-weight:600;}
+  .lang-btns{display:flex; flex-direction:column; gap:12px; width:100%; max-width:300px;}
+  .lang-btn{
+    background:#fff; border:none; border-radius:18px; padding:15px 18px; cursor:pointer;
+    font-family:'Cairo'; text-align:center; box-shadow:0 6px 18px rgba(0,0,0,.18);
+  }
+  .lang-btn b{display:block; font-size:16px; font-weight:800; color:#0F2A22;}
+  .lang-btn span{display:block; font-size:11.5px; font-weight:600; color:#57746A; margin-top:2px;}
+  .lang-btn:active{transform:scale(.97);}
 
   .lock-overlay{
     position:fixed; inset:0; z-index:99; background:linear-gradient(160deg,var(--teal-dark),var(--ink-card) 80%);
@@ -1870,6 +1917,36 @@
   <button class="btn btn-primary" id="lockRetryBtn" style="width:auto; min-width:180px; padding:12px 24px;" data-i18n="lock.retry">🔓 افتح دلوقتي</button>
 </div>
 
+<!-- شاشة البداية: نفس علامة التطبيق (حلقة القياس + علامة الاستفهام) بترتسم ثم تختفي.
+     CSS بس — مفيش مكتبات ولا صور، وبتحترم إعداد "تقليل الحركة" في النظام. -->
+<div class="splash" id="splashScreen">
+  <div class="splash-mark">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="sp-track" cx="50" cy="50" r="34"/>
+      <circle class="sp-arc" cx="50" cy="50" r="34"/>
+    </svg>
+    <span class="splash-q">؟</span>
+  </div>
+  <div class="splash-name">معايا كام؟</div>
+</div>
+
+<!-- اختيار اللغة: أول حاجة تظهر لمستخدم جديد، قبل أي إعداد تاني -->
+<div class="lang-gate" id="langGate">
+  <div class="lang-mark">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="sp-track" cx="50" cy="50" r="34"/>
+      <circle class="sp-arc done" cx="50" cy="50" r="34"/>
+    </svg>
+    <span class="splash-q">؟</span>
+  </div>
+  <h2>معايا كام؟ · What's Left?</h2>
+  <p>اختار لغتك · Choose your language</p>
+  <div class="lang-btns">
+    <button class="lang-btn" data-lang="en"><b>English</b><span>Track your money</span></button>
+    <button class="lang-btn" data-lang="ar"><b>العربية</b><span>تابع فلوسك</span></button>
+  </div>
+</div>
+
 <div class="onboard-overlay" id="onboardOverlay">
   <div class="onboard-hero">
     <div class="emoji">👋</div>
@@ -1930,7 +2007,9 @@ function catLabel(entry){ return (state.settings.lang==="en" && entry.lEn) ? ent
 function defaultSettings(){
   return {
     salary: 0, emergBal: 0, emergGoal: 0, caps: {}, sources: ["كاش","فيزا","بطاقة بنكية","فودافون كاش"], allocOverrides: {},
-    hasCar: true, customCats: [], lang: "ar",
+    // الإنجليزي هو الافتراضي قبل الاختيار، عشان أول شاشة (اختيار اللغة) تبقى مفهومة لأي حد
+    // يفتح التطبيق من أي بلد. أول ما يختار بتتحفظ ومبتتغيّرش تاني.
+    hasCar: true, customCats: [], lang: "en",
     // "auto" = تابع النظام، "light"/"dark" = اختيار صريح من المستخدم
     theme: "auto",
     // Empty means "use the language's default" (ج / EGP) — anyone outside Egypt sets their own.
@@ -4018,6 +4097,35 @@ function computeAllAccountBalances(){
 
 // ---------- onboarding (first run) ----------
 function needsOnboarding(){ return localStorage.getItem("onboarded") !== "1"; }
+// اللغة بتتسأل مرة واحدة بس. العلامة منفصلة عن الإعداد نفسه عشان لو حد لغته الإنجليزي فعلاً
+// (وهي الافتراضي) ميتسألش تاني كل مرة.
+function needsLangChoice(){
+  // مستخدم قديم شغّال على التطبيق بالفعل اختار لغته ضمنيًا — مايتسألش من جديد بعد التحديث
+  if(localStorage.getItem("langChosen") !== "1" && localStorage.getItem("onboarded") === "1"){
+    try{ localStorage.setItem("langChosen", "1"); }catch(e){}
+  }
+  return localStorage.getItem("langChosen") !== "1";
+}
+function showLangGate(){ document.getElementById("langGate").classList.add("show"); }
+document.querySelectorAll("#langGate .lang-btn").forEach(btn=>{
+  btn.onclick = async ()=>{
+    state.settings.lang = btn.dataset.lang;
+    await saveSettings();
+    try{ localStorage.setItem("langChosen", "1"); }catch(e){}
+    document.getElementById("langGate").classList.remove("show");
+    applyLanguage();
+    render();
+    if(needsOnboarding()) showOnboarding();
+  };
+});
+// شاشة البداية بتختفي بالأنيميشن، وبنشيلها من الشجرة بعده عشان متفضلش ماسكة اللمس
+(function(){
+  const sp = document.getElementById("splashScreen");
+  if(!sp) return;
+  const kill = ()=>{ sp.hidden = true; };
+  sp.addEventListener("animationend", (e)=>{ if(e.animationName === "splashOut") kill(); });
+  setTimeout(kill, 2500);   // شبكة أمان لو الأنيميشن اتمنع (تقليل الحركة/متصفح قديم)
+})();
 function showOnboarding(){
   document.getElementById("obSalary").value = state.settings.salary || "";
   document.getElementById("obEmergBal").value = state.settings.emergBal || "";
@@ -6274,6 +6382,7 @@ async function applyBackupData(data){
   // التطبيق يتقفل، لأن اللي بيتقرا وقت التشغيل هو localStorage مش الحالة في الذاكرة.
   await saveCarDocs(); await saveFuelLog(); await saveFines();
   localStorage.setItem("onboarded", "1");
+  localStorage.setItem("langChosen", "1");
   rescheduleItemDueReminders();
   rescheduleCarDocReminders();
   applyTheme();
@@ -6313,6 +6422,7 @@ document.getElementById("resetBtn").onclick = async ()=>{
   await rescheduleCarDocReminders();
   pendingSms = [];
   localStorage.removeItem("onboarded");
+  localStorage.removeItem("langChosen");
   applyTheme();
   applyLanguage();
   render();
@@ -7322,7 +7432,10 @@ function checkQuickAddUrlParam(){
   const quickAdded = await checkPendingQuickAdd();
   checkQuickAddUrlParam();
   if(!quickAdded) await tryUnlock();
-  if(needsOnboarding()) showOnboarding();
+  // ترتيب أول تشغيل: شاشة البداية (بتختفي لوحدها) ← اختيار اللغة ← إعداد البيانات.
+  // القفل بالبصمة فوقهم كلهم في z-index، فمستحيل حد يعدّي الترتيب ده ويشوف بيانات.
+  if(needsLangChoice()) showLangGate();
+  else if(needsOnboarding()) showOnboarding();
 })();
 
 // PWA offline app-shell — only relevant to the browser/"Add to Home Screen" path (an installed
