@@ -36,7 +36,29 @@ android {
     def ksPass = keystoreProps['storePassword'] ?: System.getenv('ANDROID_KEYSTORE_PASSWORD')
     def ksAlias = keystoreProps['keyAlias'] ?: System.getenv('ANDROID_KEY_ALIAS')
     def ksAliasPass = keystoreProps['keyPassword'] ?: System.getenv('ANDROID_KEY_PASSWORD')
-    def hasReleaseKey = ksPath && ksPass && ksAlias && ksAliasPass && file(ksPath).exists()
+
+    // مسار نسبي بيتحسب من مجلد android/ (مكان keystore.properties)، مش من مجلد app/.
+    // file() هنا بتحسبه من app/ لأن ده مجلد الموديول — وده كان بيخلي مفتاح موجود فعلاً في
+    // android/ مايتلاقاش، فالبناء يطلع **من غير توقيع** وPlay ترفضه.
+    def ksFile = null
+    if (ksPath) {
+        ksFile = new File(ksPath.toString())
+        if (!ksFile.isAbsolute()) ksFile = new File(rootProject.projectDir, ksPath.toString())
+    }
+    def hasReleaseKey = ksPath && ksPass && ksAlias && ksAliasPass && ksFile.exists()
+
+    // لو حد ظبّط بيانات توقيع وهي ناقصة أو المفتاح مش موجود، نقف بصوت عالي بدل ما نطلّع ملف
+    // غير موقّع في صمت — ده اللي بيضيّع دورة بناء كاملة قبل ما تكتشف السبب.
+    def anySigningConfigured = ksPath || ksPass || ksAlias || ksAliasPass
+    if (anySigningConfigured && !hasReleaseKey) {
+        def missing = []
+        if (!ksPath) missing << 'storeFile / ANDROID_KEYSTORE_PATH'
+        if (!ksPass) missing << 'storePassword / ANDROID_KEYSTORE_PASSWORD'
+        if (!ksAlias) missing << 'keyAlias / ANDROID_KEY_ALIAS'
+        if (!ksAliasPass) missing << 'keyPassword / ANDROID_KEY_PASSWORD'
+        if (ksPath && !ksFile.exists()) missing << "ملف المفتاح مش موجود على المسار: ${ksFile.absolutePath}"
+        throw new GradleException("إعداد التوقيع ناقص: " + missing.join(' · '))
+    }
 
     signingConfigs {
         debug {
@@ -47,7 +69,7 @@ android {
         }
         if (hasReleaseKey) {
             release {
-                storeFile file(ksPath)
+                storeFile ksFile
                 storePassword ksPass.toString()
                 keyAlias ksAlias.toString()
                 keyPassword ksAliasPass.toString()

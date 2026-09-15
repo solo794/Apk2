@@ -68,7 +68,16 @@ jobs:
         run: npx cap sync android
 
       - name: Restore the keystore from the secret
-        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/upload-keystore.jks
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/upload-keystore.jks
+          # لو السر اتلصق ناقص أو فيه أسطر زيادة، الملف بيطلع فاضي أو تالف — الأحسن نعرف
+          # دلوقتي مش بعد ما البناء يخلص ويطلّع ملف غير موقّع
+          SIZE=$(stat -c%s android/upload-keystore.jks)
+          echo "حجم ملف المفتاح: $SIZE بايت"
+          if [ "$SIZE" -lt 1000 ]; then
+            echo "::error::ملف المفتاح المستخرج صغير جدًا ($SIZE بايت) — غالبًا ANDROID_KEYSTORE_BASE64 اتلصق ناقص"
+            exit 1
+          fi
 
       - name: Grant execute permission to gradlew
         run: chmod +x android/gradlew
