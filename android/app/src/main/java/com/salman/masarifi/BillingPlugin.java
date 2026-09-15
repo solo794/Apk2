@@ -150,7 +150,11 @@ public class BillingPlugin extends Plugin {
 
     private JSObject baseStatus() {
         JSObject ret = new JSObject();
-        ret.put("available", connected && !unavailable);
+        // "متاح" = الاتصال بـPlay شغال **والمنتج نفسه موجود ومفعّل**. من غير الشرط التاني، بناء
+        // مرفوع على Play قبل ما الاشتراك يتعمل في الكونسول كان هيعرض زرار شراء مش بيعمل حاجة
+        // (launchBillingFlow محتاج productDetails) — وده بالظبط اللي بيترفض تحت بند
+        // "وظيفة مكسورة" في مراجعة Play.
+        ret.put("available", connected && !unavailable && productDetails != null);
         ret.put("isPro", isPro);
         ret.put("productId", PRODUCT_ID);
         // The store's own localized price string — never hardcode the number in the UI, since the

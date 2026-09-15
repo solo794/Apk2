@@ -2396,6 +2396,10 @@ const I18N = {
     "notif.maintTitle":"صيانة العربية قربت 🔧", "notif.maintBody":"باقيلك حوالي {0} كم على صيانة {1} كم (السعر المتوقع {2} ج)",
     "google.nativeOnly":"شغالة بس جوه تطبيق الموبايل.", "google.backupNow":"☁️ ارفع نسخة دلوقتي",
     "google.restore":"⬇️ استرجع من Drive", "google.signOut":"تسجيل خروج",
+    "google.deleteBackup":"🗑️ امسح النسخة السحابية",
+    "confirm.driveDelete":"هتمسح نسخة بياناتك المرفوعة على Drive نهائيًا. بياناتك على الجهاز هتفضل زي ما هي. تكمّل؟",
+    "toast.driveDeleted":"النسخة السحابية اتمسحت ✅", "toast.driveNoBackup":"مفيش نسخة سحابية أصلاً",
+    "toast.driveDeleteFail":"مقدرناش نمسح النسخة، جرّب تاني",
     "toast.uploading":"بيترفع...", "toast.driveUploadOk":"اترفعت النسخة على Google Drive ✅", "toast.driveUploadFail":"تعذّر الرفع، جرب تاني",
     "confirm.driveRestore":"هيتم استبدال كل البيانات الحالية بالنسخة اللي على Drive. متأكد؟",
     "toast.driveRestoreOk":"اترجعت البيانات من Google Drive ✅", "toast.driveRestoreFail":"مفيش نسخة محفوظة على Drive، أو حصل خطأ",
@@ -2817,6 +2821,10 @@ const I18N = {
     "notif.maintTitle":"Car maintenance is coming up 🔧", "notif.maintBody":"About {0} km left to your {1} km service (expected price {2} EGP)",
     "google.nativeOnly":"Only works inside the mobile app.", "google.backupNow":"☁️ Upload Now",
     "google.restore":"⬇️ Restore from Drive", "google.signOut":"Sign Out",
+    "google.deleteBackup":"🗑️ Delete cloud backup",
+    "confirm.driveDelete":"This permanently deletes your backup from Drive. The data on this device is left untouched. Continue?",
+    "toast.driveDeleted":"Cloud backup deleted ✅", "toast.driveNoBackup":"There is no cloud backup",
+    "toast.driveDeleteFail":"Could not delete the backup, try again",
     "toast.uploading":"Uploading...", "toast.driveUploadOk":"Backup uploaded to Google Drive ✅", "toast.driveUploadFail":"Upload failed, try again",
     "confirm.driveRestore":"This will replace all current data with the copy on Drive. Are you sure?",
     "toast.driveRestoreOk":"Data restored from Google Drive ✅", "toast.driveRestoreFail":"No backup found on Drive, or an error occurred",
@@ -3851,6 +3859,19 @@ async function driveUploadBackup(){
   });
   if(!res.ok) throw new Error("drive upload failed: "+res.status);
 }
+// حذف النسخة السحابية من جوّه التطبيق. مطلوب سياسيًا (لازم يبقى فيه مسار واضح لحذف
+// البيانات) وكمان منطقي: مفيش داعي المستخدم يروح يدوّر على الملف في Drive بنفسه — وهو أصلاً
+// في مساحة appDataFolder المخفية مش بيشوفها.
+async function driveDeleteBackup(){
+  const token = await driveAccessToken();
+  const fileId = await driveFindBackupFileId(token);
+  if(!fileId) return false;          // مفيش نسخة أصلاً
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+    method: "DELETE", headers: { Authorization: "Bearer "+token },
+  });
+  if(!res.ok && res.status !== 404) throw new Error("drive delete failed: "+res.status);
+  return true;
+}
 async function driveRestoreBackup(){
   const token = await driveAccessToken();
   const fileId = await driveFindBackupFileId(token);
@@ -3877,7 +3898,15 @@ function renderGoogleAccountCard(){
       </div>
       <button class="btn btn-primary" id="googleBackupNowBtn" style="margin-bottom:8px;">${t("google.backupNow")}</button>
       <button class="btn btn-ghost" id="googleRestoreBtn" style="margin-bottom:8px;">${t("google.restore")}</button>
+      <button class="btn btn-ghost" id="googleDeleteBackupBtn" style="margin-bottom:8px;">${t("google.deleteBackup")}</button>
       <button class="btn btn-ghost" id="googleSignOutBtn">${t("google.signOut")}</button>`;
+    document.getElementById("googleDeleteBackupBtn").onclick = async ()=>{
+      if(!confirm(t("confirm.driveDelete"))) return;
+      try{
+        const had = await driveDeleteBackup();
+        showToast(t(had ? "toast.driveDeleted" : "toast.driveNoBackup"));
+      }catch(e){ showToast(t("toast.driveDeleteFail")); }
+    };
     document.getElementById("googleBackupNowBtn").onclick = async ()=>{
       if(!requirePro("cloud")) return;
       showToast(t("toast.uploading"));

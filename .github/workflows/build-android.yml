@@ -21,6 +21,10 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # الأكشن افتراضيًا بيثبّت حزمة اسمها tools، وجوجل شالتها من مستودع الـSDK — فالخطوة
+          # بتفشل قبل ما البناء يبدأ أصلاً. بنحدد اللي محتاجينه بالظبط بدل الافتراضي.
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
       - name: Set up Node
         uses: actions/setup-node@v4
