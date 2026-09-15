@@ -1,4 +1,4 @@
-package com.salman.masarifi;
+package com.salemkhaled.whatsleft;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

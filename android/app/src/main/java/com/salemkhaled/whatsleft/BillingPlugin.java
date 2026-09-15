@@ -1,4 +1,4 @@
-package com.salman.masarifi;
+package com.salemkhaled.whatsleft;
 
 import android.content.Intent;
 import android.net.Uri;

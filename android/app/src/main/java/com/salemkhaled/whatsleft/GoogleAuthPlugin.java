@@ -1,4 +1,4 @@
-package com.salman.masarifi;
+package com.salemkhaled.whatsleft;
 
 import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSObject;

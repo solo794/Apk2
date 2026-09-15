@@ -14,7 +14,7 @@
 > التطبيق بيرد عليه في شاشته الرئيسية من أول يوم، بقى هو اسم البراند نفسه.
 > (كان اتجرّب اسم "فلوسفة" قبل كده وبعدين اتغيّر لده.) الاسم القديم "متابعة
 > مصاريفي" فضل موجود كوصف/عنوان تقني في أماكن مش ظاهرة للمستخدم (زي `App ID`
-> بتاع أندرويد `com.salman.masarifi`، واسم مشروع الـ npm) — تغيير الهوية دي
+> بتاع أندرويد `com.salemkhaled.whatsleft`، واسم مشروع الـ npm) — تغيير الهوية دي
 > (App ID) عملية أكبر وأخطر بكتير (بتكسر التوقيع، تسجيل الدخول بجوجل،
 > والتثبيتات الحالية على أجهزة المستخدمين) فمتعملتش دلوقتي.
 
@@ -329,7 +329,7 @@ Play**. ده شرط من جوجل مش اختيار في الكود:
 
 1. **حساب مطوّر على Google Play** — 25 دولار مرة واحدة مدى الحياة.
 2. **ترفع التطبيق على Play** (حتى لو Internal Testing في الأول) بنفس اسم
-   الحزمة `com.salman.masarifi`، وموقّع بمفتاح الرفع بتاعك.
+   الحزمة `com.salemkhaled.whatsleft`، وموقّع بمفتاح الرفع بتاعك.
 3. **تعمل منتج اشتراك في Play Console** بالمعرّف **`pro_monthly`** بالظبط
    (ده المعرّف المكتوب في `BillingPlugin.java`)، وتحطله خطة أساسية شهرية
    بسعر **50 جنيه** لمصر.
@@ -1027,7 +1027,7 @@ Play**. ده شرط من جوجل مش اختيار في الكود:
   وارد، deposit، received... مقابل خصم، شراء، دفع، سحب، تحويل صادر، debit...)
   — لو رسالة بنكك بصياغة مختلفة تمامًا ممكن تتصنّف غلط، بلّغني بنص الرسالة
   (بعد حذف بياناتك الشخصية) عشان أظبط الكلمات عليها.
-- الكود الأصلي: `android/app/src/main/java/com/salman/masarifi/SmsReceiver.java`
+- الكود الأصلي: `android/app/src/main/java/com/salemkhaled/whatsleft/SmsReceiver.java`
   (الـ listener — بيجمّع أجزاء الرسالة الطويلة (multi-part SMS) في رسالة
   منطقية واحدة قبل ما يخزنها، فمفيش نفس الرسالة بتتقرا مرتين) و
   `SmsReaderPlugin.java` (الجسر مع الـ JS)، والـ parsing نفسه في
@@ -1052,7 +1052,7 @@ Play**. ده شرط من جوجل مش اختيار في الكود:
   القفل (وهيقولّك تظبط قفل الجهاز الأول)، وحتى لو حصل عطل غريب في التحقق
   نفسه، التطبيق **بيفتح** بدل ما يقفلك بره بياناتك بشكل دائم من غير أي طريقة
   رجوع — مفيش باسورد بديل جوه التطبيق نفسه.
-- الكود الأصلي: `android/app/src/main/java/com/salman/masarifi/BiometricAuthPlugin.java`
+- الكود الأصلي: `android/app/src/main/java/com/salemkhaled/whatsleft/BiometricAuthPlugin.java`
   (باستخدام مكتبة AndroidX Biometric الرسمية من جوجل — نفس اللي بيستخدمها
   تطبيقات البنوك تقريبًا).
 
@@ -1184,7 +1184,7 @@ Google بتفرض إن أي تطبيق يستخدم "تسجيل الدخول ب�
    للعامة أو تعدّي مراجعة جوجل.
 4. **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
    - Application type: **Android**
-   - Package name: `com.salman.masarifi`
+   - Package name: `com.salemkhaled.whatsleft`
    - SHA-1 certificate fingerprint (من نفس `debug.keystore` المُثبّت في
      المستودع، اللي بيوقّع كل نسخ الـ APK من الـ CI):
      ```
@@ -1211,7 +1211,7 @@ Google بتفرض إن أي تطبيق يستخدم "تسجيل الدخول ب�
 جهازك).
 
 الكود الأصلي:
-`android/app/src/main/java/com/salman/masarifi/GoogleAuthPlugin.java` (تسجيل
+`android/app/src/main/java/com/salemkhaled/whatsleft/GoogleAuthPlugin.java` (تسجيل
 الدخول + استخراج access token لـ Drive) — التطبيق نفسه (`www/index.html`) هو
 اللي بيكلّم Drive REST API مباشرة بالـ token ده لرفع/استرجاع نفس ملف النسخة
 الاحتياطية.
@@ -1317,7 +1317,7 @@ scripts/gen-icon.js     ← سكريبت بايثون/نود بسيط ولّد �
 .github/workflows/      ← بناء تلقائي للـ APK عبر GitHub Actions
 ```
 
-- **App ID:** `com.salman.masarifi`
+- **App ID:** `com.salemkhaled.whatsleft`
 - **اسم التطبيق:** معايا كام؟ (What's Left?)
 
 ---

@@ -128,7 +128,7 @@
 ## المرحلة 1 — قرارات وحساب
 
 - [ ] **اسم التطبيق في المتجر** (30 حرف أقصى). مقترح: `معايا كام؟ — مصاريفي`
-- [ ] **اسم الحزمة**: `com.salman.masarifi` — ⛔ **ده ملوش رجعة بعد النشر**،
+- [ ] **اسم الحزمة**: `com.salemkhaled.whatsleft` — ⛔ **ده ملوش رجعة بعد النشر**،
       مينفعش يتغيّر أبدًا. لو مش عاجبك، غيّره **قبل** الرفعة الأولى.
 - [ ] **حساب بنكي باسمك** لاستلام الأرباح (لازم يكون باسمك انت بالظبط)
 - [ ] **الرقم القومي/جواز السفر** — جوجل بتطلب تأكيد هوية للحسابات الشخصية
@@ -395,7 +395,7 @@ https://solo794.github.io/Apk2/privacy.html
 - [ ] `Monetization → Subscriptions → Create subscription`
 - [ ] **Product ID**: `pro_monthly`
       ⛔ **حرف بحرف كده** — ده مكتوب في
-      `android/app/src/main/java/com/salman/masarifi/BillingPlugin.java`.
+      `android/app/src/main/java/com/salemkhaled/whatsleft/BillingPlugin.java`.
       ولو غيّرته، قول لي أغيّره في الكود. والـID **ملوش رجعة بعد الإنشاء**.
 - [ ] **Base plan**: شهري (Monthly, auto-renewing)
 - [ ] **السعر**: `50 EGP` لمصر

@@ -1,4 +1,4 @@
-package com.salman.masarifi;
+package com.salemkhaled.whatsleft;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -22,8 +22,8 @@ import android.widget.RemoteViews;
  * the two always agree.
  */
 public class QuickAddWidgetProvider extends AppWidgetProvider {
-    static final String ACTION_QUICK_ADD_TEXT = "com.salman.masarifi.QUICK_ADD_TEXT";
-    static final String ACTION_QUICK_ADD_VOICE = "com.salman.masarifi.QUICK_ADD_VOICE";
+    static final String ACTION_QUICK_ADD_TEXT = "com.salemkhaled.whatsleft.QUICK_ADD_TEXT";
+    static final String ACTION_QUICK_ADD_VOICE = "com.salemkhaled.whatsleft.QUICK_ADD_VOICE";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
