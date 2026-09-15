@@ -126,6 +126,21 @@
     padding-bottom:120px;
     box-shadow:var(--app-shadow);
   }
+  /* شريط الحالة (الساعة والأيقونات) شفاف في أندرويد 15+ ومفيش طريقة نلغي ده — المحتوى
+     بيعدّي تحته وإحنا بنسكرول. الحشو (padding) في .topbar بيحل المنظر عند أول الصفحة بس؛
+     أول ما تسكرول، دواير الإجراءات السريعة كانت بتطلع تحت الساعة والأيقونات وتتلخبط معاهم
+     (اتصوّرت على جهاز حقيقي). الحل: شريط ثابت بلون الهيدر بيغطي ارتفاع الـinset بالظبط،
+     فأي حاجة بتسكرول تحته تختفي وراه بدل ما تصطدم بأيقونات النظام.
+     ارتفاعه صفر لو مفيش inset (ويب/ديسكتوب) فمش بيبان أصلاً، وz-index تحت .modal-bg (50)
+     عشان خلفية المودال تعتّم عليه هو كمان بدل ما يفضل شريط فاقع فوقها. */
+  .statusbar-scrim{
+    position:fixed; top:0; z-index:30;
+    left:50%; transform:translateX(-50%);
+    width:100%; max-width:460px;
+    height:max(env(safe-area-inset-top), var(--sa-top, 0px));
+    background:var(--hero);
+    pointer-events:none;
+  }
   /* ---------- top bar ---------- */
   /* The bar is solid where its content sits and then dissolves into the page ground through a
      dedicated strip below it (.topbar-fade) — a single gradient across the whole block put the
@@ -764,6 +779,15 @@
     padding:calc(28px + max(env(safe-area-inset-top), var(--sa-top, 0px))) 20px calc(24px + max(env(safe-area-inset-bottom), var(--sa-bottom, 0px)));
   }
   .onboard-overlay.show{display:flex;}
+  /* شاشة الترحيب هي الشاشة الوحيدة اللي خلفيتها فاتحة وبتغطي الشاشة كلها (z-index 90 فوق
+     شريط .statusbar-scrim) — فأيقونات شريط الحالة البيضا كانت بتختفي على الأرضية الفاتحة
+     (اتصوّرت على جهاز حقيقي). نفس شريط الهيدر بيترسم هنا كمان عشان الأيقونات تفضل مقروءة. */
+  .onboard-overlay::before{
+    content:""; position:fixed; top:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:460px;
+    height:max(env(safe-area-inset-top), var(--sa-top, 0px));
+    background:var(--hero); pointer-events:none;
+  }
   .onboard-hero{text-align:center; margin-bottom:20px;}
   .onboard-hero .emoji{font-size:40px;}
   .onboard-hero h2{font-size:19px; margin:10px 0 8px; color:var(--ink);}
@@ -869,6 +893,8 @@
 </head>
 <body>
 <div id="app">
+
+  <div class="statusbar-scrim" aria-hidden="true"></div>
 
   <div class="topbar">
     <div class="brand">
