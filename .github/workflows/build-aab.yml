@@ -147,6 +147,28 @@ jobs:
           fi
           echo "✅ مفيش صلاحية رسائل في الملف"
 
+      # استمارة Advertising ID في Play Console بتسأل "التطبيق بيستخدم معرّف الإعلانات؟"
+      # والإجابة عندنا "لأ" — بس دي إجابة عن **كل** المكتبات المدمجة، مش كودنا بس. أي مكتبة
+      # بتضيف صلاحية AD_ID في مانفستها بتدخل جوه المانفست المدمج لوحدها، وساعتها الإقرار
+      # يبقى غلط (وإقرار غلط في Play = مشكلة سياسة مش مجرد رفض). الخطوة دي بتطبع قايمة
+      # الصلاحيات الحقيقية اللي في الملف وبتفشل لو AD_ID ظهرت فيها.
+      - name: List the bundle's real permissions (and fail on AD_ID)
+        working-directory: android
+        run: |
+          AAB=app/build/outputs/bundle/playRelease/app-play-release.aab
+          rm -rf /tmp/permcheck && mkdir -p /tmp/permcheck
+          unzip -o -q "$AAB" 'base/manifest/AndroidManifest.xml' -d /tmp/permcheck
+          M=/tmp/permcheck/base/manifest/AndroidManifest.xml
+          echo "### 🔐 الصلاحيات جوه الـAAB" >> "$GITHUB_STEP_SUMMARY"
+          grep -aoE '(android|com\.android\.vending|com\.google\.android\.(gms|c2dm))[a-zA-Z0-9_.]*permission\.[A-Z_0-9]+' "$M" \
+            | sort -u | tee /tmp/permcheck/list.txt | sed 's/^/- `/; s/$/`/' >> "$GITHUB_STEP_SUMMARY"
+          echo "المجموع: $(wc -l < /tmp/permcheck/list.txt)" >> "$GITHUB_STEP_SUMMARY"
+          if grep -q 'permission.AD_ID' /tmp/permcheck/list.txt; then
+            echo "::error::الملف فيه صلاحية AD_ID — يعني مكتبة بتستخدم معرّف الإعلانات، وإقرار Play لازم يتغيّر لـYes"
+            exit 1
+          fi
+          echo "✅ مفيش AD_ID — إقرار Advertising ID = No صحيح"
+
       - name: Remove the keystore from the runner
         if: always()
         run: rm -f android/upload-keystore.jks
