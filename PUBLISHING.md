@@ -356,9 +356,25 @@ https://solo794.github.io/Apk2/privacy.html
 مرة واحدة (~10 دقايق):
 
 - [ ] مشروع جديد على [Google Cloud Console](https://console.cloud.google.com/)
-- [ ] تفعيل **Google Drive API**
-- [ ] **OAuth consent screen** — اختار External
-- [ ] **OAuth client ID** نوع Android + اسم الحزمة + بصمة SHA-1
+- [ ] **APIs & Services → Library** → فعّل **Google Drive API**
+- [ ] **APIs & Services → Google Auth Platform** (الاسم الجديد لـ«OAuth
+      consent screen») → تبويب **Audience** → **External**
+- [ ] نفس المكان → تبويب **Clients** → **OAuth client ID** نوع **Android**
+      + اسم الحزمة + بصمة SHA-1
+
+> ### 🪤 التسميات اتغيّرت — وده بيتوّه الناس
+>
+> | بتدوّر على | بقى اسمه فين |
+> |---|---|
+> | OAuth consent screen | **Google Auth Platform** (تبويبات Overview · Branding · Audience · Clients · Data Access) |
+> | Credentials → OAuth client ID | تبويب **Clients** جوه Google Auth Platform |
+> | Test users | تبويب **Audience** |
+> | Scopes | تبويب **Data Access** |
+>
+> ⛔ **ومتدوّرش على كلمة «OAuth» في الـAPI Library.** شاشة الموافقة **مش
+> API بتتفعّل**. ولو طلعلك **Cloud OAuth Service API** في البحث،
+> **متفعّلهوش** — ده منتج تاني خالص. الـAPI الوحيد المطلوب هو
+> **Google Drive API**.
 
 ### 💳 ⛔ متدفعش حاجة هنا — الـBilling مش مطلوب أصلاً
 

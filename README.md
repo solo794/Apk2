@@ -1185,11 +1185,27 @@ Google بتفرض إن أي تطبيق يستخدم "تسجيل الدخول ب�
    جديد (أو استخدم مشروع موجود).
 2. من القايمة الجانبية: **APIs & Services → Library**، دوّر على **Google
    Drive API** ودوس **Enable**.
-3. **APIs & Services → OAuth consent screen**: اختار **External**، املأ اسم
-   التطبيق وإيميلك، واحفظ. لو التطبيق هيفضل لاستخدامك الشخصي بس، سيبه في وضع
-   **Testing** وضيف إيميل جوجل بتاعك تحت **Test users** — مش محتاج تنشره
-   للعامة أو تعدّي مراجعة جوجل.
-4. **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
+   > ⛔ **متدوّرش على «OAuth» في الـAPI Library** — شاشة الموافقة مش API
+   > بتتفعّل من هنا (خطوة 3). ولو ظهرلك **Cloud OAuth Service API** في
+   > البحث، **متفعّلهوش** — ده منتج تاني خالص ومالوش علاقة بينا.
+   > الـAPI الوحيد اللي بتفعّله هو **Google Drive API**.
+3. **شاشة الموافقة** — جوجل غيّرت اسمها ومكانها: بقت
+   **APIs & Services → Google Auth Platform** (كانت «OAuth consent screen»،
+   والرابط القديم لسه بيوصّل:
+   [console.cloud.google.com/apis/credentials/consent](https://console.cloud.google.com/apis/credentials/consent)).
+   أول مرة بيفتحلك ويزارد **Get started** في صفحة واحدة، وبعدها بتلاقي
+   تبويبات: **Overview · Branding · Audience · Clients · Data Access**.
+   - **Branding**: اسم التطبيق + إيميل الدعم
+   - **Audience**: اختار **External**. ولو التطبيق لاستخدامك الشخصي بس،
+     سيبه في وضع **Testing** وضيف إيميل جوجل بتاعك تحت **Test users** —
+     مش محتاج تنشره للعامة أو تعدّي مراجعة جوجل.
+   - **Data Access**: هنا بتضيف الصلاحية اللي التطبيق بيطلبها:
+     `https://www.googleapis.com/auth/drive.appdata`. وهي مش لازمة وانت في
+     وضع Testing (المستخدمين المسجّلين بيعدّوا عادي)، بس **لازمة قبل النشر
+     للعامة**.
+4. **OAuth client** — في الواجهة الجديدة تبويب **Clients** جوه Google Auth
+   Platform (أو القديم **APIs & Services → Credentials**) →
+   **Create client / Create Credentials → OAuth client ID**:
    - Application type: **Android**
    - Package name: `com.salemkhaled.whatsleft`
    - SHA-1 certificate fingerprint (من نفس `debug.keystore` المُثبّت في
