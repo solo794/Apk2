@@ -145,14 +145,79 @@
 التطبيق دلوقتي موقّع بمفتاح تجريبي (`debug.keystore` الموجود في المستودع)
 وده **مينفعش** للمتجر. محتاج تعمل مفتاح حقيقي مرة واحدة.
 
-نفّذ الأمر ده على جهازك (محتاج Java مثبّتة):
+### 2.1 — تأكد إن `keytool` موجود عندك
 
-```bash
-keytool -genkey -v -keystore upload-keystore.jks \
-  -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+`keytool` بييجي مع Java. افتح **PowerShell** واكتب:
+
+```powershell
+keytool -help
 ```
 
-هيسألك على باسوورد واسمك وبلدك — املأهم واحفظ الباسوورد.
+لو طلعت رسالة إن الأمر مش معروف، عندك اختيارين:
+
+- **لو عندك Android Studio** (الأسهل): استخدم الـkeytool اللي جواه —
+  ```powershell
+  cd "C:\Program Files\Android\Android Studio\jbr\bin"
+  ```
+  وشغّل الأوامر من المسار ده.
+- **لو مفيش**: نزّل **JDK 21** من [adoptium.net](https://adoptium.net) وثبّته
+  (الافتراضيات كلها تمام)، وافتح PowerShell **جديدة** بعد التثبيت.
+
+### 2.2 — اعمل المفتاح
+
+ادخل على مجلد تحبه (مثلاً `Documents`) وشغّل:
+
+```powershell
+keytool -genkeypair -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+
+هيسألك بالترتيب:
+
+| السؤال | تكتب إيه |
+|---|---|
+| `Enter keystore password` | باسوورد قوي — **احفظه**، مش هينفع تسترجعه |
+| `Re-enter new password` | نفس الباسوورد |
+| `What is your first and last name?` | اسمك (أو اسم التطبيق) |
+| باقي الأسئلة (وحدة/مؤسسة/مدينة/بلد) | املأها أو اضغط Enter، مش مهمة للمتجر |
+| `Is CN=... correct?` | اكتب **yes** |
+| `Enter key password for <upload>` | **اضغط Enter** عشان يبقى نفس باسوورد المفتاح |
+
+> لو ضغطت Enter في آخر سؤال، يبقى `ANDROID_KEY_PASSWORD` =
+> `ANDROID_KEYSTORE_PASSWORD` (نفس القيمة). ده أشهر مكان بيلخبط الناس.
+
+اتأكد إنه اتعمل صح (وده كمان بيطلّع بصمة SHA-1 اللي هتحتاجها في مرحلة 6):
+
+```powershell
+keytool -list -v -keystore upload-keystore.jks -alias upload
+```
+
+### 2.3 — حوّله لـbase64 عشان GitHub
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("upload-keystore.jks")) | Set-Content -NoNewline keystore.b64.txt
+```
+
+(على لينكس/ماك: `base64 -w0 upload-keystore.jks > keystore.b64.txt`)
+
+افتح `keystore.b64.txt` بالـNotepad واعمل **Ctrl+A ثم Ctrl+C**.
+
+### 2.4 — حطّ الأسرار الأربعة في GitHub
+
+من `github.com/solo794/Apk2` → **Settings** → **Secrets and variables** →
+**Actions** → **New repository secret**، واعمل الأربعة دول بالأسماء دي
+بالظبط:
+
+| الاسم | القيمة |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | اللي نسخته من `keystore.b64.txt` |
+| `ANDROID_KEYSTORE_PASSWORD` | باسوورد الـkeystore |
+| `ANDROID_KEY_ALIAS` | `upload` |
+| `ANDROID_KEY_PASSWORD` | نفس باسوورد الـkeystore (لو ضغطت Enter فوق) |
+
+بعدها امسح `keystore.b64.txt` من جهازك — الملف ده نسخة كاملة من مفتاحك.
+
+> ⛔ **متحطش ملف `.jks` ولا الباسوورد في المستودع نفسه أبدًا.** المستودع
+> بيتجاهلهم أصلاً في `.gitignore`، بس الأمان الحقيقي إنك متحطهمش من الأساس.
 
 - [ ] عملت الملف `upload-keystore.jks`
 - [ ] حفظت **الباسوورد** + **اسم الـalias** (`upload`) في مكان آمن
