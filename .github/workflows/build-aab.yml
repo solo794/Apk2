@@ -95,6 +95,21 @@ jobs:
             exit 1
           fi
 
+      - name: Confirm the SMS permission is not in the bundle
+        working-directory: android
+        run: |
+          AAB=app/build/outputs/bundle/playRelease/app-play-release.aab
+          rm -rf /tmp/aabcheck && mkdir -p /tmp/aabcheck
+          unzip -o -q "$AAB" 'base/manifest/AndroidManifest.xml' -d /tmp/aabcheck
+          # المانفست جوه الـAAB بصيغة ثنائية، بس أسماء الصلاحيات بتفضل نصوص جواه — فوجود
+          # السلسلة دي معناه إن نسخة الـfull (اللي بتقرا رسائل البنك) هي اللي اتبنت بالغلط.
+          # ورفع نسخة فيها صلاحية رسائل من غير إقرار معتمد = مخالفة سياسة، مش مجرد رفض.
+          if grep -aq 'android.permission.RECEIVE_SMS' /tmp/aabcheck/base/manifest/AndroidManifest.xml; then
+            echo "::error::الـAAB فيه صلاحية RECEIVE_SMS — ده معناه إن النسخة المبنية مش نسخة المتجر"
+            exit 1
+          fi
+          echo "✅ مفيش صلاحية رسائل في الملف"
+
       - name: Remove the keystore from the runner
         if: always()
         run: rm -f android/upload-keystore.jks
