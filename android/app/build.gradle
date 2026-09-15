@@ -1,5 +1,13 @@
 apply plugin: 'com.android.application'
 
+// Play بترفض أي رفعة بـversionCode اتستخدم قبل كده — وده بيفضل صحيح حتى لو الإصدار
+// اللي استخدمه اتلغى أو اتحذف من الكونسول. عشان كده الرقم مش مكتوب ثابت هنا:
+// ووركفلو build-aab.yml بيمرّره من رقم تشغيل GitHub Actions (بيزيد لوحده مع كل بناء)،
+// فكل ملف طالع من الـCI رقمه أعلى من اللي قبله بشكل تلقائي.
+// الرقم اللي تحت ده للبناء المحلي على جهازك بس (تجربة) — الملف ده مش للرفع على Play.
+def vCode = (project.findProperty("appVersionCode") ?: "1").toString().toInteger()
+def vName = (project.findProperty("appVersionName") ?: "1.0").toString()
+
 android {
     namespace "com.salemkhaled.whatsleft"
     compileSdk rootProject.ext.compileSdkVersion
@@ -7,8 +15,8 @@ android {
         applicationId "com.salemkhaled.whatsleft"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode vCode
+        versionName vName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

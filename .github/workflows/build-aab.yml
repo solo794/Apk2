@@ -17,6 +17,16 @@ name: Build Play AAB (signed)
 
 on:
   workflow_dispatch:
+    inputs:
+      version_code:
+        description: "versionCode (سيبه فاضي عشان ياخد رقم التشغيل تلقائيًا — لازم يكون أعلى من أي رقم رفعته قبل كده)"
+        required: false
+        type: string
+      version_name:
+        description: "versionName اللي بيظهر للمستخدم (مثلاً 1.0)"
+        required: false
+        default: "1.0"
+        type: string
 
 jobs:
   bundle:
@@ -82,6 +92,21 @@ jobs:
       - name: Grant execute permission to gradlew
         run: chmod +x android/gradlew
 
+      # Play بترفض أي رفعة بـversionCode اتستخدم قبل كده، حتى لو الإصدار اللي استخدمه
+      # اتلغى أو اتحذف. رقم تشغيل الووركفلو (run_number) بيزيد لوحده مع كل بناء، فهو
+      # ضمان إن كل ملف طالع من هنا رقمه أعلى من اللي قبله من غير ما حد يفتكر يزوّده.
+      - name: Work out the version code
+        id: ver
+        run: |
+          VC="${{ inputs.version_code }}"
+          if [ -z "$VC" ]; then VC="${{ github.run_number }}"; fi
+          VN="${{ inputs.version_name }}"
+          if [ -z "$VN" ]; then VN="1.0"; fi
+          echo "code=$VC" >> "$GITHUB_OUTPUT"
+          echo "name=$VN" >> "$GITHUB_OUTPUT"
+          echo "### 📦 versionCode = \`$VC\` · versionName = \`$VN\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "لو Play قالت إن الرقم ده مستخدم قبل كده، شغّل الووركفلو تاني وحُطّ رقم أعلى في خانة version_code." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Build signed AAB (play flavor)
         working-directory: android
         env:
@@ -89,7 +114,10 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew bundlePlayRelease --no-daemon
+        run: |
+          ./gradlew bundlePlayRelease --no-daemon \
+            -PappVersionCode=${{ steps.ver.outputs.code }} \
+            -PappVersionName=${{ steps.ver.outputs.name }}
 
       - name: Confirm the bundle really is signed
         working-directory: android
@@ -126,5 +154,5 @@ jobs:
       - name: Upload the AAB
         uses: actions/upload-artifact@v4
         with:
-          name: masarifi-play-release-aab
+          name: whatsleft-play-release-aab-v${{ steps.ver.outputs.code }}
           path: android/app/build/outputs/bundle/playRelease/app-play-release.aab
