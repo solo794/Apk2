@@ -124,7 +124,10 @@ dependencies {
     implementation "androidx.biometric:biometric:1.1.0" // BiometricAuthPlugin (app-lock)
     implementation "androidx.activity:activity:$androidxActivityVersion" // GoogleAuthPlugin's ActivityResult API
     implementation "com.google.android.gms:play-services-auth:21.2.0" // GoogleAuthPlugin (sign-in + Drive appdata token)
-    implementation "com.android.billingclient:billing:7.1.1" // BillingPlugin (Pro subscription)
+    // Play بترفض أي رفعة بمكتبة فوترة أقل من 8.0.0 ("must update to at least version 8.0.0").
+    // مثبّتة على 8.0.0 بالتحديد مش أحدث: من 8.1.0 المكتبة بتطلب minSdk 23، والتطبيق دلوقتي
+    // على 22 (أندرويد 5.1) — الترقية لأحدث بتستلزم رفع minSdk وفقدان الأجهزة دي.
+    implementation "com.android.billingclient:billing:8.0.0" // BillingPlugin (Pro subscription)
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')

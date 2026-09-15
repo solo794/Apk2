@@ -7,6 +7,7 @@ import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
@@ -73,7 +74,10 @@ public class BillingPlugin extends Plugin {
     public void load() {
         billingClient = BillingClient.newBuilder(getContext())
             .setListener(purchasesListener)
-            .enablePendingPurchases()
+            // النسخة من غير باراميتر اتشالت في مكتبة الفوترة 8. دي هي البديل المكافئ لها
+            // بالظبط حسب دليل الترقية. (التطبيق بيبيع اشتراك بس، بس الـbuilder بيطلب
+            // الإعداد ده في كل الحالات وإلا build() بترمي استثناء.)
+            .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
             .build();
         connect(null);
     }
@@ -116,8 +120,14 @@ public class BillingPlugin extends Plugin {
                     .setProductType(BillingClient.ProductType.SUBS)
                     .build()))
             .build();
-        billingClient.queryProductDetailsAsync(params, (result, list) -> {
-            if (result.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null && !list.isEmpty()) {
+        // في مكتبة الفوترة 8 الكولباك بقى بياخد QueryProductDetailsResult مكان List<ProductDetails>
+        // مباشرة — المكتبة بقت بترجّع كمان المنتجات اللي **مقدرتش** تجيبها وسبب كل واحدة.
+        // القايمة نفسها بتتقرا من getProductDetailsList()، وبتفضل فاضية لو المنتج لسه
+        // متعملش/مش مفعّل في الكونسول، وساعتها baseStatus() بتقول available=false.
+        billingClient.queryProductDetailsAsync(params, (result, productDetailsResult) -> {
+            if (result.getResponseCode() != BillingClient.BillingResponseCode.OK || productDetailsResult == null) return;
+            List<ProductDetails> list = productDetailsResult.getProductDetailsList();
+            if (list != null && !list.isEmpty()) {
                 productDetails = list.get(0);
             }
         });
