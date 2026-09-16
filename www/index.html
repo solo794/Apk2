@@ -2317,6 +2317,7 @@ const I18N = {
     "pro.why.reports":"التقارير والتصدير جزء من النسخة الكاملة.",
     "pro.why.cloud":"النسخة الاحتياطية السحابية جزء من النسخة الكاملة.",
     "pro.unavailableNative":"الاشتراك بيتم من خلال Google Play، والنسخة دي اتثبتت من برّه المتجر — نزّل التطبيق من Google Play عشان تقدر تشترك.",
+    "pro.unavailableProduct":"الاشتراك لسه مش متاح للشراء دلوقتي — بنجهّزه. كل المزايا المجانية شغّالة عادي، وجرّب تاني بعدين.",
     "pro.unavailableWeb":"الاشتراك متاح في نسخة الأندرويد من Google Play. النسخة دي (الويب/الآيفون) بتشتغل بالمزايا المجانية.",
     "pro.freeNote":"كل حاجة تانية في التطبيق مجانية بالكامل: تسجيل المصاريف، الالتزامات، الحسابات، التوزيعات، والصيانة — والاشتراك بيفتح الأتمتة والتقارير والنسخة السحابية بس.",
     "toast.proActivated":"تم تفعيل النسخة الكاملة 🎉", "toast.proFailed":"متمّش الاشتراك — جرّب تاني",
@@ -2741,6 +2742,7 @@ const I18N = {
     "pro.why.reports":"Reports and export are part of the full version.",
     "pro.why.cloud":"Cloud backup is part of the full version.",
     "pro.unavailableNative":"Subscriptions go through Google Play, and this copy was installed from outside the store — install the app from Google Play to subscribe.",
+    "pro.unavailableProduct":"The subscription isn't on sale yet — we're setting it up. Every free feature works as normal; please try again later.",
     "pro.unavailableWeb":"Subscriptions are available in the Android version on Google Play. This version runs with the free features.",
     "pro.freeNote":"Everything else in the app is completely free: expenses, obligations, accounts, allocations and maintenance — the subscription only unlocks automation, reports and cloud backup.",
     "toast.proActivated":"Full version activated 🎉", "toast.proFailed":"Subscription didn't go through — try again",
@@ -3173,6 +3175,42 @@ function showToast(msg){
 }
 
 // ---------- file save/share (native app vs plain browser) ----------
+// أندرويد 15+ بيرسم من حافة لحافة إجباريًا، فالحشو العلوي/السفلي لازم ييجي من مقاسات أشرطة
+// النظام. MainActivity بيبعتهم لـ--sa-top/--sa-bottom من مستمع WindowInsets، بس المستمع ده
+// بيتسابق مع تحميل الصفحة: بيشتغل مرة واحدة عند أول رسم، ولو ده حصل قبل ما index.html يخلص
+// تحميل، الستايل اللي بيكتبه بيبقى على المستند اللي اتبدّل — وبعدها المستمع مبيشتغلش تاني غير
+// لو الأرقام **اتغيّرت** (تدوير الشاشة، الكيبورد). يعني في تشغيل عادي ممكن ميشتغلش خالص،
+// و--sa-top تفضل فاضية، والهيدر يترسم تحت شريط الحالة. الجهاز اللي بيكسب السباق واللي بيخسره
+// مسألة توقيت بحتة — عشان كده نفس النسخة بانت مظبوطة على موبايل وغلط على التاني.
+//
+// السحب مفيهوش سباق: بننادي البلوجن بنفسنا بعد ما المستند بقى موجود، والرقم بيتقرا من شجرة
+// الواجهة وقتها. ومستمع الدفع بيفضل مكانه للتغييرات اللي بتحصل بعد كده.
+const ANDROID_MIN_STATUS_BAR = 24; // أقل ارتفاع معروف لشريط الحالة في أندرويد
+async function applySystemBarInsets(){
+  if(!isNativeApp()) return;
+  let top = 0, bottom = 0;
+  const { Insets } = window.Capacitor.Plugins;
+  if(Insets){
+    // getRootWindowInsets بترجّع null لو الواجهة لسه متربطتش بالشاشة، وده وارد لو الجافاسكريبت
+    // سبق أول رسم. الصفر هنا معناه "لسه معرفش"، مش "مفيش شريط حالة" — فبنحاول تاني كام مرة
+    // بدل ما نثبّت رقم غلط ونسيب الهيدر مغطّى لحد ما المستخدم يدوّر الشاشة.
+    for(let attempt = 0; attempt < 6 && top <= 0; attempt++){
+      if(attempt) await new Promise(r => setTimeout(r, 100));
+      try{
+        const r = await Insets.get();
+        top = Number(r.top) || 0;
+        bottom = Number(r.bottom) || 0;
+      }catch(e){ break; }
+    }
+  }
+  // حزام أمان أخير: لو فضلت صفر بعد كل ده (نسخة قديمة متثبتة من غير البلوجن مثلاً)، أقل ارتفاع
+  // معروف لشريط الحالة أحسن بكتير من إن الهيدر يترسم تحت الساعة.
+  if(top <= 0) top = ANDROID_MIN_STATUS_BAR;
+  const root = document.documentElement;
+  root.style.setProperty("--sa-top", top + "px");
+  root.style.setProperty("--sa-bottom", bottom + "px");
+}
+
 function isNativeApp(){
   return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 }
@@ -3679,7 +3717,7 @@ let googleAccount = null; // {email, name, photoUrl} — not persisted; re-read 
 // localStorage. Every feature gate reads the cache; the cache is refreshed on launch and on every
 // return to the app. A gate must never block on the network — a paying user coming back from a
 // tunnel with no signal still gets their features.
-let proState = { isPro:false, price:null, available:false, checkedAt:null, devUnlock:false };
+let proState = { isPro:false, price:null, available:false, reachable:false, checkedAt:null, devUnlock:false };
 const PRO_FEATURES = ["automation", "reports", "cloud"];
 function loadProState(){
   try{
@@ -3705,6 +3743,7 @@ async function refreshProStatus(){
     const res = await Billing.getStatus();
     proState.isPro = !!res.isPro;
     proState.available = !!res.available;
+    proState.reachable = !!res.reachable;
     proState.price = res.price || proState.price;
     proState.checkedAt = Date.now();
     saveProState();
@@ -3732,8 +3771,13 @@ function openPaywall(feature){
   const canBuy = isNativeApp() && proState.available;
   document.getElementById("paywallBuyBtn").style.display = canBuy ? "" : "none";
   document.getElementById("paywallUnavailable").style.display = canBuy ? "none" : "";
+  // تلات أسباب مختلفة لنفس النتيجة (مفيش زرار شراء)، ولكل واحد رسالة مختلفة. الخلط بينهم
+  // بيقول لمستخدم نزّل التطبيق من Play إنه مثبّته من بره المتجر — وده كلام غلط بيخلّيه
+  // يفتكر إن في حاجة بايظة عنده.
   document.getElementById("paywallUnavailable").textContent =
-    isNativeApp() ? t("pro.unavailableNative") : t("pro.unavailableWeb");
+    !isNativeApp()        ? t("pro.unavailableWeb")      // ويب/آيفون: مفيش فوترة أصلاً
+    : !proState.reachable ? t("pro.unavailableNative")   // مثبّت فعلاً من بره المتجر
+    :                       t("pro.unavailableProduct"); // من Play، بس المنتج لسه متعملش
   document.getElementById("paywallModalBg").classList.add("show");
 }
 
@@ -3745,6 +3789,7 @@ async function startProPurchase(){
     const res = await window.Capacitor.Plugins.Billing.purchase();
     proState.isPro = !!res.isPro;
     proState.available = !!res.available;
+    proState.reachable = !!res.reachable;
     proState.price = res.price || proState.price;
     proState.checkedAt = Date.now();
     saveProState();
@@ -7470,6 +7515,9 @@ function checkQuickAddUrlParam(){
   // Asked for before the first render rather than after it: render() touches several native
   // plugins, and a throw in any one of them would otherwise skip everything below it — including
   // the subscription check, which would silently lock a paying user out of what they paid for.
+  // قبل أول رسم: الحشو العلوي/السفلي لازم يكون مظبوط من أول إطار،
+  // مش يتعدّل قدام المستخدم بعد ما الصفحة تبان.
+  await applySystemBarInsets();
   refreshProStatus();
   // Same placement reasoning as the line above (before render() and the native setup, not after):
   // it runs on every launch, not only after an edit, because a repeating monthly notification

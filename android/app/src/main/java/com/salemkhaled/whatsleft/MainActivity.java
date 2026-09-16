@@ -25,6 +25,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(SpeechToTextPlugin.class);
         registerPlugin(QuickAddPlugin.class);
         registerPlugin(BillingPlugin.class);
+        registerPlugin(InsetsPlugin.class);
         super.onCreate(savedInstanceState);
         requestHighestRefreshRate();
         bridgeSystemBarInsets();

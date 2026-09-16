@@ -164,6 +164,12 @@ public class BillingPlugin extends Plugin {
         // مرفوع على Play قبل ما الاشتراك يتعمل في الكونسول كان هيعرض زرار شراء مش بيعمل حاجة
         // (launchBillingFlow محتاج productDetails) — وده بالظبط اللي بيترفض تحت بند
         // "وظيفة مكسورة" في مراجعة Play.
+        // فرق مهم للواجهة: "وصلنا لـPlay" غير "المنتج جاهز للبيع".
+        // reachable=false معناها فعلاً إن النسخة دي مش من المتجر (أو Play مش موجود على
+        // الجهاز)، وساعتها الرسالة الصح هي "نزّلها من Play". لكن نسخة **منزّلة من Play**
+        // والمنتج لسه متعملش في الكونسول بتدّي reachable=true و available=false — ولو
+        // الواجهة خلطت بين الحالتين هتقول للمستخدم إنه مثبّت من بره المتجر وهو مش كده.
+        ret.put("reachable", connected && !unavailable);
         ret.put("available", connected && !unavailable && productDetails != null);
         ret.put("isPro", isPro);
         ret.put("productId", PRODUCT_ID);
